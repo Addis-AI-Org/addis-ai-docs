@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Addis AI Realtime Voice Demo</title>
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --surface-soft: #f8fafc;
+        --border: #e2e8f0;
+        --text: #0f172a;
+        --muted: #64748b;
+        --primary: #0f172a;
+        --primary-hover: #1e293b;
+        --danger: #ef4444;
+        --danger-hover: #dc2626;
+        --ring: #cbd5e1;
+        --ok: #22c55e;
+        --warn: #f59e0b;
+        --err: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(900px 420px at 100% -5%, #f1f5f9 0%, transparent 70%),
+          radial-gradient(760px 420px at -10% 115%, #eef2ff 0%, transparent 68%),
+          var(--bg);
+        color: var(--text);
+        font-family:
+          "Inter",
+          "Segoe UI",
+          "Helvetica Neue",
+          Arial,
+          sans-serif;
+      }
+
+      .container {
+        max-width: 760px;
+        margin: 44px auto;
+        padding: 0 16px 28px;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow:
+          0 8px 20px rgba(15, 23, 42, 0.06),
+          0 1px 0 rgba(15, 23, 42, 0.04);
+        padding: 20px;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface-soft);
+        color: #334155;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      h1 {
+        margin: 12px 0 8px;
+        font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        margin: 0 0 16px;
+        color: var(--muted);
+        font-size: 0.94rem;
+        line-height: 1.5;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .field {
+        display: grid;
+        gap: 7px;
+      }
+
+      .field label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #334155;
+      }
+
+      input {
+        width: 100%;
+        height: 42px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--text);
+        padding: 0 12px;
+        font-size: 0.94rem;
+        outline: none;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+
+      input:focus {
+        border-color: #94a3b8;
+        box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.25);
+      }
+
+      input::placeholder {
+        color: #94a3b8;
+      }
+
+      .meta {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface-soft);
+        padding: 10px 12px;
+      }
+
+      .meta strong {
+        display: block;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #64748b;
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
+      }
+
+      .meta code {
+        font-size: 0.84rem;
+        color: #1e293b;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        height: 40px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        padding: 0 14px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.18s ease;
+      }
+
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: var(--primary-hover);
+      }
+
+      .btn-danger {
+        background: var(--danger);
+        color: #fff;
+      }
+
+      .btn-danger:hover:not(:disabled) {
+        background: var(--danger-hover);
+      }
+
+      .btn-secondary {
+        background: #fff;
+        color: #334155;
+        border-color: var(--border);
+      }
+
+      .btn-secondary:hover:not(:disabled) {
+        border-color: #cbd5e1;
+        background: #f8fafc;
+      }
+
+      .status {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        padding: 10px 12px;
+      }
+
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: var(--warn);
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+      }
+
+      .dot.ok {
+        background: var(--ok);
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+      }
+
+      .dot.err {
+        background: var(--err);
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+      }
+
+      .status-title {
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+
+      .status-sub {
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .log-card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .log-head {
+        height: 38px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-soft);
+        color: #475569;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .log-body {
+        margin: 0;
+        min-height: 180px;
+        max-height: 320px;
+        overflow: auto;
+        padding: 12px;
+        white-space: pre-wrap;
+        color: #1e293b;
+        font-size: 0.82rem;
+        line-height: 1.45;
+        background: #fff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+
+      .footnote {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      @media (max-width: 680px) {
+        .container {
+          margin-top: 22px;
+        }
+
+        .card {
+          padding: 16px;
+        }
+
+        .actions {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <span class="eyebrow">Realtime WebSocket Demo</span>
+        <h1>Addis AI Realtime Voice Chat</h1>
+        <p class="subtitle">
+          Enter your API key and click Start. This streams microphone audio as PCM16 and plays AI audio back in
+          realtime.
+        </p>
+
+        <div class="stack">
+          <div class="field">
+            <label for="apiKey">API Key</label>
+            <input id="apiKey" type="password" placeholder="sk_..." autocomplete="off" />
+          </div>
+
+          <div class="meta">
+            <strong>Endpoint</strong>
+            <code>wss://relay.addisassistant.com/ws?apiKey=YOUR_API_KEY</code>
+          </div>
+
+          <div class="actions">
+            <button id="startBtn" class="btn btn-primary">Start</button>
+            <button id="stopBtn" class="btn btn-danger" disabled>Stop</button>
+            <button id="clearBtn" class="btn btn-secondary">Clear Logs</button>
+          </div>
+
+          <div class="status">
+            <span id="statusDot" class="dot"></span>
+            <div>
+              <div id="statusText" class="status-title">Idle</div>
+              <div id="statusDetail" class="status-sub">Ready to connect.</div>
+            </div>
+          </div>
+
+          <div class="log-card">
+            <div class="log-head">Events / Logs</div>
+            <pre id="logs" class="log-body"></pre>
+          </div>
+
+          <p class="footnote">
+            Use on <code>localhost</code> or <code>https</code>. For production, issue short-lived session tokens from
+            your backend.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const CONFIG = {
+        wsEndpoint: "wss://relay.addisassistant.com/ws",
+        inputSampleRate: 16000,
+        outputSampleRate: 24000,
+        processorSize: 2048,
+      };
+
+      const WS_CONNECTING = 0;
+      const WS_OPEN = 1;
+
+      const ui = {
+        apiKey: document.getElementById("apiKey"),
+        startBtn: document.getElementById("startBtn"),
+        stopBtn: document.getElementById("stopBtn"),
+        clearBtn: document.getElementById("clearBtn"),
+        statusDot: document.getElementById("statusDot"),
+        statusText: document.getElementById("statusText"),
+        statusDetail: document.getElementById("statusDetail"),
+        logs: document.getElementById("logs"),
+      };
+
+      const state = {
+        ws: null,
+        inputCtx: null,
+        outputCtx: null,
+        stream: null,
+        sourceNode: null,
+        processorNode: null,
+        muteNode: null,
+        nextPlaybackTime: 0,
+        canStreamAudio: false,
+        starting: false,
+        running: false,
+        stopping: false,
+        runId: 0,
+        userStopped: false,
+      };
+
+      ui.apiKey.value = localStorage.getItem("addis_realtime_api_key") || "";
+
+      function now() {
+        return new Date().toLocaleTimeString();
+      }
+
+      function appendLog(line) {
+        ui.logs.textContent += `[${now()}] ${line}\n`;
+        ui.logs.scrollTop = ui.logs.scrollHeight;
+      }
+
+      function setStatus(title, detail = "", tone = "warn") {
+        ui.statusText.textContent = title;
+        ui.statusDetail.textContent = detail;
+        ui.statusDot.className = `dot ${tone === "ok" ? "ok" : tone === "err" ? "err" : ""}`;
+      }
+
+      function syncButtons() {
+        const busy = state.starting || state.running;
+        ui.startBtn.disabled = busy;
+        ui.stopBtn.disabled = !busy;
+      }
+
+      function isAbortError(error) {
+        return error instanceof Error && error.message === "START_ABORTED";
+      }
+
+      function shouldAbort(runId) {
+        return runId !== state.runId || state.stopping;
+      }
+
+      function assertNotAborted(runId) {
+        if (shouldAbort(runId)) {
+          throw new Error("START_ABORTED");
+        }
+      }
+
+      function buildSocketUrl(apiKey) {
+        const url = new URL(CONFIG.wsEndpoint);
+        url.searchParams.set("apiKey", apiKey);
+        return url.toString();
+      }
+
+      function floatTo16BitPCM(float32Array) {
+        const int16Array = new Int16Array(float32Array.length);
+        for (let i = 0; i < float32Array.length; i += 1) {
+          const sample = Math.max(-1, Math.min(1, float32Array[i]));
+          int16Array[i] = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+        }
+        return int16Array;
+      }
+
+      function arrayBufferToBase64(arrayBuffer) {
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i += 1) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+      }
+
+      function base64ToArrayBuffer(base64) {
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes.buffer;
+      }
+
+      async function playPcm16Chunk(arrayBuffer) {
+        if (!state.outputCtx || !(arrayBuffer instanceof ArrayBuffer)) return;
+
+        const pcm16 = new Int16Array(arrayBuffer);
+        if (pcm16.length === 0) return;
+
+        const float32 = new Float32Array(pcm16.length);
+        for (let i = 0; i < pcm16.length; i += 1) {
+          float32[i] = pcm16[i] / 32768;
+        }
+
+        const buffer = state.outputCtx.createBuffer(1, float32.length, CONFIG.outputSampleRate);
+        buffer.copyToChannel(float32, 0);
+
+        const src = state.outputCtx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(state.outputCtx.destination);
+
+        const startAt = Math.max(state.outputCtx.currentTime, state.nextPlaybackTime);
+        src.start(startAt);
+        state.nextPlaybackTime = startAt + buffer.duration;
+      }
+
+      function cleanupAudioGraph() {
+        try {
+          if (state.processorNode) state.processorNode.disconnect();
+        } catch (_error) {}
+        try {
+          if (state.sourceNode) state.sourceNode.disconnect();
+        } catch (_error) {}
+        try {
+          if (state.muteNode) state.muteNode.disconnect();
+        } catch (_error) {}
+
+        if (state.stream) {
+          state.stream.getTracks().forEach((track) => track.stop());
+        }
+
+        state.processorNode = null;
+        state.sourceNode = null;
+        state.muteNode = null;
+        state.stream = null;
+      }
+
+      async function closeAudioContexts() {
+        if (state.inputCtx) {
+          await state.inputCtx.close().catch(() => {});
+        }
+        if (state.outputCtx) {
+          await state.outputCtx.close().catch(() => {});
+        }
+        state.inputCtx = null;
+        state.outputCtx = null;
+      }
+
+      async function resetTransport() {
+        const ws = state.ws;
+        state.ws = null;
+        state.canStreamAudio = false;
+
+        if (ws && (ws.readyState === WS_OPEN || ws.readyState === WS_CONNECTING)) {
+          ws.onopen = null;
+          ws.onmessage = null;
+          ws.onerror = null;
+          ws.onclose = null;
+          try {
+            ws.close(1000, "client-stop");
+          } catch (_error) {}
+        }
+
+        cleanupAudioGraph();
+        await closeAudioContexts();
+        state.nextPlaybackTime = 0;
+      }
+
+      async function setupAudioPipeline(runId) {
+        state.outputCtx = new (window.AudioContext || window.webkitAudioContext)({
+          sampleRate: CONFIG.outputSampleRate,
+        });
+        await state.outputCtx.resume();
+        assertNotAborted(runId);
+        state.nextPlaybackTime = state.outputCtx.currentTime;
+
+        state.inputCtx = new (window.AudioContext || window.webkitAudioContext)({
+          sampleRate: CONFIG.inputSampleRate,
+        });
+        await state.inputCtx.resume();
+        assertNotAborted(runId);
+
+        state.stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+          video: false,
+        });
+        assertNotAborted(runId);
+
+        state.sourceNode = state.inputCtx.createMediaStreamSource(state.stream);
+        state.processorNode = state.inputCtx.createScriptProcessor(CONFIG.processorSize, 1, 1);
+        state.muteNode = state.inputCtx.createGain();
+        state.muteNode.gain.value = 0;
+
+        state.processorNode.onaudioprocess = (event) => {
+          if (!state.running || !state.canStreamAudio || !state.ws || state.ws.readyState !== WS_OPEN) return;
+
+          const inputData = event.inputBuffer.getChannelData(0);
+          const pcm16Data = floatTo16BitPCM(inputData);
+
+          state.ws.send(
+            JSON.stringify({
+              data: arrayBufferToBase64(pcm16Data.buffer),
+              mimeType: "audio/pcm;rate=16000",
+            }),
+          );
+        };
+
+        state.sourceNode.connect(state.processorNode);
+        state.processorNode.connect(state.muteNode);
+        state.muteNode.connect(state.inputCtx.destination);
+      }
+
+      async function stopRealtime(title = "Stopped", detail = "Session stopped.", userInitiated = true) {
+        if (state.stopping) return;
+
+        state.stopping = true;
+        state.userStopped = userInitiated;
+        state.runId += 1;
+        state.starting = false;
+        state.running = false;
+        syncButtons();
+
+        setStatus("Stopping", "Closing microphone and socket...", "warn");
+        await resetTransport();
+
+        state.stopping = false;
+        setStatus(title, detail, title === "Disconnected" ? "err" : "warn");
+        syncButtons();
+      }
+
+      async function startRealtime() {
+        if (state.starting || state.running) return;
+
+        const apiKey = ui.apiKey.value.trim();
+        if (!apiKey) {
+          setStatus("Missing API key", "Enter your API key before starting.", "err");
+          appendLog("Missing API key.");
+          return;
+        }
+
+        localStorage.setItem("addis_realtime_api_key", apiKey);
+
+        const runId = state.runId + 1;
+        state.runId = runId;
+        state.starting = true;
+        state.running = false;
+        state.stopping = false;
+        state.userStopped = false;
+        state.canStreamAudio = false;
+        syncButtons();
+
+        setStatus("Connecting", "Requesting microphone and opening WebSocket...", "warn");
+        appendLog("Starting realtime session...");
+
+        try {
+          await resetTransport();
+          assertNotAborted(runId);
+
+          await setupAudioPipeline(runId);
+          assertNotAborted(runId);
+
+          const socketUrl = buildSocketUrl(apiKey);
+          state.ws = new WebSocket(socketUrl);
+
+          state.ws.onopen = () => {
+            if (shouldAbort(runId)) return;
+            state.starting = false;
+            state.running = true;
+            syncButtons();
+
+            setStatus("Connected", "Waiting for setupComplete...", "warn");
+            appendLog("WebSocket connected. Waiting for setupComplete.");
+          };
+
+          state.ws.onmessage = async (event) => {
+            if (shouldAbort(runId)) return;
+
+            if (typeof event.data !== "string") {
+              appendLog("Received non-text websocket message.");
+              return;
+            }
+
+            let message;
+            try {
+              message = JSON.parse(event.data);
+            } catch (error) {
+              appendLog(`JSON parse error: ${String(error)}`);
+              return;
+            }
+
+            if (message?.setupComplete || (message?.type === "status" && /ready/i.test(message?.message || ""))) {
+              state.canStreamAudio = true;
+              setStatus("Live", "Streaming microphone and AI audio.", "ok");
+              appendLog("Setup complete. Streaming started.");
+              return;
+            }
+
+            if (message?.type === "warning" && message?.message) {
+              appendLog(`Warning: ${message.message}`);
+            }
+
+            const base64Audio = message?.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+            if (typeof base64Audio === "string" && base64Audio.length > 0) {
+              await playPcm16Chunk(base64ToArrayBuffer(base64Audio));
+            }
+
+            if (message?.error) {
+              const errMessage = message.error?.message || JSON.stringify(message.error);
+              setStatus("Server error", errMessage, "err");
+              appendLog(`Server error: ${errMessage}`);
+            }
+          };
+
+          state.ws.onerror = () => {
+            if (shouldAbort(runId)) return;
+            setStatus("Connection error", "Transport error from websocket.", "err");
+            appendLog("WebSocket error event.");
+          };
+
+          state.ws.onclose = async (event) => {
+            const wasUserStop = state.userStopped || shouldAbort(runId);
+            appendLog(`Socket closed (code=${event.code}, reason=${event.reason || "n/a"}).`);
+
+            if (!wasUserStop && event.code === 1006) {
+              appendLog("Hint: 1006 usually means auth mismatch or protocol mismatch.");
+            }
+
+            await stopRealtime(
+              wasUserStop ? "Stopped" : "Disconnected",
+              wasUserStop ? "Session stopped by client." : "Connection closed unexpectedly.",
+              wasUserStop,
+            );
+          };
+        } catch (error) {
+          if (isAbortError(error)) {
+            appendLog("Start canceled.");
+            return;
+          }
+
+          appendLog(`Start failed: ${String(error)}`);
+          setStatus("Start failed", "Could not initialize realtime session.", "err");
+          await stopRealtime("Disconnected", "Initialization failed.", false);
+        } finally {
+          if (runId === state.runId && !state.running) {
+            state.starting = false;
+            syncButtons();
+          }
+        }
+      }
+
+      ui.startBtn.addEventListener("click", () => {
+        void startRealtime();
+      });
+
+      ui.stopBtn.addEventListener("click", () => {
+        void stopRealtime("Stopped", "Session stopped by user.", true);
+      });
+
+      ui.clearBtn.addEventListener("click", () => {
+        ui.logs.textContent = "";
+      });
+
+      window.addEventListener("beforeunload", () => {
+        void stopRealtime("Stopped", "Page unload.", true);
+      });
+
+      setStatus("Idle", "Ready to connect.", "warn");
+      syncButtons();
+      appendLog("Ready. Enter API key and click Start.");
+    </script>
+  </body>
+</html>
