@@ -1,0 +1,26 @@
+---
+title: Node.js SDK reference
+description: Resource-oriented reference for the official JavaScript and TypeScript SDK.
+---
+
+# Node.js SDK reference
+
+```ts
+import AddisAI, { fileFromPath } from "addisai";
+const addis = new AddisAI({ apiKey, timeout, maxRetries });
+```
+
+| Resource | Methods |
+| --- | --- |
+| `addis.chat` | `completions.create`, `runTools` |
+| `addis.voice` | `generate`, `estimate`, `usage` |
+| `addis.voice.clips` | `list`, `get`, `download`, `delete` |
+| `addis.voices` | `list`, `preview` |
+| `addis.speech` | `transcribe` |
+| `addis.translate` | `create` |
+
+`runTools` exists in `0.1.2` but is not production-ready; it can repeat a completed call and the current message mapper cannot preserve a tool-result round trip. See [Function calling](/docs/core-concepts/function-calling).
+
+Voice fields use camelCase: `voiceId`, `outputFormat`, and `clientRequestId`. Generated clips expose `toFile`. Voice generation output formats are `mp3_44100`, `wav_44100`, and `pcm_16000`.
+
+The package runs on server and edge JavaScript runtimes. Browser execution is refused by default to protect credentials.

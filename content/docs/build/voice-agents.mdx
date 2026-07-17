@@ -1,0 +1,14 @@
+---
+title: Voice agents
+description: Compose transcription, chat, and Voice 2 safely.
+---
+
+# Voice agents
+
+A turn-based voice agent transcribes audio, sends the transcript to chat, then generates the final text with Voice 2.
+
+```text
+Audio → speech.transcribe → chat.completions.create → voice.generate → audio clip
+```
+
+Use `clientRequestId`/`client_request_id` for billed generation and retain the text transcript for observability. Published SDK tool loops are not currently production-ready; see [function calling](/docs/core-concepts/function-calling). For bidirectional low-latency sessions, evaluate [Realtime Audio](/docs/guides/realtime), currently Beta.

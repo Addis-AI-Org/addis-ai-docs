@@ -1,4 +1,5 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
+import Image from 'next/image';
 
 /**
  * Shared layout configurations
@@ -11,26 +12,31 @@ export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
       title: (
-        <>         
-            {/* Light Mode Logo: Visible by default, hidden when .dark class is present */}
-          <img 
-            src="/images/Addis-Ai-Logo-Dark.png" 
-            alt="Addis AI" 
-            className="block dark:hidden pr-20"
-            height="24"
+        <>
+          <Image
+            src="/images/Addis-Ai-Logo-Dark.png"
+            alt="Addis AI"
+            className="block dark:hidden"
+            width={110}
+            height={24}
+            priority
           />
-
-          {/* Dark Mode Logo: Hidden by default, visible when .dark class is present */}
-          <img 
-            src="/images/addis_ai_full.png" 
-            alt="Addis AI" 
-            className="hidden dark:block pr-20"
-            height="24"
+          <Image
+            src="/images/addis_ai_full.png"
+            alt="Addis AI"
+            className="hidden dark:block"
+            width={148}
+            height={24}
+            priority
           />
         </>
       ),
     },
-    // see https://fumadocs.dev/docs/ui/navigation/links
-    links: [],
+    links: [
+      { text: 'Announcements', url: '/docs/announcements' },
+      { text: 'API keys', url: 'https://addisassistant.com/apikeys', external: true },
+      { text: 'npm', url: 'https://www.npmjs.com/package/addisai', external: true },
+      { text: 'PyPI', url: 'https://pypi.org/project/addisai/', external: true },
+    ],
   };
 }

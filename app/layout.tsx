@@ -7,10 +7,22 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://docs.addisassistant.com';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  title: {
+    default: 'Addis AI documentation',
+    template: '%s | Addis AI documentation',
+  },
+  description: 'Build chat, voice, speech, translation, and multimodal applications with the official Addis AI SDKs.',
+  applicationName: 'Addis AI documentation',
+  openGraph: {
+    type: 'website',
+    siteName: 'Addis AI documentation',
+    title: 'Addis AI documentation',
+    description: 'SDK-first documentation for the Addis AI platform.',
+  },
 };
 
 export default function Layout({ children }: LayoutProps<'/'>) {

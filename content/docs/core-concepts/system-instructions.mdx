@@ -1,0 +1,29 @@
+---
+title: System instructions
+description: Define behavior, constraints, and response format.
+---
+
+# System instructions
+
+`system` defines how the assistant should behave. Put stable rules, scope, tone, and output constraints here—not user-supplied text.
+
+<Tabs items={['Node.js', 'Python']} groupId="sdk-language">
+  <Tab>
+```ts
+const response = await addis.chat.completions.create({
+  system: "Answer in Amharic. Be concise and do not invent account data.",
+  messages: [{ role: "user", content: "የክፍያ ሁኔታዬን ንገረኝ" }],
+});
+```
+  </Tab>
+  <Tab>
+```python
+response = addis.chat.completions.create(
+    system="Answer in Amharic. Be concise and do not invent account data.",
+    messages=[{"role": "user", "content": "የክፍያ ሁኔታዬን ንገረኝ"}],
+)
+```
+  </Tab>
+</Tabs>
+
+System instructions guide the model but do not replace authorization, input validation, or platform safeguards. Enforce security rules in application code.

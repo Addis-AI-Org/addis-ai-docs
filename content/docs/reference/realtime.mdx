@@ -1,0 +1,32 @@
+---
+title: Realtime WebSocket events
+description: Current event lifecycle for the Beta Realtime Audio relay.
+---
+
+<StatusBadge status="beta">Beta</StatusBadge>
+
+# Realtime WebSocket events
+
+Connect to `wss://relay.addisassistant.com/ws` with a short-lived user JWT in the `jwt` query parameter. The current Realtime relay does not authenticate browser sessions with a long-lived Addis API key.
+
+```text
+wss://relay.addisassistant.com/ws?jwt=<short-lived-jwt>
+```
+
+Send mono 16-bit PCM audio at 16 kHz as base64-encoded JSON messages:
+
+```json
+{ "data": "<base64-pcm16>", "mimeType": "audio/pcm;rate=16000" }
+```
+
+The relay confirms readiness with:
+
+```json
+{ "setupComplete": true }
+```
+
+Model audio is returned as 24 kHz PCM in `serverContent.modelTurn.parts[0].inlineData`. A completed turn may include `serverContent.turnComplete` and `usageMetadata`. Stop queued playback when `serverContent.interrupted` is true. Warning messages use `{ "type": "warning", "message": "..." }`; failures use `error`.
+
+This Beta protocol can change. Keep authentication, audio conversion, event parsing, reconnection, and playback scheduling behind an application adapter.
+
+<LastVerified date="2026-07-17" />

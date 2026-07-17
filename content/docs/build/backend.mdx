@@ -1,0 +1,38 @@
+---
+title: Backend services
+description: Integrate Addis AI from a trusted application server.
+---
+
+# Backend services
+
+Create one SDK client per process, load the key from a secret manager, and call Addis AI after authenticating your own user.
+
+<Tabs items={['Node.js', 'Python']} groupId="sdk-language">
+  <Tab>
+```ts
+import AddisAI from "addisai";
+const addis = new AddisAI({ maxRetries: 2, timeout: 30_000 });
+
+export async function answer(userId: string, prompt: string) {
+  await authorize(userId, "chat:create");
+  return addis.chat.completions.create({
+    messages: [{ role: "user", content: prompt }],
+  });
+}
+```
+  </Tab>
+  <Tab>
+```python
+from addisai import AddisAI
+addis = AddisAI(max_retries=2, timeout=30)
+
+def answer(user_id: str, prompt: str):
+    authorize(user_id, "chat:create")
+    return addis.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+    )
+```
+  </Tab>
+</Tabs>
+
+Apply per-user rate limits, request-size limits, timeouts, safe logging, and idempotency for billed operations. Return only the fields your client needs.

@@ -9,11 +9,14 @@ function remarkElementIds() {
     file.data ??= {};
     file.data.elementIds ??= [];
 
+    // The visitor's MDX node types are supplied by the parser at runtime.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     visit(tree as any, 'mdxJsxFlowElement', (element) => {
       if (!element.name || !element.attributes) return;
 
       const idAttr = element.attributes.find(
-        (attr:any) => attr.type === 'mdxJsxAttribute' && attr.name === 'id',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (attr: any) => attr.type === 'mdxJsxAttribute' && attr.name === 'id',
       );
 
       if (idAttr && typeof idAttr.value === 'string') {

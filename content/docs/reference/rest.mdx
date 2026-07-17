@@ -1,0 +1,24 @@
+---
+title: REST and OpenAPI
+description: Raw HTTP endpoints and the versioned OpenAPI contract.
+---
+
+# REST and OpenAPI
+
+The official SDKs are recommended. Use raw HTTP for unsupported runtimes and interoperability.
+
+[Download the OpenAPI 3.1 contract](/openapi.json).
+
+| Capability | Endpoint |
+| --- | --- |
+| Chat compatibility | `POST /v1/chat/completions` |
+| Native chat | `POST /api/v1/chat_generate` with JSON, or multipart for files/audio |
+| Voice generation | `POST /api/v1/voice/generations` |
+| Voice estimate and usage | `POST /api/v1/voice/estimate`, `GET /api/v1/voice/usage` |
+| Voice catalog and preview | `GET /api/v1/voice/voices`, `GET /api/v1/voice/voices/{voice_id}/preview` |
+| Clip history | `GET /api/v1/voice/clips`, `GET`/`DELETE /api/v1/voice/clips/{clip_id}` |
+| Clip audio | `GET /api/v1/voice/clips/{clip_id}/file` |
+| Speech-to-text | `POST /api/v2/stt` |
+| Translation | `POST /api/v1/translate` |
+
+Authenticate with `x-api-key`. Errors use an HTTP status plus a structured message; preserve response/request identifiers when contacting support.

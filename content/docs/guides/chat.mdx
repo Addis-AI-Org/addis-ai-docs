@@ -1,0 +1,51 @@
+---
+title: Text generation and chat
+description: Build single-turn, multi-turn, instructed, and streaming conversations.
+---
+
+<StatusBadge>Generally available</StatusBadge>
+
+# Text generation and chat
+
+## Generate a response
+
+<Tabs items={['Node.js', 'Python']} groupId="sdk-language">
+  <Tab>
+```ts
+const response = await addis.chat.completions.create({
+  persona: "You are a helpful Ethiopian language tutor.",
+  system: "Answer in Amharic and include one short example.",
+  messages: [{ role: "user", content: "Explain the word እንኳን." }],
+});
+
+console.log(response.choices[0].message.content);
+console.log(response.usage);
+```
+  </Tab>
+  <Tab>
+```python
+response = addis.chat.completions.create(
+    persona="You are a helpful Ethiopian language tutor.",
+    system="Answer in Amharic and include one short example.",
+    messages=[{"role": "user", "content": "Explain the word እንኳን."}],
+)
+
+print(response["choices"][0]["message"]["content"])
+print(response.get("usage"))
+```
+  </Tab>
+</Tabs>
+
+Persist the returned assistant message for multi-turn chat. Use streaming for long text and upload helpers for images, documents, or audio. Retry only transient failures and preserve request identifiers in logs.
+
+<RestDisclosure>
+<Endpoint method="POST" path="/v1/chat/completions" />
+
+```bash
+curl https://api.addisassistant.com/v1/chat/completions \
+  -H "x-api-key: $ADDIS_API_KEY" -H "content-type: application/json" \
+  -d '{"system":"Answer in Amharic.","messages":[{"role":"user","content":"Hello"}]}'
+```
+</RestDisclosure>
+
+Next: [function calling](/docs/core-concepts/function-calling) and [multimodal input](/docs/guides/multimodal).

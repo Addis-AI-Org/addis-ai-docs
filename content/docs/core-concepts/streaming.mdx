@@ -1,0 +1,36 @@
+---
+title: Streaming
+description: Render chat output as it is generated.
+---
+
+# Streaming
+
+Streaming reduces perceived latency by returning chat deltas incrementally.
+
+<Tabs items={['Node.js', 'Python']} groupId="sdk-language">
+  <Tab>
+```ts
+const stream = await addis.chat.completions.create({
+  messages: [{ role: "user", content: "Write a short Oromo greeting." }],
+  stream: true,
+});
+
+for await (const event of stream) {
+  process.stdout.write(event.choices[0]?.delta?.content ?? "");
+}
+```
+  </Tab>
+  <Tab>
+```python
+stream = addis.chat.completions.create(
+    messages=[{"role": "user", "content": "Write a short Oromo greeting."}],
+    stream=True,
+)
+
+for event in stream:
+    print(event["choices"][0]["delta"].get("content", ""), end="", flush=True)
+```
+  </Tab>
+</Tabs>
+
+Buffer incomplete Unicode segments and handle disconnects. Function calling and Addis Voice 2 generation are not currently streamable; Realtime Audio uses a separate Beta WebSocket API.

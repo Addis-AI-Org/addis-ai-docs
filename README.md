@@ -1,45 +1,31 @@
-# addisdocs
+# Addis AI documentation
 
-This is a Next.js application generated with
-[Create Fumadocs](https://github.com/fuma-nama/fumadocs).
+Canonical technical documentation for Addis AI, built with Next.js and Fumadocs. The official Node.js and Python SDKs are the primary integration path; raw REST is secondary.
 
-Run development server:
+## Local development
 
 ```bash
-npm run dev
-# or
+pnpm install
 pnpm dev
-# or
-yarn dev
 ```
 
-Open http://localhost:3000 with your browser to see the result.
+Open `http://localhost:3000/docs/overview`.
 
-## Explore
+## Quality gates
 
-In the project, you can see:
+```bash
+pnpm test
+pnpm lint
+pnpm exec tsc --noEmit
+pnpm build
+pnpm audit --prod
+pnpm --package=@redocly/cli dlx redocly lint public/openapi.json
+```
 
-- `lib/source.ts`: Code for content source adapter, [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the interface to access your content.
-- `lib/layout.shared.tsx`: Shared options for layouts, optional but preferred to keep.
+`pnpm test` uses [uv](https://docs.astral.sh/uv/) to execute the published `addisai==0.1.1` Python package against an in-memory HTTP transport.
 
-| Route                     | Description                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `app/(home)`              | The route group for your landing page and other pages. |
-| `app/docs`                | The documentation layout and pages.                    |
-| `app/api/search/route.ts` | The Route Handler for search.                          |
+Content lives in `content/docs`. The public OpenAPI contract is `public/openapi.json`; private build-time pricing data is stored in `data/pricing.v1.json`.
 
-### Fumadocs MDX
+Before publishing, verify live API behavior, the production `am-hamen` voice, package examples, pricing, redirects, and external links. This repository does not publish the SDK packages or modify the API/developer-portal projects.
 
-A `source.config.ts` config file has been included, you can customise different options like frontmatter schema.
-
-Read the [Introduction](https://fumadocs.dev/docs/mdx) for further details.
-
-## Learn More
-
-To learn more about Next.js and Fumadocs, take a look at the following
-resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js
-  features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Fumadocs](https://fumadocs.dev) - learn about Fumadocs
+Release notes belong in both `content/docs/announcements.mdx` for developers and `content/docs/platform/changelog.mdx` for contract history. Pages introduced by the current release are listed in `lib/source.ts` so the sidebar can display a temporary “New” label.

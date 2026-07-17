@@ -1,0 +1,30 @@
+---
+title: Python SDK
+description: Install and configure the official synchronous Addis AI Python SDK.
+---
+
+# Python SDK
+
+The official Python SDK supports Python 3.8 and later.
+
+Latest live-verified package: `addisai==0.1.1` (2026-07-17).
+
+Voice estimates and the usage summary expose minute pricing, but `0.1.1` drops `price_per_minute` from generated `clip.usage`. Use the estimate response for preflight pricing until the coordinated SDK fix is published.
+
+```bash
+pip install addisai
+```
+
+```python
+from addisai import AddisAI
+
+addis = AddisAI(
+    api_key=None,  # reads ADDIS_API_KEY
+    timeout=30,
+    max_retries=2,
+)
+```
+
+The current Python client is synchronous. Use a worker pool when calling it from an async web framework so network requests do not block the event loop.
+
+See the [Python SDK reference](/docs/reference/python) and [PyPI package](https://pypi.org/project/addisai/).

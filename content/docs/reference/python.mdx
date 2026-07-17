@@ -1,0 +1,24 @@
+---
+title: Python SDK reference
+description: Resource-oriented reference for the official synchronous Python SDK.
+---
+
+# Python SDK reference
+
+```python
+from addisai import AddisAI
+addis = AddisAI(api_key=api_key, timeout=30, max_retries=2)
+```
+
+| Resource | Methods |
+| --- | --- |
+| `addis.chat` | `completions.create`, `run_tools` |
+| `addis.voice` | `generate`, `estimate`, `usage` |
+| `addis.voice.clips` | `list`, `get`, `download`, `delete` |
+| `addis.voices` | `list`, `preview` |
+| `addis.speech` | `transcribe` |
+| `addis.translate` | `create` |
+
+`run_tools` exists in `0.1.1` but is not production-ready; it can repeat completed calls and cannot reliably return the final tool result. See [Function calling](/docs/core-concepts/function-calling).
+
+Python mappings use snake_case: `voice_id`, `output_format`, `client_request_id`, and `to_file`. The current package provides a synchronous client; it does not expose an async client.

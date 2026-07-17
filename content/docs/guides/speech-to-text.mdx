@@ -1,0 +1,44 @@
+---
+title: Speech-to-text
+description: Transcribe supported audio formats and languages.
+---
+
+<StatusBadge>Generally available</StatusBadge>
+
+# Speech-to-text
+
+Transcription accepts Amharic (`am`), Afan Oromo (`om`), English (`en`), Hausa (`ha`), and Swahili (`sw`). Current SDK guidance limits files to 25 MB and 120 seconds.
+
+<Tabs items={['Node.js', 'Python']} groupId="sdk-language">
+  <Tab>
+```ts
+import { fileFromPath } from "addisai";
+
+const result = await addis.speech.transcribe({
+  audio: await fileFromPath("meeting.wav"),
+  language: "am",
+});
+console.log(result.text, result.confidence);
+```
+  </Tab>
+  <Tab>
+```python
+with open("meeting.wav", "rb") as audio:
+    result = addis.speech.transcribe(audio=audio, language="am")
+print(result["text"], result.get("confidence"))
+```
+  </Tab>
+</Tabs>
+
+Validate media type and size before upload. Store uploads outside the public web root, scan untrusted files, set request timeouts, and remove temporary files after processing.
+
+<RestDisclosure>
+<Endpoint method="POST" path="/api/v2/stt" />
+
+```bash
+curl https://api.addisassistant.com/api/v2/stt \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -F "audio=@meeting.wav" \
+  -F 'request_data={"language_code":"am"}'
+```
+</RestDisclosure>
