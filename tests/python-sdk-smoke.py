@@ -1,5 +1,7 @@
 """Exercise the published Python SDK against an in-memory HTTP transport."""
 
+import base64
+
 from importlib.metadata import version
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -101,6 +103,10 @@ def handler(request):
             "quality": "high",
             "usage_metadata": {},
         }})
+    if path == "/api/v1/audio":
+        return json_response(request, {
+            "audio": base64.b64encode(b"legacy-audio").decode("ascii"),
+        })
     raise AssertionError(f"Unexpected request: {request.method} {path}")
 
 
@@ -139,6 +145,12 @@ transcription = addis.speech.transcribe(audio=b"audio", language="am")
 assert transcription["text"] == "ሰላም"
 translation = addis.translate.create(text="Hello", source="en", target="am")
 assert translation["text"] == "ሰላም"
+
+legacy_audio = addis.legacy.audio.generate(text="ሰላም", language="am")
+with TemporaryDirectory() as directory:
+    output = Path(directory) / "legacy-speech.wav"
+    legacy_audio.to_file(str(output))
+    assert output.read_bytes() == b"legacy-audio"
 
 tools = [{
     "type": "function",

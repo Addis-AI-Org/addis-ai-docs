@@ -56,6 +56,18 @@ async function verifyPublishedNodeSurface() {
   const translation = await addis.translate.create({ text: 'Hello', from: 'en', to: 'am' });
   console.log(translation.text);
 
+  const legacyAudio = await addis.legacy.audio.generate({
+    text: 'ሰላም',
+    language: 'am',
+  });
+  await legacyAudio.toFile('legacy-speech.wav');
+
+  const legacyStream = await addis.legacy.audio.stream({
+    text: 'ረጅም ጽሑፍ',
+    language: 'am',
+  });
+  for await (const chunk of legacyStream) console.log(chunk.byteLength);
+
   const tools = [{
     type: 'function' as const,
     function: {

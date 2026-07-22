@@ -37,8 +37,17 @@ test("navigation stays compact, familiar, and icon-led", async () => {
   }
 
   const pageSlugs = meta.pages.filter((entry) => !entry.startsWith("---"));
-  assert.ok(pageSlugs.length <= 15, `sidebar has ${pageSlugs.length} pages`);
+  assert.ok(pageSlugs.length <= 16, `sidebar has ${pageSlugs.length} pages`);
   assert.equal(pageSlugs[0], "announcements");
+  assert.deepEqual(pageSlugs.filter((slug) => slug.startsWith("capabilities/")), [
+    "capabilities/text-generation",
+    "capabilities/text-to-speech",
+    "capabilities/text-to-speech-legacy",
+    "capabilities/speech-to-text",
+    "capabilities/multimodal",
+    "capabilities/realtime",
+    "capabilities/translation",
+  ]);
   for (const slug of pageSlugs) {
     const content = await readFile(path.join(docsRoot, `${slug}.mdx`), "utf8");
     if (slug !== "announcements") {
@@ -59,7 +68,7 @@ test("canonical content uses am-hamen and keeps raw REST secondary", async () =>
   assert.match(content, /pip install addisai/);
 });
 
-test("announcements appear once as a bold link and cover the current release", async () => {
+test("announcements appear once, New badges are cyan, and SDK links are compact", async () => {
   const meta = JSON.parse(await readFile(path.join(docsRoot, "meta.json"), "utf8"));
   assert.equal(meta.pages.filter((entry) => entry === "announcements").length, 1);
 
@@ -69,20 +78,39 @@ test("announcements appear once as a bold link and cover the current release", a
   }
 
   const source = await readFile(path.join(workspaceRoot, "lib", "source.ts"), "utf8");
-  assert.match(source, /node\.url !== '\/docs\/announcements'/);
+  assert.match(source, /node\.url === '\/docs\/announcements'/);
   assert.match(source, /createElement\('strong'/);
-  assert.doesNotMatch(source, /New documentation|newDocUrls/);
+  assert.match(source, /newDocUrls/);
+  assert.match(source, /border-fd-primary\/35/);
+  assert.doesNotMatch(source, /emerald[^\n]+New documentation/);
+
+  const components = await readFile(path.join(workspaceRoot, "components", "docs.tsx"), "utf8");
+  assert.match(components, /function NewBadge/);
+  assert.match(components, /text-fd-primary/);
+  assert.doesNotMatch(announcements, /<StatusBadge>New<\/StatusBadge>/);
 
   const layout = await readFile(path.join(workspaceRoot, "lib", "layout.shared.tsx"), "utf8");
-  assert.match(layout, /links: \[\]/);
+  for (const resource of ["API keys", "Node.js on npm", "Python on PyPI", "Node.js on GitHub", "Python on GitHub"]) {
+    assert.match(layout, new RegExp(resource.replaceAll(".", "\\.")));
+  }
+  assert.equal((layout.match(/text: 'SDK resources'/g) ?? []).length, 1);
 });
 
-test("GA capability guides use direct Node.js, Python, and cURL tabs", async () => {
-  for (const slug of ["chat", "voice", "speech-to-text", "translation", "multimodal"]) {
-    const content = await readFile(path.join(docsRoot, "guides", `${slug}.mdx`), "utf8");
+test("HTTP capability guides use direct Node.js, Python, and cURL tabs", async () => {
+  for (const slug of ["text-generation", "text-to-speech", "text-to-speech-legacy", "speech-to-text", "translation", "multimodal"]) {
+    const content = await readFile(path.join(docsRoot, "capabilities", `${slug}.mdx`), "utf8");
     assert.match(content, /items=\{\['Node\.js', 'Python', 'cURL'\]\}/);
     assert.match(content, /groupId="integration-language"/);
     assert.doesNotMatch(content, /<RestDisclosure>/);
+  }
+});
+
+test("every capability restores a visible Best Practices section", async () => {
+  const capabilityFiles = (await readDocsTree(path.join(docsRoot, "capabilities"))).sort();
+  assert.equal(capabilityFiles.length, 7);
+  for (const file of capabilityFiles) {
+    const content = await readFile(file, "utf8");
+    assert.match(content, /^## Best Practices$/m, file);
   }
 });
 
@@ -111,12 +139,12 @@ test("MDX pages rely on the layout title instead of repeating a visible H1", asy
   }
 });
 
-test("legacy Voice 1 routes appear only in migration material", async () => {
+test("legacy Voice 1 endpoint appears only in migration material", async () => {
   const docs = await readDocsTree();
   for (const file of docs) {
     const content = await readFile(file, "utf8");
-    if (/\/api\/v1\/audio|Voice 1/.test(content)) {
-      assert.match(file, /platform\/deprecations\.mdx$/);
+    if (/\/api\/v1\/audio/.test(content)) {
+      assert.match(file, /(platform\/deprecations|capabilities\/text-to-speech-legacy)\.mdx$/);
     }
   }
 });
@@ -135,12 +163,12 @@ test("machine-readable API reference is present", async () => {
 });
 
 test("Voice 2 raw request documents required fields and signed URL download", async () => {
-  const content = await readFile(path.join(docsRoot, "guides", "voice.mdx"), "utf8");
+  const content = await readFile(path.join(docsRoot, "capabilities", "text-to-speech.mdx"), "utf8");
   for (const field of ["language", "voice_id", "client_request_id"]) {
     assert.match(content, new RegExp(`"${field}"`));
   }
-  assert.match(content, /data\.audio_url/);
-  assert.match(content, /curl --location "\$VOICE_AUDIO_URL" --output speech\.mp3/);
+  assert.match(content, /\.data\.audio_url/);
+  assert.match(content, /curl --location "\$\(jq -r '\.data\.audio_url' voice\.json\)"/);
 });
 
 test("SDK examples use the published parameter and response shapes", async () => {
@@ -252,15 +280,44 @@ test("every Python documentation block compiles and the mocked SDK flow executes
   assert.equal(smoke.status, 0, smoke.stderr);
 });
 
-test("renamed public routes use permanent redirects", async () => {
+test("canonical capability routes are pages and only renamed routes redirect", async () => {
   const config = await readFile(path.join(workspaceRoot, "next.config.mjs"), "utf8");
   for (const route of [
     "/docs",
     "/docs/get-started/quick-start",
-    "/docs/capabilities/text-to-speech",
+    "/docs/guides/voice",
+    "/docs/core-concepts/function-calling",
     "/docs/integration/server",
     "/docs/api-reference/chat-endpoint",
   ]) {
     assert.match(config, new RegExp(`source: '${route.replaceAll("/", "\\/")}'[^\n]+permanent: true`));
   }
+  for (const canonical of [
+    "/docs/capabilities/text-generation",
+    "/docs/capabilities/text-to-speech",
+    "/docs/capabilities/speech-to-text",
+    "/docs/capabilities/multimodal",
+    "/docs/capabilities/realtime",
+    "/docs/capabilities/translation",
+  ]) {
+    assert.doesNotMatch(config, new RegExp(`source: '${canonical.replaceAll("/", "\\/")}'`));
+  }
+});
+
+test("interactive audio tools are restored without permanent browser credentials", async () => {
+  const legacy = await readFile(path.join(docsRoot, "capabilities", "text-to-speech-legacy.mdx"), "utf8");
+  assert.match(legacy, /<Base64Player \/>/);
+
+  const realtime = await readFile(path.join(docsRoot, "capabilities", "realtime.mdx"), "utf8");
+  assert.match(realtime, /<RealtimeVoiceDemo \/>/);
+  assert.match(realtime, /\/realtime-demo\.html/);
+
+  const demoFiles = [
+    await readFile(path.join(workspaceRoot, "components", "realtime-voice-demo.tsx"), "utf8"),
+    await readFile(path.join(workspaceRoot, "public", "realtime-demo.html"), "utf8"),
+  ].join("\n");
+  assert.match(demoFiles, /short-lived user JWT/i);
+  assert.match(demoFiles, /setupComplete/);
+  assert.match(demoFiles, /interrupted/);
+  assert.doesNotMatch(demoFiles, /apiKey|ADDIS_API_KEY|sk_/);
 });
