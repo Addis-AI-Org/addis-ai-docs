@@ -80,17 +80,86 @@ def answer(user_id: str, prompt: str):
   </Tab>
 </Tabs>
 
-### Web, mobile, and voice applications
+## Secure web applications
 
-Web and mobile clients should authenticate to the same backend boundary. Apply tenant quotas, request timeouts, safe logging, and CSRF protection where applicable. Assume mobile binaries can be inspected and never rely on hiding a permanent API key inside the app.
-
-A turn-based voice agent composes three resources:
+The browser sends user input to an authenticated route you own. The route validates the request, enforces tenant limits, calls the Addis SDK, and returns only the fields the interface needs.
 
 ```text
-audio → speech.transcribe → chat.completions.create → voice.generate → audio clip
+Browser → session/auth → your /api/answer route → Addis Node.js or Python SDK
 ```
 
-Use a stable client request ID for voice retries. For bidirectional low-latency sessions, use [Realtime Audio](/docs/guides/realtime), currently Beta.
+```ts
+export async function POST(request: Request) {
+  const user = await requireUser(request);
+  const { prompt } = promptSchema.parse(await request.json());
+  await enforceQuota(user.id, "chat");
+
+  const response = await addis.chat.completions.create({
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  return Response.json({
+    text: response.choices[0].message.content,
+    usage: response.usage,
+  });
+}
+```
+
+Apply CSRF protection when the authentication mechanism requires it. Never forward arbitrary Addis parameters, headers, tool definitions, or attachment paths directly from an untrusted client.
+
+## Mobile applications
+
+Mobile binaries can be inspected, so hiding an API key in native code, build configuration, or remote config does not make it secret. Use the same authenticated backend boundary as a web application.
+
+```text
+iOS / Android / Flutter / React Native → your mobile API → Addis SDK
+```
+
+For generated audio, return a short-lived URL or application-owned media URL instead of copying large Base64 values through multiple layers. Existing Voice 1 applications can decode Base64 locally:
+
+```dart
+final bytes = base64Decode(response.audioBase64);
+await audioPlayer.play(BytesSource(bytes));
+```
+
+Validate the authenticated user's access to each clip before proxying or returning its URL.
+
+## Voice-agent orchestration
+
+A turn-based voice agent composes three APIs:
+
+```text
+recorded audio
+  → speech.transcribe
+  → chat.completions.create
+  → voice.generate
+  → completed audio clip
+```
+
+Keep the orchestration on your backend so transcription, conversation state, tools, billing approval, and Voice 2 idempotency share one trusted boundary. Generate a stable client request ID for each logical spoken response.
+
+Use [Realtime Audio](/docs/capabilities/realtime) when the product requires continuous bidirectional audio, interruption, and lower turn latency.
+
+## Production deployment
+
+- Create one SDK client per server process rather than one per request.
+- Set explicit request timeouts and bounded retry counts.
+- Apply per-user and per-tenant quotas before calling Addis AI.
+- Store keys in the deployment secret manager, not the repository or container image.
+- Log request IDs, status, latency, and usage while redacting prompts and credentials.
+- Validate uploads and delete temporary files after processing.
+- Use idempotency for billed generation and other retryable side effects.
+- Monitor `401`, `402`, `429`, and `5xx` rates separately.
+
+## Integration Best Practices
+
+- Prefer the official SDK for Node.js and Python backends; use REST for unsupported runtimes.
+- Keep the permanent Addis API key on a trusted server.
+- Authenticate and authorize the caller before forwarding work.
+- Validate only the fields your product supports.
+- Return a small application response rather than exposing the provider response unchanged.
+- Keep browser, mobile, and voice clients independent of private Addis API details.
+- Version your own backend contract so you can adopt SDK changes without breaking clients.
 
 ## Resources
 

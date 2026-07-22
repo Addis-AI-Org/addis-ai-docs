@@ -1,0 +1,112 @@
+---
+title: Multimodal
+description: Combine text with images, documents, or audio input.
+icon: Layers
+---
+
+<StatusBadge>Generally available</StatusBadge>
+
+
+Multimodal chat uses the Text Generation API with file attachments or an audio command. The official SDKs create the native multipart request for you.
+
+## Analyze an image or document
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+import { fileFromPath } from "addisai";
+
+const response = await addis.chat.completions.create({
+  messages: [{
+    role: "user",
+    content: "Extract the table and summarize it in Amharic.",
+  }],
+  attachments: [{ file: await fileFromPath("report.pdf") }],
+});
+
+console.log(response.choices[0].message.content);
+console.log(response.uploaded_attachments);
+```
+  </Tab>
+  <Tab>
+```python
+with open("report.pdf", "rb") as report:
+    response = addis.chat.completions.create(
+        messages=[{
+            "role": "user",
+            "content": "Extract the table and summarize it in Amharic.",
+        }],
+        attachments=[report],
+    )
+
+print(response["choices"][0]["message"]["content"])
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/chat_generate \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -F 'attachment_0=@report.pdf;type=application/pdf' \
+  -F 'request_data={"prompt":"Extract the table and summarize it in Amharic.","target_language":"am","attachment_field_names":["attachment_0"]}'
+```
+  </Tab>
+</Tabs>
+
+## Send audio input
+
+Audio input is transcribed server-side and used as the current user request.
+
+```ts
+const response = await addis.chat.completions.create({
+  messages: [{ role: "user", content: "Follow the instruction in this recording." }],
+  audio: await fileFromPath("command.wav"),
+});
+
+console.log(response.transcription?.clean);
+console.log(response.choices[0].message.content);
+```
+
+Use [Speech to Text](/docs/capabilities/speech-to-text) instead when you only need a transcript and do not need a model response.
+
+## OCR and extraction
+
+State the intended outcome explicitly. For example:
+
+- “Extract every visible line without summarizing.”
+- “Return the table as JSON with these field names.”
+- “Describe the image in Amharic for a screen-reader user.”
+- “Find invoice totals, dates, and currency; return `null` when a value is absent.”
+
+Treat extracted content as untrusted. A document can contain misleading instructions, malformed data, or text designed to influence an automated workflow.
+
+## Conversation history and file reuse
+
+The response can include `uploaded_attachments` with a reusable `fileUri` and MIME type. Store those references only for the lifetime needed by the conversation and preserve them unchanged when the current API flow supports reuse.
+
+Do not re-upload the same large file on every turn when a returned reusable reference is available. If the reference expires or access is denied, upload the source file again through your authenticated backend.
+
+## Response handling
+
+Read the assistant answer from `choices[0].message.content`. Audio requests can also include raw and cleaned transcription fields; multipart responses can include uploaded attachment metadata and normal token usage.
+
+## Security and errors
+
+- Authenticate and authorize the uploader.
+- Allow only formats required by the product.
+- Cap size, page count, resolution, and attachment count at your boundary.
+- Isolate file parsing and scan untrusted uploads when appropriate.
+- Do not expose uploaded file references between tenants.
+- Handle malformed media, unsupported MIME types, and expired file references without retry loops.
+
+## Best Practices
+
+- Prefer native PDFs to screenshots when text extraction is the goal.
+- Upload upright, readable images with sufficient contrast and resolution.
+- Ask for a specific schema when downstream code consumes the answer.
+- Separate extraction from interpretation for auditable workflows.
+- Use Amharic or Afan Oromo prompts when that is the desired answer language.
+- Reuse supported file references instead of repeatedly uploading the same content.
+- Treat model output and document text as untrusted before triggering tools or database writes.
+- Review legal, medical, financial, and identity-document extraction with a qualified human.
+
+<LastVerified date="2026-07-22" />

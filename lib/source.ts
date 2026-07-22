@@ -6,7 +6,6 @@ import { createElement } from 'react';
 
 const newDocUrls = new Set([
   '/docs/get-started/sdks',
-  '/docs/guides/voice',
   '/docs/capabilities/text-to-speech',
 ]);
 

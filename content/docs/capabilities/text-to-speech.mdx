@@ -1,0 +1,253 @@
+---
+title: Text to Speech — Voice 2
+description: Discover voices, estimate cost, generate speech, and manage durable audio clips.
+icon: AudioLines
+---
+
+<StatusBadge>Generally available</StatusBadge>
+
+
+Addis Voice 2 turns Amharic and Afan Oromo text into durable audio clips. It is billed by generated duration at **5 ETB per minute** and does not stream partial audio.
+
+## Discover voices
+
+Query the catalog rather than copying an arbitrary ID into production configuration. `am-hamen` is the canonical Amharic example.
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const voices = await addis.voices.list({ language: "am" });
+for (const voice of voices) {
+  console.log(voice.id, voice.name, voice.isAvailable);
+}
+```
+  </Tab>
+  <Tab>
+```python
+voices = addis.voices.list(language="am")
+for voice in voices:
+    print(voice["id"], voice["name"], voice["is_available"])
+```
+  </Tab>
+  <Tab>
+```bash
+curl "https://api.addisassistant.com/api/v1/voice/voices?language=am" \
+  -H "x-api-key: $ADDIS_API_KEY"
+```
+  </Tab>
+</Tabs>
+
+The catalog is dynamic. Filter for the requested language and store only IDs currently marked available.
+
+## Preview a voice
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const preview = await addis.voices.preview("am-hamen");
+console.log(preview.audioUrl);
+```
+  </Tab>
+  <Tab>
+```python
+preview = addis.voices.preview("am-hamen")
+print(preview["audio_url"])
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/voices/am-hamen/preview \
+  -H "x-api-key: $ADDIS_API_KEY"
+```
+  </Tab>
+</Tabs>
+
+Preview URLs are signed and can expire. Fetch fresh preview metadata instead of storing the URL permanently.
+
+## Estimate cost
+
+Estimate before generation when a user must approve spend or the application is close to its available balance.
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const input = {
+  text: "ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+  voiceId: "am-hamen",
+  language: "am" as const,
+  outputFormat: "mp3_44100" as const,
+};
+
+const estimate = await addis.voice.estimate(input);
+if (!estimate.canGenerate) throw new Error("Insufficient balance");
+console.log(estimate.estimatedCost, estimate.currency);
+```
+  </Tab>
+  <Tab>
+```python
+input = {
+    "text": "ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+    "voice_id": "am-hamen",
+    "language": "am",
+    "output_format": "mp3_44100",
+}
+
+estimate = addis.voice.estimate(**input)
+if not estimate["can_generate"]:
+    raise RuntimeError("Insufficient balance")
+print(estimate["estimated_cost"], estimate["currency"])
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/estimate \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "text":"ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+    "voice_id":"am-hamen",
+    "language":"am",
+    "output_format":"mp3_44100"
+  }'
+```
+  </Tab>
+</Tabs>
+
+The estimate reports the pricing unit, price per minute, estimated duration, billable duration, cost, current balance, projected balance, currency, and whether generation is currently allowed.
+
+## Generate and save a clip
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const clip = await addis.voice.generate({
+  ...input,
+  clientRequestId: crypto.randomUUID(),
+});
+
+await clip.toFile("speech.mp3");
+console.log(clip.id, clip.audioUrl, clip.usage);
+```
+  </Tab>
+  <Tab>
+```python
+clip = addis.voice.generate(
+    **input,
+    client_request_id="order-123",
+)
+
+clip.to_file("speech.mp3")
+print(clip.id, clip.audio_url, clip.usage)
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/generations \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "text":"ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+    "voice_id":"am-hamen",
+    "language":"am",
+    "output_format":"mp3_44100",
+    "client_request_id":"order-123"
+  }' | tee voice.json
+
+curl --location "$(jq -r '.data.audio_url' voice.json)" \
+  --output speech.mp3
+```
+  </Tab>
+</Tabs>
+
+The cURL example requires `jq`. A generation response contains clip metadata and a signed `audio_url`. A first response may also include an audio data URL; an idempotent replay can omit that inline field, so use the signed URL or SDK file helper.
+
+## Output formats
+
+| Format | Use |
+| --- | --- |
+| `mp3_44100` | Compact delivery for web, mobile, and downloads. |
+| `wav_44100` | Uncompressed editing and audio pipelines. |
+| `pcm_16000` | Speech pipelines expecting 16 kHz PCM in a WAV container. |
+
+Choose the format before estimating because output choice can affect generated duration and storage behavior.
+
+## Idempotency and retries
+
+`clientRequestId` in Node.js and `client_request_id` in Python identifies one logical generation.
+
+- Reuse it when retrying the same request after a timeout or uncertain response.
+- Generate a new value for different text, voice, language, or output format.
+- Do not retry a validation error unchanged.
+- For a generation-in-progress response, wait for the reported retry interval before checking again.
+
+## Voice settings
+
+`speed` is currently applied. `stability`, `similarity`, and `style` are accepted for compatibility but ignored by the current provider. The response reports ignored settings in `meta.ignoredVoiceSettings` or `meta["ignored_voice_settings"]`.
+
+Do not build user-facing behavior that assumes an ignored control changes the generated clip.
+
+## Usage and clip history
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const usage = await addis.voice.usage();
+const page = await addis.voice.clips.list({ limit: 20 });
+
+const clip = await addis.voice.clips.get(page.data[0].id);
+await addis.voice.clips.download(clip.id, "saved-clip.mp3");
+await addis.voice.clips.delete(clip.id);
+```
+  </Tab>
+  <Tab>
+```python
+usage = addis.voice.usage()
+page = addis.voice.clips.list(limit=20)
+
+clip = addis.voice.clips.get(page.data[0]["id"])
+addis.voice.clips.download(clip["id"], "saved-clip.mp3")
+addis.voice.clips.delete(clip["id"])
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/usage \
+  -H "x-api-key: $ADDIS_API_KEY"
+
+curl https://api.addisassistant.com/api/v1/voice/clips \
+  -H "x-api-key: $ADDIS_API_KEY"
+
+curl -X DELETE https://api.addisassistant.com/api/v1/voice/clips/CLIP_ID \
+  -H "x-api-key: $ADDIS_API_KEY"
+```
+  </Tab>
+</Tabs>
+
+Current Voice 2 clips are minute-priced. Historical records may retain character-based usage fields so existing billing history remains readable.
+
+<Callout type="warn" title="Published SDK billing types">
+The currently documented packages run against the minute-priced backend, but some exported types or clip mappings still describe retired character-pricing fields. Treat the estimate endpoint and [Pricing](/docs/platform/pricing) as authoritative until the coordinated SDK releases are published.
+</Callout>
+
+## Errors
+
+Common failures include unavailable voice IDs, unsupported formats, insufficient balance, idempotency conflicts, generation still in progress, rate limiting, and transient provider errors.
+
+Refresh the voice catalog after an unavailable-voice error. Log the clip ID, request ID, and client request ID, but never the API key or sensitive full text.
+
+## Best Practices
+
+- Query and filter the catalog instead of hardcoding a voice count or copying arbitrary IDs.
+- Preview a voice before storing it as an application default.
+- Estimate before generating when the user approves spend.
+- Use native Ethiopic punctuation and well-formed sentences for natural pauses.
+- Keep language and script consistent; transliterate explicitly when required.
+- Split very long content at sentence or paragraph boundaries and generate separate clips.
+- Use stable idempotency values for uncertain retries.
+- Cache completed clips when the exact same reusable audio is requested frequently.
+- Store durable clip IDs rather than expiring signed URLs.
+- Do not wait for streaming audio from Voice 2.
+
+Continue to [Legacy Text to Speech](/docs/capabilities/text-to-speech-legacy) only when maintaining an existing Voice 1 integration.
+
+<LastVerified date="2026-07-22" />

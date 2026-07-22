@@ -1,0 +1,133 @@
+---
+title: Realtime Audio
+description: Build low-latency bidirectional voice sessions over the Beta WebSocket relay.
+icon: Radio
+---
+
+<StatusBadge status="beta">Beta</StatusBadge>
+
+
+Realtime Audio is a stateful WebSocket capability for live conversations. It is separate from completed Voice 2 clips and does not currently have a dedicated method in the Node.js or Python SDKs.
+
+## Session flow
+
+1. Your authenticated backend issues or obtains a short-lived user JWT.
+2. The client connects to `wss://relay.addisassistant.com/ws?jwt=...`.
+3. Wait for `{ "setupComplete": true }` before sending audio.
+4. Capture mono PCM16 audio at 16 kHz.
+5. Send base64 PCM16 JSON envelopes.
+6. Decode returned 24 kHz PCM and schedule playback in order.
+7. Stop queued playback when an interruption event arrives.
+8. Record usage metadata and close the socket cleanly.
+
+Never put a permanent Addis API key in browser or mobile code.
+
+## Connect from an application
+
+Use a standard WebSocket client because the official SDKs do not yet wrap the Beta relay.
+
+<Tabs items={['Node.js', 'Python', 'Browser']} groupId="integration-language">
+  <Tab>
+```ts
+import WebSocket from "ws";
+
+const jwt = await getShortLivedUserJwt();
+const socket = new WebSocket(
+  `wss://relay.addisassistant.com/ws?jwt=${encodeURIComponent(jwt)}`,
+);
+
+socket.on("message", (raw) => {
+  const event = JSON.parse(raw.toString());
+  if (event.setupComplete) console.log("ready");
+  if (event.serverContent?.interrupted) stopQueuedPlayback();
+});
+```
+  </Tab>
+  <Tab>
+```python
+import asyncio
+import json
+import urllib.parse
+import websockets
+
+async def run(jwt: str):
+    url = "wss://relay.addisassistant.com/ws?jwt=" + urllib.parse.quote(jwt)
+    async with websockets.connect(url) as socket:
+        async for raw in socket:
+            event = json.loads(raw)
+            if event.get("setupComplete"):
+                print("ready")
+
+asyncio.run(run(short_lived_jwt))
+```
+  </Tab>
+  <Tab>
+```js
+const jwt = await fetch("/api/realtime-session", {
+  method: "POST",
+  credentials: "include",
+}).then((response) => response.json()).then((body) => body.jwt);
+
+const socket = new WebSocket(
+  `wss://relay.addisassistant.com/ws?jwt=${encodeURIComponent(jwt)}`,
+);
+```
+  </Tab>
+</Tabs>
+
+The browser example calls a developer-owned authenticated route. That route, not the browser bundle, holds permanent Addis credentials.
+
+## Audio messages
+
+Send mono 16-bit PCM at 16 kHz:
+
+```json
+{
+  "data": "<base64-pcm16>",
+  "mimeType": "audio/pcm;rate=16000"
+}
+```
+
+Model audio arrives as base64 PCM at 24 kHz under `serverContent.modelTurn.parts[0].inlineData`. Decode it to signed 16-bit samples and queue buffers in arrival order.
+
+## Events
+
+| Event | Action |
+| --- | --- |
+| `setupComplete` | Start sending microphone frames. |
+| `serverContent.modelTurn` | Decode and queue model audio. |
+| `serverContent.interrupted` | Stop and clear queued playback. |
+| `serverContent.turnComplete` | Finalize the turn in your UI. |
+| `usageMetadata` | Record safe usage data. |
+| `type: "warning"` | Show recoverable feedback. |
+| `error` | Stop or reconnect according to the error. |
+
+See the [Realtime event reference](/docs/reference/realtime) for the current wire shape.
+
+## Reconnection and backpressure
+
+Use bounded reconnection with exponential backoff and jitter. Do not replay microphone frames from a previous session unless the protocol explicitly supports it.
+
+If encoding or the socket cannot keep up with capture, apply a bounded queue and drop or stop capture rather than growing memory indefinitely. Suspend capture when the tab is hidden or the application loses microphone permission.
+
+## Troubleshooting
+
+- **Connection rejected:** refresh the short-lived JWT and confirm its audience and expiry.
+- **No setup event:** do not send audio yet; log the close code and server error.
+- **No transcription or response:** verify mono PCM16 at 16 kHz and the JSON envelope.
+- **Fast or slow playback:** model audio is 24 kHz; do not play it at the 16 kHz input rate.
+- **Overlapping speech:** clear queued audio immediately on `interrupted`.
+- **Audio distortion:** check byte order, clipping, and Float32-to-PCM16 conversion.
+
+## Best Practices
+
+- Keep permanent credentials on your backend and issue short-lived user sessions.
+- Ask for microphone permission only after a clear user action.
+- Wait for readiness before transmitting audio.
+- Use bounded audio queues and ordered playback.
+- Implement explicit mute, disconnect, interruption, and permission states.
+- Keep protocol parsing behind an adapter because Realtime is Beta.
+- Log session IDs, close codes, latency, and usage without recording sensitive audio by default.
+- Test with slow networks, revoked permission, expired JWTs, tab suspension, and rapid interruptions.
+
+<LastVerified date="2026-07-22" />

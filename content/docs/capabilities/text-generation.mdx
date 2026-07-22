@@ -1,0 +1,308 @@
+---
+title: Text Generation
+description: Generate text, continue conversations, apply instructions, and call application tools.
+icon: MessageSquareText
+---
+
+
+Text Generation is the core chat capability. A request can contain conversation history, system instructions, a persona, generation controls, files, audio input, and function definitions.
+
+## Basic generation
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const response = await addis.chat.completions.create({
+  messages: [{ role: "user", content: "በአማርኛ ስለ አዲስ አበባ አጭር መግለጫ ጻፍ።" }],
+});
+
+console.log(response.choices[0].message.content);
+console.log(response.usage);
+```
+  </Tab>
+  <Tab>
+```python
+response = addis.chat.completions.create(
+    messages=[{
+        "role": "user",
+        "content": "በአማርኛ ስለ አዲስ አበባ አጭር መግለጫ ጻፍ።",
+    }],
+)
+
+print(response["choices"][0]["message"]["content"])
+print(response.get("usage"))
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/v1/chat/completions \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "messages":[{
+      "role":"user",
+      "content":"በአማርኛ ስለ አዲስ አበባ አጭር መግለጫ ጻፍ።"
+    }]
+  }'
+```
+  </Tab>
+</Tabs>
+
+## Messages and conversation state
+
+`messages` is the conversation state sent with the current request. Store only the history your application needs, then send the relevant user and assistant turns again with the next request.
+
+```ts
+const messages = [
+  { role: "user" as const, content: "Teach me one Amharic greeting." },
+  { role: "assistant" as const, content: "ሰላም means hello." },
+  { role: "user" as const, content: "Use it in a short sentence." },
+];
+
+const response = await addis.chat.completions.create({ messages });
+```
+
+Do not send an entire conversation indefinitely. Trim irrelevant turns, summarize older context when necessary, and apply an explicit retention policy before storing sensitive messages.
+
+## System instructions and personas
+
+Use each control for one job:
+
+| Input | Purpose | Example |
+| --- | --- | --- |
+| `persona` | The assistant's identity and stable role | “You are an Ethiopian language tutor.” |
+| `system` | Rules for this request or workflow | “Answer in Amharic using three bullets.” |
+| `messages` | The actual conversation | User and assistant turns |
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const response = await addis.chat.completions.create({
+  persona: "You are a patient Ethiopian language tutor.",
+  system: "Answer in Amharic, then include one English gloss.",
+  messages: [{ role: "user", content: "Explain the word እንኳን." }],
+});
+```
+  </Tab>
+  <Tab>
+```python
+response = addis.chat.completions.create(
+    persona="You are a patient Ethiopian language tutor.",
+    system="Answer in Amharic, then include one English gloss.",
+    messages=[{"role": "user", "content": "Explain the word እንኳን."}],
+)
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/v1/chat/completions \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "persona":"You are a patient Ethiopian language tutor.",
+    "system":"Answer in Amharic, then include one English gloss.",
+    "messages":[{"role":"user","content":"Explain the word እንኳን."}]
+  }'
+```
+  </Tab>
+</Tabs>
+
+Addis AI continues to enforce platform safeguards and language behavior. Application instructions do not replace those controls.
+
+## Function calling
+
+<StatusBadge status="beta">Beta</StatusBadge>
+
+Function calling lets the model request a function that your application owns. The model never executes the function itself.
+
+The complete flow is:
+
+1. Define a narrow function schema.
+2. Send the user request and available tools.
+3. Receive a structured `tool_calls` entry.
+4. Validate and authorize its arguments.
+5. Execute trusted application code.
+6. Return the tool result with its `tool_call_id`.
+7. Ask the model for the final response.
+
+Tool calling is currently non-streaming.
+
+### Automatic tool loop
+
+`runTools` and `run_tools` are the shortest integration when the installed SDK version has passed the complete tool-result round-trip test.
+
+<Tabs items={['Node.js', 'Python']} groupId="integration-language">
+  <Tab>
+```ts
+const response = await addis.chat.runTools({
+  messages: [{ role: "user", content: "What is the weather in Addis Ababa?" }],
+  maxToolRoundtrips: 3,
+  tools: [{
+    type: "function",
+    function: {
+      name: "get_weather",
+      description: "Get weather for an allowed city",
+      parameters: {
+        type: "object",
+        properties: { city: { type: "string" } },
+        required: ["city"],
+        additionalProperties: false,
+      },
+      function: async ({ city }: { city: string }) => {
+        await authorizeCity(city);
+        return getWeather(city, { timeoutMs: 3_000 });
+      },
+    },
+  }],
+});
+
+console.log(response.choices[0].message.content);
+```
+  </Tab>
+  <Tab>
+```python
+response = addis.chat.run_tools(
+    messages=[{
+        "role": "user",
+        "content": "What is the weather in Addis Ababa?",
+    }],
+    max_tool_roundtrips=3,
+    tools=[{
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get weather for an allowed city",
+            "parameters": {
+                "type": "object",
+                "properties": {"city": {"type": "string"}},
+                "required": ["city"],
+                "additionalProperties": False,
+            },
+            "function": get_weather,
+        },
+    }],
+)
+
+print(response["choices"][0]["message"]["content"])
+```
+  </Tab>
+</Tabs>
+
+<Callout type="warn" title="Check your installed SDK version">
+The currently documented Node `0.1.2` and Python `0.1.1` helpers have known tool-result round-trip problems. Use the receive-only or raw REST flow until your installed package release notes confirm the fix.
+</Callout>
+
+### Manual orchestration
+
+The manual loop gives your application explicit control. Preserve the assistant message and opaque tool state exactly, return one result for each `tool_call_id`, and stop after a bounded number of rounds.
+
+```ts
+const first = await addis.chat.completions.create({
+  messages: [{ role: "user", content: "Use get_weather for Addis Ababa." }],
+  tools,
+  tool_choice: "required",
+});
+
+const assistant = first.choices[0].message;
+const call = assistant.tool_calls?.[0];
+if (!call) throw new Error("No tool call returned");
+if (call.function.name !== "get_weather") throw new Error("Tool not allowed");
+
+const args = weatherSchema.parse(JSON.parse(call.function.arguments));
+await authorize(currentUser, "weather:read", args.city);
+const result = await withTimeout(getWeather(args.city), 3_000);
+
+const final = await addis.chat.completions.create({
+  messages: [
+    { role: "user", content: "Use get_weather for Addis Ababa." },
+    assistant,
+    {
+      role: "tool",
+      tool_call_id: call.id,
+      content: JSON.stringify(result),
+    },
+  ],
+  tools,
+});
+```
+
+Treat arguments and tool output as untrusted. Require approval for payments, deletion, outbound messages, or other consequential actions. Use idempotency keys for side effects and never expose arbitrary filesystem, database, network, or shell access.
+
+## Streaming
+
+Set `stream: true` to receive long text incrementally. Streaming cannot be combined with tools.
+
+<Tabs items={['Node.js', 'Python']} groupId="integration-language">
+  <Tab>
+```ts
+const stream = await addis.chat.completions.create({
+  stream: true,
+  messages: [{ role: "user", content: "Write a short Amharic story." }],
+});
+
+for await (const event of stream) {
+  process.stdout.write(event.choices[0]?.delta.content ?? "");
+}
+```
+  </Tab>
+  <Tab>
+```python
+stream = addis.chat.completions.create(
+    stream=True,
+    messages=[{"role": "user", "content": "Write a short Amharic story."}],
+)
+
+for event in stream:
+    print(event["choices"][0]["delta"].get("content", ""), end="")
+```
+  </Tab>
+</Tabs>
+
+## Files, images, and audio input
+
+Use `attachments` for images and documents and `audio` for a voice-command input. The SDK uses the native multipart chat extension.
+
+```ts
+import { fileFromPath } from "addisai";
+
+const response = await addis.chat.completions.create({
+  messages: [{ role: "user", content: "Extract the table and summarize it in Amharic." }],
+  attachments: [{ file: await fileFromPath("report.pdf") }],
+});
+```
+
+See [Multimodal](/docs/capabilities/multimodal) for validation, OCR, reuse, and security guidance.
+
+## Generation options and responses
+
+| Option | Use |
+| --- | --- |
+| `language` | Select Amharic (`am`) or Afan Oromo (`om`) behavior. |
+| `temperature` | Lower values favor consistency; higher values allow more variation. |
+| `max_tokens` | Bound the maximum generated output. |
+| `stream` | Receive text incrementally; unavailable with tools. |
+
+Read generated text from `choices[0].message.content`. When present, `usage` reports prompt, completion, and total token counts. Log the request ID and safe usage metadata, not the API key or sensitive prompt contents.
+
+## Errors and retries
+
+- Correct `400` and `422` requests before retrying.
+- Refresh credentials for `401` or `403`.
+- Back off on `429` and honor `Retry-After`.
+- Retry bounded transient failures with jitter.
+- Never retry tool side effects without application-level idempotency.
+
+See [Errors & Limits](/docs/platform/errors) for the shared error model.
+
+## Best Practices
+
+- Put stable identity in `persona`, request-specific rules in `system`, and conversation state in `messages`.
+- Write explicit language, output-format, and audience instructions instead of relying on inference.
+- Use native Ethiopic script when that is the desired output; specify transliteration separately.
+- Start with a lower temperature for extraction, support, and factual workflows; raise it only when variation is useful.
+- Trim irrelevant conversation history and cap output length to control latency and cost.
+- Validate attachments before upload and treat extracted document text as untrusted input.
+- Use streaming for long text, but not for Voice 2 or function-calling requests.
+- Validate, authorize, time-limit, and audit every tool call.
+
+<LastVerified date="2026-07-22" />

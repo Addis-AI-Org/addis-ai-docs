@@ -17,4 +17,12 @@ icon: TriangleAlert
 
 SDK retries apply only to eligible transient failures. For billed generation, reuse `clientRequestId` or `client_request_id`. Log status, request ID, endpoint, latency, and safe error detail—never the API key or sensitive user input.
 
-Current request sizes, context windows, audio duration, and rate limits are listed in [Limits](/docs/platform/limits). Limits may vary by account and capability; handle `429` responses even when normal traffic stays below the documented values.
+Limits may vary by account and capability; handle `429` responses even when normal traffic stays below the documented values.
+
+## Limits
+
+Limits can vary by capability and account. Current SDK guidance for Speech to Text is a maximum file size of **25 MB** and maximum duration of **120 seconds**. Validate both before upload.
+
+Applications should also cap prompt length, attachment count, conversation history, concurrent requests, and function-calling rounds at their own boundary. Treat `429` as backpressure: honor `Retry-After` when present and retry with exponential backoff plus jitter.
+
+Voice catalog size is dynamic. Query `voices.list` instead of embedding a count. Contact support through the developer portal for account-specific capacity.

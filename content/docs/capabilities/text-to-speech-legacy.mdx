@@ -1,0 +1,167 @@
+---
+title: Legacy Text to Speech
+description: Maintain Voice 1 integrations that return Base64 audio or legacy streams.
+icon: AudioWaveform
+---
+
+import { Base64Player } from '@/components/base64-player';
+
+<StatusBadge status="deprecated">Legacy</StatusBadge>
+
+
+Voice 1 is retained for existing integrations. New applications should use [Text to Speech — Voice 2](/docs/capabilities/text-to-speech), which provides a voice catalog, cost estimates, durable clips, and idempotent billing.
+
+<Endpoint method="POST" path="/api/v1/audio" />
+
+## Generate Base64 audio
+
+Non-streaming Voice 1 synthesis returns Base64-encoded audio. The current SDK migration bridge limits non-streaming input to 1,500 characters.
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const audio = await addis.legacy.audio.generate({
+  text: "ሰላም፣ እንኳን ደህና መጡ።",
+  language: "am",
+});
+
+await audio.toFile("legacy-speech.wav");
+```
+  </Tab>
+  <Tab>
+```python
+audio = addis.legacy.audio.generate(
+    text="ሰላም፣ እንኳን ደህና መጡ።",
+    language="am",
+)
+
+audio.to_file("legacy-speech.wav")
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/audio \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "text":"ሰላም፣ እንኳን ደህና መጡ።",
+    "language":"am",
+    "stream":false
+  }' > legacy-response.json
+```
+  </Tab>
+</Tabs>
+
+## Decode and save the response
+
+If you use raw REST, decode the `audio` field before passing it to an audio player or saving it as a file.
+
+<Tabs items={['Node.js', 'Python', 'Browser']} groupId="legacy-audio-language">
+  <Tab>
+```ts
+import { writeFile } from "node:fs/promises";
+
+const body = JSON.parse(await response.text());
+const bytes = Buffer.from(body.audio, "base64");
+await writeFile("legacy-speech.wav", bytes);
+```
+  </Tab>
+  <Tab>
+```python
+import base64
+
+body = response.json()
+audio_bytes = base64.b64decode(body["audio"], validate=True)
+with open("legacy-speech.wav", "wb") as output:
+    output.write(audio_bytes)
+```
+  </Tab>
+  <Tab>
+```js
+const bytes = Uint8Array.from(atob(body.audio), (character) =>
+  character.charCodeAt(0),
+);
+const url = URL.createObjectURL(new Blob([bytes], { type: "audio/wav" }));
+const player = new Audio(url);
+await player.play();
+```
+  </Tab>
+</Tabs>
+
+### Base64 audio tool
+
+Paste only the `audio` value from a Voice 1 response. Conversion happens locally in your browser; the value is not uploaded by this documentation tool.
+
+<Base64Player />
+
+## Stream legacy synthesis
+
+Legacy streaming is a Voice 1 behavior. It does not mean Voice 2 supports streaming.
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+import { createWriteStream } from "node:fs";
+
+const stream = await addis.legacy.audio.stream({
+  text: longText,
+  language: "am",
+});
+
+const output = createWriteStream("legacy-stream.wav");
+for await (const chunk of stream) output.write(chunk);
+output.end();
+```
+  </Tab>
+  <Tab>
+```python
+stream = addis.legacy.audio.stream(
+    text=long_text,
+    language="am",
+)
+
+with open("legacy-stream.wav", "wb") as output:
+    for chunk in stream:
+        output.write(chunk)
+```
+  </Tab>
+  <Tab>
+```bash
+curl --no-buffer https://api.addisassistant.com/api/v1/audio \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "text":"LONG_TEXT_HERE",
+    "language":"am",
+    "stream":true
+  }'
+```
+  </Tab>
+</Tabs>
+
+The SDK normalizes the legacy encodings into audio-byte chunks. Raw REST clients must handle the response format returned for the selected language and should not assume Voice 2's signed-clip response shape.
+
+## Migration to Voice 2
+
+| Voice 1 | Voice 2 replacement |
+| --- | --- |
+| `/api/v1/audio` | `/api/v1/voice/generations` |
+| Base64 response | Durable clip plus signed download URL |
+| Legacy voice selection | Discoverable production voice catalog |
+| Character-oriented legacy behavior | Minute-based ETB billing |
+| Legacy stream | Completed Voice 2 clip; no partial streaming |
+
+Migrate one use case at a time: select a Voice 2 catalog voice, compare output, add estimates and idempotency, then update storage to retain clip IDs.
+
+## Best Practices
+
+- Keep Voice 1 only where an existing application depends on its response shape or stream behavior.
+- Enforce the non-streaming 1,500-character SDK limit before sending a request.
+- Use Ethiopic punctuation to create natural sentence and paragraph pauses.
+- Keep script and language consistent; transliterate mixed Latin text when pronunciation matters.
+- Validate Base64 before decoding and set a maximum decoded size.
+- Write audio bytes directly to storage instead of keeping large Base64 values in memory.
+- Cache reusable audio and avoid synthesizing unchanged text repeatedly.
+- Plan migration to Voice 2 rather than adding new Voice 1 dependencies.
+
+<LastVerified date="2026-07-22" />

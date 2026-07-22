@@ -1,0 +1,92 @@
+---
+title: Speech to Text
+description: Transcribe supported audio files with language and confidence metadata.
+icon: Mic
+---
+
+<StatusBadge>Generally available</StatusBadge>
+
+
+Speech to Text transcribes Amharic (`am`), Afan Oromo (`om`), English (`en`), Hausa (`ha`), and Swahili (`sw`) audio.
+
+<Endpoint method="POST" path="/api/v2/stt" />
+
+## Transcribe a file
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+import { fileFromPath } from "addisai";
+
+const result = await addis.speech.transcribe({
+  audio: await fileFromPath("meeting.wav"),
+  language: "am",
+});
+
+console.log(result.text);
+console.log(result.confidence);
+```
+  </Tab>
+  <Tab>
+```python
+with open("meeting.wav", "rb") as audio:
+    result = addis.speech.transcribe(audio=audio, language="am")
+
+print(result["text"])
+print(result.get("confidence"))
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v2/stt \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -F "audio=@meeting.wav" \
+  -F 'request_data={"language_code":"am"}'
+```
+  </Tab>
+</Tabs>
+
+The REST endpoint uses multipart form data. `request_data` is a JSON string, not a separate JSON request body.
+
+## Supported input
+
+The SDK accepts common audio formats including WAV, MP3, M4A, and WebM. Current SDK guidance limits one file to **25 MB** and **120 seconds**.
+
+Validate the actual file signature as well as the extension and declared MIME type. Reject unexpected formats before sending the upload.
+
+## Response handling
+
+The normalized SDK response includes:
+
+| Field | Meaning |
+| --- | --- |
+| `text` | The transcription. |
+| `confidence` | Confidence when the provider returns it; otherwise `null`. |
+| `usage` | Provider usage metadata when available. |
+
+Raw REST returns the transcription in `data.transcription`. Store the original recording only when your retention policy requires it, and avoid treating confidence as a guarantee of correctness.
+
+## Upload security
+
+- Authenticate the end user before accepting an upload.
+- Cap file size and duration before sending it to Addis AI.
+- Store temporary files outside the public web root.
+- Scan untrusted uploads when your threat model requires it.
+- Set request timeouts and delete temporary files after processing.
+- Never log the Addis API key or full sensitive recordings.
+
+## Errors and retries
+
+Correct unsupported language, invalid multipart data, file type, size, or duration errors before retrying. Back off on `429`; retry bounded transient failures only while the temporary upload is still available.
+
+## Best Practices
+
+- Record at 16 kHz or higher and prefer mono audio for speech recognition.
+- Keep the microphone roughly 10–30 cm from the speaker and reduce background noise.
+- Avoid clipping, aggressive compression, and very low recording levels.
+- Split long recordings at natural pauses before the documented duration limit.
+- Select the actual spoken language rather than relying on filename or user locale.
+- Review names, technical terminology, code-switching, and high-impact transcripts with a human.
+- Preserve timestamps or source references in your application when auditability matters.
+
+<LastVerified date="2026-07-22" />

@@ -1,0 +1,79 @@
+---
+title: Translation
+description: Translate between Amharic, Afan Oromo, and English.
+icon: Languages
+---
+
+<StatusBadge>Generally available</StatusBadge>
+
+
+Translation supports Amharic (`am`), Afan Oromo (`om`), and English (`en`). Source and target languages must differ. Usage follows language-model token pricing.
+
+<Endpoint method="POST" path="/api/v1/translate" />
+
+## Translate text
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const result = await addis.translate.create({
+  text: "Baga nagaan dhuftan.",
+  from: "om",
+  to: "en",
+});
+
+console.log(result.text, result.quality);
+```
+  </Tab>
+  <Tab>
+```python
+result = addis.translate.create(
+    text="Baga nagaan dhuftan.",
+    source="om",
+    target="en",
+)
+
+print(result["text"], result.get("quality"))
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/translate \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "text":"Baga nagaan dhuftan.",
+    "source_language":"om",
+    "target_language":"en"
+  }'
+```
+  </Tab>
+</Tabs>
+
+## Response handling
+
+The normalized SDK response contains translated text, source language, target language, optional quality, and usage metadata. Preserve the source text when reviewers need to compare or audit a translation.
+
+Quality is a model signal, not a substitute for review. Do not silently publish high-impact content only because the response says `high`.
+
+## Context and terminology
+
+Translate complete sentences or paragraphs when possible. Isolated words often lack the grammatical and cultural context needed for the correct result.
+
+For product names, legal terms, or organization-specific vocabulary, include the intended meaning in the source text or process the output with an approved terminology list.
+
+## Errors and billing
+
+Correct unsupported or identical language pairs and empty input before retrying. Translation consumes language-model tokens; see [Pricing](/docs/platform/pricing) and retain usage metadata when allocating cost by customer or workflow.
+
+## Best Practices
+
+- Specify both source and target languages when they are known.
+- Preserve spelling, punctuation, and Fidel consistency in the source.
+- Send complete sentences for grammatical context.
+- Keep names and product terms unchanged when required, and state that rule explicitly.
+- Translate related content in coherent sections instead of unrelated fragments.
+- Preserve the source for review and auditability.
+- Use qualified human review for legal, medical, financial, safety, or public-policy content.
+
+<LastVerified date="2026-07-22" />
