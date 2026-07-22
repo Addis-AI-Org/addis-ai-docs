@@ -1,0 +1,48 @@
+---
+title: FAQ
+description: Current answers to common Addis AI integration questions.
+icon: BadgeQuestionMark
+---
+
+
+## General
+
+### Which integration should I use?
+
+Use the official Node.js or Python SDK when your backend runs one of those languages. Use cURL or REST for another runtime or when inspecting the wire contract.
+
+### Which languages are supported?
+
+Amharic and Afan Oromo are the platform's primary languages. Individual capabilities may support additional languages; check the relevant capability page for its current matrix.
+
+## Security
+
+### Can I put my API key in a website or mobile application?
+
+No. Keep permanent Addis AI API keys on a backend you control. Browser and mobile clients should authenticate to that backend instead.
+
+### How should I retry Voice 2 generation?
+
+Reuse the same client request ID only when retrying the same logical generation. Use a new value for new speech so distinct requests are not treated as idempotent replays.
+
+## SDKs and APIs
+
+### Does Python include an async client?
+
+The current Python package provides a synchronous client. Do not assume an async client is available.
+
+### Does Voice 2 stream audio?
+
+No. Voice 2 returns a completed clip and download URL. Legacy Text to Speech and Realtime Audio have different delivery models.
+
+### Where is the REST contract?
+
+See the [API Reference](/docs/reference/rest) or download the checked-in [OpenAPI document](/openapi.json).
+
+## Billing and support
+
+### Which currency is authoritative?
+
+Addis AI bills natively in Ethiopian birr (ETB). See [Pricing](/docs/platform/pricing) for current units and examples.
+
+For account-specific help, email [support@addisassistant.com](mailto:support@addisassistant.com) or join the [developer community](https://t.me/addisassistantai).

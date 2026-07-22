@@ -1,7 +1,7 @@
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import * as FilesComponents from "fumadocs-ui/components/files";
 import { Tab, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/tabs';
-import { AudioPreview, Endpoint, LastVerified, RestDisclosure, StatusBadge } from '@/components/docs';
+import { AudioPreview, Endpoint, LastVerified, NewBadge, RestDisclosure, StatusBadge } from '@/components/docs';
 import { PricingTable } from '@/components/pricing-table';
 import type { MDXComponents } from "mdx/types";
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
@@ -19,6 +19,7 @@ export function getMDXComponents(components?: MDXComponents) {
     AudioPreview,
     Endpoint,
     LastVerified,
+    NewBadge,
     RestDisclosure,
     StatusBadge,
     PricingTable,

@@ -22,6 +22,14 @@ export function StatusBadge({
   );
 }
 
+export function NewBadge({ children = 'New' }: { children?: ReactNode }) {
+  return (
+    <span className="not-prose inline-flex rounded-full border border-fd-primary/35 bg-fd-primary/10 px-2.5 py-1 text-xs font-semibold text-fd-primary">
+      {children}
+    </span>
+  );
+}
+
 export function Endpoint({ method, path }: { method: string; path: string }) {
   return (
     <div className="not-prose my-4 flex items-center gap-3 rounded-lg border bg-fd-card px-4 py-3 font-mono text-sm">

@@ -1,4 +1,5 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
+import { Braces, ExternalLink, KeyRound, Package } from 'lucide-react';
 import Image from 'next/image';
 
 /**
@@ -32,6 +33,44 @@ export function baseOptions(): BaseLayoutProps {
         </>
       ),
     },
-    links: [],
+    links: [
+      {
+        type: 'menu',
+        text: 'SDK resources',
+        icon: <Package className="size-4" />,
+        items: [
+          {
+            text: 'API keys',
+            url: 'https://addisassistant.com/apikeys',
+            external: true,
+            icon: <KeyRound className="size-4" />,
+          },
+          {
+            text: 'Node.js on npm',
+            url: 'https://www.npmjs.com/package/addisai',
+            external: true,
+            icon: <Package className="size-4" />,
+          },
+          {
+            text: 'Python on PyPI',
+            url: 'https://pypi.org/project/addisai/',
+            external: true,
+            icon: <Package className="size-4" />,
+          },
+          {
+            text: 'Node.js on GitHub',
+            url: 'https://github.com/Addis-AI-Org/addisai-js',
+            external: true,
+            icon: <Braces className="size-4" />,
+          },
+          {
+            text: 'Python on GitHub',
+            url: 'https://github.com/Addis-AI-Org/addisai-py',
+            external: true,
+            icon: <ExternalLink className="size-4" />,
+          },
+        ],
+      },
+    ],
   };
 }
