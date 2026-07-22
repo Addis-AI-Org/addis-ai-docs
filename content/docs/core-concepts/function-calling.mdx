@@ -1,11 +1,11 @@
 ---
 title: Function calling
 description: Receive structured tool calls and execute trusted application functions.
+icon: Wrench
 ---
 
 <StatusBadge status="beta">Beta</StatusBadge>
 
-# Function calling
 
 The production chat API can return structured `tool_calls`, but the currently published SDKs cannot complete the tool-result round trip reliably. Function calling remains Beta and is not ready for production workflows. Tool calling is non-streaming.
 
@@ -17,7 +17,7 @@ Live verification on 2026-07-17 found that `runTools` in Node `0.1.2` and `run_t
 
 The following receive-only examples are useful for evaluating schemas. They intentionally stop before executing the requested function.
 
-<Tabs items={['Node.js', 'Python']} groupId="sdk-language">
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
   <Tab>
 ```ts
 const tools = [{
@@ -71,6 +71,18 @@ calls = response["choices"][0]["message"].get("tool_calls", [])
 if not calls:
     raise RuntimeError("The model did not request a tool")
 print(calls[0]["function"]["name"], calls[0]["function"]["arguments"])
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/v1/chat/completions \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "messages":[{"role":"user","content":"Use get_weather for Addis Ababa."}],
+    "tools":[{"type":"function","function":{"name":"get_weather","description":"Get current weather for an allowed city","parameters":{"type":"object","properties":{"city":{"type":"string"}},"required":["city"]}}}],
+    "tool_choice":"required"
+  }'
 ```
   </Tab>
 </Tabs>

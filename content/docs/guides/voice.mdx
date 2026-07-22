@@ -1,17 +1,17 @@
 ---
 title: Addis Voice 2
 description: Discover voices, estimate cost, generate speech, and manage clips.
+icon: AudioLines
 ---
 
 <StatusBadge>Generally available</StatusBadge>
 
-# Addis Voice 2
 
 Addis Voice 2 is billed by generated audio duration at **5 ETB per minute**. Estimate before generating when the user must approve cost.
 
 ## Discover and preview voices
 
-<Tabs items={['Node.js', 'Python']} groupId="sdk-language">
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
   <Tab>
 ```ts
 const catalog = await addis.voices.list({ language: "am" });
@@ -26,13 +26,22 @@ preview = addis.voices.preview("am-hamen")
 print(preview["audio_url"])
 ```
   </Tab>
+  <Tab>
+```bash
+curl "https://api.addisassistant.com/api/v1/voice/voices?language=am" \
+  -H "x-api-key: $ADDIS_API_KEY"
+
+curl https://api.addisassistant.com/api/v1/voice/voices/am-hamen/preview \
+  -H "x-api-key: $ADDIS_API_KEY"
+```
+  </Tab>
 </Tabs>
 
 Use the catalog as the source of truth. `am-hamen` is the canonical minimal example, not a substitute for catalog discovery.
 
 ## Estimate and generate
 
-<Tabs items={['Node.js', 'Python']} groupId="sdk-language">
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
   <Tab>
 ```ts
 const input = {
@@ -69,7 +78,23 @@ clip = addis.voice.generate(**input, client_request_id="order-123")
 clip.to_file("speech.mp3")
 ```
   </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/generations \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "text":"ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+    "voice_id":"am-hamen",
+    "language":"am",
+    "output_format":"mp3_44100",
+    "client_request_id":"order-123"
+  }'
+```
+  </Tab>
 </Tabs>
+
+The REST response returns the generated clip in `data` and a signed download URL in `data.audio_url`. Download that URL with `curl --location "$VOICE_AUDIO_URL" --output speech.mp3` or your HTTP client.
 
 Supported output formats are `mp3_44100`, `wav_44100`, and `pcm_16000`. A stable client request ID prevents duplicate generation after uncertain retries.
 
@@ -86,29 +111,5 @@ Node `0.1.2` runs against the minute-priced backend, but some exported Voice est
 </Callout>
 
 Voice 2 does not currently support streaming. Do not wait for partial audio from `voice.generate`.
-
-<RestDisclosure>
-<Endpoint method="POST" path="/api/v1/voice/generations" />
-
-```bash
-VOICE_REQUEST_ID="$(uuidgen)"
-
-VOICE_RESPONSE="$(curl --fail-with-body \
-  https://api.addisassistant.com/api/v1/voice/generations \
-  -H "x-api-key: $ADDIS_API_KEY" \
-  -H "content-type: application/json" \
-  -d "{\
-    \"text\": \"ሰላም\",\
-    \"language\": \"am\",\
-    \"voice_id\": \"am-hamen\",\
-    \"output_format\": \"mp3_44100\",\
-    \"client_request_id\": \"$VOICE_REQUEST_ID\"\
-  }")"
-
-printf '%s' "$VOICE_RESPONSE" | jq .
-VOICE_AUDIO_URL="$(printf '%s' "$VOICE_RESPONSE" | jq -r '.data.audio_url')"
-curl --fail --location "$VOICE_AUDIO_URL" --output speech.mp3
-```
-</RestDisclosure>
 
 Errors include invalid voices, unsupported formats, insufficient balance, rate limiting, and transient generation failures. Validate catalog membership, estimate when needed, retry transient failures with the same idempotency value, and log the clip/request ID.

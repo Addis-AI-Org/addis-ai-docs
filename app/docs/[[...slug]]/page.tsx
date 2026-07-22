@@ -13,7 +13,7 @@ import { createRelativeLink } from "fumadocs-ui/mdx";
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
   if (!params.slug) {
-    redirect('/docs/overview');
+    redirect('/docs/get-started/introduction');
   }
   const page = source.getPage(params.slug);
   if (!page) notFound();

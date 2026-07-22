@@ -1,15 +1,13 @@
 ---
-title: Text generation and chat
-description: Build single-turn, multi-turn, instructed, and streaming conversations.
+title: Text Generation
+description: Build conversations with messages, instructions, personas, streaming, and tools.
+icon: MessageSquareText
 ---
 
-<StatusBadge>Generally available</StatusBadge>
 
-# Text generation and chat
+Send a `messages` array to generate a response. The SDK keeps the request shape consistent across single-turn chat, conversation history, instructions, and multimodal input.
 
-## Generate a response
-
-<Tabs items={['Node.js', 'Python']} groupId="sdk-language">
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
   <Tab>
 ```ts
 const response = await addis.chat.completions.create({
@@ -19,7 +17,6 @@ const response = await addis.chat.completions.create({
 });
 
 console.log(response.choices[0].message.content);
-console.log(response.usage);
 ```
   </Tab>
   <Tab>
@@ -31,21 +28,36 @@ response = addis.chat.completions.create(
 )
 
 print(response["choices"][0]["message"]["content"])
-print(response.get("usage"))
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/v1/chat/completions \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "persona":"You are a helpful Ethiopian language tutor.",
+    "system":"Answer in Amharic and include one short example.",
+    "messages":[{"role":"user","content":"Explain the word እንኳን."}]
+  }'
 ```
   </Tab>
 </Tabs>
 
-Persist the returned assistant message for multi-turn chat. Use streaming for long text and upload helpers for images, documents, or audio. Retry only transient failures and preserve request identifiers in logs.
+## Messages, system instructions, and personas
 
-<RestDisclosure>
-<Endpoint method="POST" path="/v1/chat/completions" />
+- **[Messages](/docs/core-concepts/messages)** are the conversation. Send prior user and assistant messages again when the next answer needs that context.
+- **[System instructions](/docs/core-concepts/system-instructions)** define behavior and constraints for the current request: language, format, tone, or rules.
+- **[Persona](/docs/core-concepts/personas)** defines who the assistant is. Keep identity in `persona` and task-specific rules in `system`.
 
-```bash
-curl https://api.addisassistant.com/v1/chat/completions \
-  -H "x-api-key: $ADDIS_API_KEY" -H "content-type: application/json" \
-  -d '{"system":"Answer in Amharic.","messages":[{"role":"user","content":"Hello"}]}'
-```
-</RestDisclosure>
+Addis AI continues to enforce platform safeguards and language behavior. Application instructions do not replace those controls.
 
-Next: [function calling](/docs/core-concepts/function-calling) and [multimodal input](/docs/guides/multimodal).
+## Continue a conversation
+
+Append the returned assistant message and the next user message to your stored history. Keep only the history your application needs, and avoid storing sensitive conversations without a retention policy.
+
+## Streaming and files
+
+Set `stream: true` when the SDK consumer should receive long text incrementally. Streaming is for text responses; Addis Voice 2 does not currently stream generated audio.
+
+For images, documents, or audio, use the upload helpers described in [Multimodal](/docs/guides/multimodal). To let the model request application actions, continue to [Function Calling](/docs/core-concepts/function-calling).

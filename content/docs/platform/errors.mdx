@@ -1,9 +1,9 @@
 ---
-title: Errors and retries
-description: Handle authentication, validation, capacity, and server failures safely.
+title: Errors and limits
+description: Handle failures, retries, and service limits safely.
+icon: TriangleAlert
 ---
 
-# Errors and retries
 
 | Status | Meaning | Action |
 | --- | --- | --- |
@@ -16,3 +16,5 @@ description: Handle authentication, validation, capacity, and server failures sa
 | `5xx` | Transient service failure | Retry a bounded number of times with jitter. |
 
 SDK retries apply only to eligible transient failures. For billed generation, reuse `clientRequestId` or `client_request_id`. Log status, request ID, endpoint, latency, and safe error detail—never the API key or sensitive user input.
+
+Current request sizes, context windows, audio duration, and rate limits are listed in [Limits](/docs/platform/limits). Limits may vary by account and capability; handle `429` responses even when normal traffic stays below the documented values.

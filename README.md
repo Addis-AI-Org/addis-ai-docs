@@ -9,7 +9,7 @@ pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:3000/docs/overview`.
+Open `http://localhost:3000/docs/get-started/introduction`.
 
 ## Quality gates
 
@@ -28,4 +28,4 @@ Content lives in `content/docs`. The public OpenAPI contract is `public/openapi.
 
 Before publishing, verify live API behavior, the production `am-hamen` voice, package examples, pricing, redirects, and external links. This repository does not publish the SDK packages or modify the API/developer-portal projects.
 
-Release notes belong in both `content/docs/announcements.mdx` for developers and `content/docs/platform/changelog.mdx` for contract history. Pages introduced by the current release are listed in `lib/source.ts` so the sidebar can display a temporary “New” label.
+Release notes belong in both `content/docs/announcements.mdx` for developers and `content/docs/platform/changelog.mdx` for contract history. Keep the sidebar compact: detailed concept and reference pages should be linked from the relevant guide rather than added to the primary navigation by default.

@@ -3,6 +3,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import test from "node:test";
+import { icons } from "lucide-react";
 
 const workspaceRoot = path.resolve(import.meta.dirname, "..");
 const docsRoot = path.join(workspaceRoot, "content", "docs");
@@ -27,17 +28,24 @@ async function readTextTree(directory, extensions) {
   return files.flat();
 }
 
-test("navigation exposes the SDK-first documentation architecture", async () => {
+test("navigation stays compact, familiar, and icon-led", async () => {
   const meta = JSON.parse(await readFile(path.join(docsRoot, "meta.json"), "utf8"));
   const navigation = meta.pages.join("\n");
 
-  for (const section of ["Get started", "Core concepts", "Guides", "Build patterns", "Reference", "Platform"]) {
+  for (const section of ["Get Started", "Capabilities", "Platform"]) {
     assert.match(navigation.toLowerCase(), new RegExp(section.toLowerCase()));
   }
 
   const pageSlugs = meta.pages.filter((entry) => !entry.startsWith("---"));
+  assert.ok(pageSlugs.length <= 15, `sidebar has ${pageSlugs.length} pages`);
+  assert.equal(pageSlugs[0], "announcements");
   for (const slug of pageSlugs) {
-    await assert.doesNotReject(readFile(path.join(docsRoot, `${slug}.mdx`), "utf8"));
+    const content = await readFile(path.join(docsRoot, `${slug}.mdx`), "utf8");
+    if (slug !== "announcements") {
+      const match = content.match(/^---[\s\S]*\nicon: (\S+)/);
+      assert.ok(match, `${slug} is missing a sidebar icon`);
+      assert.ok(icons[match[1]], `${slug} uses unknown Lucide icon ${match[1]}`);
+    }
   }
 });
 
@@ -51,9 +59,9 @@ test("canonical content uses am-hamen and keeps raw REST secondary", async () =>
   assert.match(content, /pip install addisai/);
 });
 
-test("announcements and navigation New labels cover the current release", async () => {
+test("announcements appear once as a bold link and cover the current release", async () => {
   const meta = JSON.parse(await readFile(path.join(docsRoot, "meta.json"), "utf8"));
-  assert.equal(meta.pages[1], "announcements");
+  assert.equal(meta.pages.filter((entry) => entry === "announcements").length, 1);
 
   const announcements = await readFile(path.join(docsRoot, "announcements.mdx"), "utf8");
   for (const announcement of ["Addis Voice 2 is available", "Official Node.js and Python SDKs", "New chat controls"]) {
@@ -61,26 +69,45 @@ test("announcements and navigation New labels cover the current release", async 
   }
 
   const source = await readFile(path.join(workspaceRoot, "lib", "source.ts"), "utf8");
-  for (const route of [
-    "/docs/announcements",
-    "/docs/get-started/node-sdk",
-    "/docs/get-started/python-sdk",
-    "/docs/core-concepts/system-instructions",
-    "/docs/core-concepts/personas",
-    "/docs/core-concepts/function-calling",
-    "/docs/guides/voice",
-  ]) {
-    assert.match(source, new RegExp(route.replaceAll("/", "\\/")));
-  }
-  assert.match(source, /New documentation/);
+  assert.match(source, /node\.url !== '\/docs\/announcements'/);
+  assert.match(source, /createElement\('strong'/);
+  assert.doesNotMatch(source, /New documentation|newDocUrls/);
+
+  const layout = await readFile(path.join(workspaceRoot, "lib", "layout.shared.tsx"), "utf8");
+  assert.match(layout, /links: \[\]/);
 });
 
-test("GA capability guides lead with synchronized Node.js and Python examples", async () => {
+test("GA capability guides use direct Node.js, Python, and cURL tabs", async () => {
   for (const slug of ["chat", "voice", "speech-to-text", "translation", "multimodal"]) {
     const content = await readFile(path.join(docsRoot, "guides", `${slug}.mdx`), "utf8");
-    assert.match(content, /items=\{\['Node\.js', 'Python'\]\}/);
-    assert.match(content, /groupId="sdk-language"/);
-    assert.match(content, /<RestDisclosure>/);
+    assert.match(content, /items=\{\['Node\.js', 'Python', 'cURL'\]\}/);
+    assert.match(content, /groupId="integration-language"/);
+    assert.doesNotMatch(content, /<RestDisclosure>/);
+  }
+});
+
+test("introduction and quick start preserve the visual onboarding flow", async () => {
+  const introduction = await readFile(path.join(docsRoot, "get-started", "introduction.mdx"), "utf8");
+  for (const section of ["Why Addis AI?", "The core engines", "Documentation roadmap", "Community and support"]) {
+    assert.match(introduction, new RegExp(section.replace("?", "\\?")));
+  }
+  assert.match(introduction, /Open Playground/);
+  assert.match(introduction, /Start coding/);
+
+  const quickstart = await readFile(path.join(docsRoot, "get-started", "quickstart.mdx"), "utf8");
+  for (const image of ["playgroundchat.png", "api_page.png", "api_name.png", "secretkey.png"]) {
+    assert.match(quickstart, new RegExp(image.replace(".", "\\.")));
+    await assert.doesNotReject(readFile(path.join(workspaceRoot, "public", "images", image)));
+  }
+  assert.match(quickstart, /You will not be able to view the full key again/);
+  assert.match(quickstart, /voiceId: "am-hamen"/);
+});
+
+test("MDX pages rely on the layout title instead of repeating a visible H1", async () => {
+  const docs = await readDocsTree();
+  for (const file of docs) {
+    const content = await readFile(file, "utf8");
+    assert.doesNotMatch(content, /^# /m, file);
   }
 });
 
@@ -110,11 +137,10 @@ test("machine-readable API reference is present", async () => {
 test("Voice 2 raw request documents required fields and signed URL download", async () => {
   const content = await readFile(path.join(docsRoot, "guides", "voice.mdx"), "utf8");
   for (const field of ["language", "voice_id", "client_request_id"]) {
-    assert.match(content, new RegExp(`\\\\\"${field}\\\\\"`));
+    assert.match(content, new RegExp(`"${field}"`));
   }
-  assert.match(content, /\.data\.audio_url/);
-  assert.match(content, /VOICE_RESPONSE="\$\(curl --fail-with-body/);
-  assert.match(content, /curl --fail --location "\$VOICE_AUDIO_URL" --output speech\.mp3/);
+  assert.match(content, /data\.audio_url/);
+  assert.match(content, /curl --location "\$VOICE_AUDIO_URL" --output speech\.mp3/);
 });
 
 test("SDK examples use the published parameter and response shapes", async () => {

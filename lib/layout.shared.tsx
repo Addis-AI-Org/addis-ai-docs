@@ -32,11 +32,6 @@ export function baseOptions(): BaseLayoutProps {
         </>
       ),
     },
-    links: [
-      { text: 'Announcements', url: '/docs/announcements' },
-      { text: 'API keys', url: 'https://addisassistant.com/apikeys', external: true },
-      { text: 'npm', url: 'https://www.npmjs.com/package/addisai', external: true },
-      { text: 'PyPI', url: 'https://pypi.org/project/addisai/', external: true },
-    ],
+    links: [],
   };
 }

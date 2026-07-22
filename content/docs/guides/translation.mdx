@@ -1,15 +1,15 @@
 ---
 title: Translation
 description: Translate between Amharic, Afan Oromo, and English.
+icon: Languages
 ---
 
 <StatusBadge>Generally available</StatusBadge>
 
-# Translation
 
 Translation supports `am`, `om`, and `en` and uses language-model token pricing.
 
-<Tabs items={['Node.js', 'Python']} groupId="sdk-language">
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
   <Tab>
 ```ts
 const result = await addis.translate.create({
@@ -30,17 +30,14 @@ result = addis.translate.create(
 print(result["text"])
 ```
   </Tab>
-</Tabs>
-
-Preserve source text for auditability, specify both languages when known, and review high-impact legal, medical, or financial translations with a qualified human.
-
-<RestDisclosure>
-<Endpoint method="POST" path="/api/v1/translate" />
-
+  <Tab>
 ```bash
 curl https://api.addisassistant.com/api/v1/translate \
   -H "x-api-key: $ADDIS_API_KEY" \
   -H "content-type: application/json" \
   -d '{"text":"Baga nagaan dhuftan.","source_language":"om","target_language":"en"}'
 ```
-</RestDisclosure>
+  </Tab>
+</Tabs>
+
+Preserve source text for auditability, specify both languages when known, and review high-impact legal, medical, or financial translations with a qualified human.
