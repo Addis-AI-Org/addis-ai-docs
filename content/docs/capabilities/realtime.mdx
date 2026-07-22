@@ -4,6 +4,8 @@ description: Build low-latency bidirectional voice sessions over the Beta WebSoc
 icon: Radio
 ---
 
+import { RealtimeVoiceDemo } from '@/components/realtime-voice-demo';
+
 <StatusBadge status="beta">Beta</StatusBadge>
 
 
@@ -109,6 +111,14 @@ See the [Realtime event reference](/docs/reference/realtime) for the current wir
 Use bounded reconnection with exponential backoff and jitter. Do not replay microphone frames from a previous session unless the protocol explicitly supports it.
 
 If encoding or the socket cannot keep up with capture, apply a bounded queue and drop or stop capture rather than growing memory indefinitely. Suspend capture when the tab is hidden or the application loses microphone permission.
+
+## Interactive demo
+
+Create a short-lived user JWT through your authenticated backend, then paste it into the demo. The token remains in page memory and is not stored in local or session storage.
+
+<RealtimeVoiceDemo />
+
+[Open the standalone Realtime Audio demo](/realtime-demo.html)
 
 ## Troubleshooting
 

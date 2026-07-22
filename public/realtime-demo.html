@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Addis AI Realtime Audio demo</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #09090b;
+        --card: #18181b;
+        --soft: #27272a;
+        --border: #3f3f46;
+        --text: #fafafa;
+        --muted: #a1a1aa;
+        --primary: #22d3ee;
+        --danger: #ef4444;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at top right, #083344 0, transparent 35%), var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+      main { width: min(760px, calc(100% - 32px)); margin: 48px auto; }
+      .card { border: 1px solid var(--border); border-radius: 16px; background: color-mix(in srgb, var(--card) 94%, transparent); padding: 24px; }
+      h1 { margin: 0 0 8px; font-size: clamp(1.6rem, 5vw, 2.2rem); }
+      p { color: var(--muted); line-height: 1.55; }
+      label { display: block; margin: 24px 0 8px; font-size: 0.9rem; font-weight: 650; }
+      input { width: 100%; height: 44px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); color: var(--text); padding: 0 12px; }
+      input:focus { outline: 2px solid var(--primary); outline-offset: 2px; }
+      .hint { margin: 6px 0 0; font-size: 0.78rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+      button { min-height: 40px; border: 1px solid var(--border); border-radius: 9px; background: var(--soft); color: var(--text); padding: 0 15px; font-weight: 650; cursor: pointer; }
+      button.primary { border-color: var(--primary); background: var(--primary); color: #083344; }
+      button.danger { border-color: var(--danger); background: var(--danger); color: white; }
+      button:disabled { cursor: not-allowed; opacity: 0.5; }
+      .status { display: flex; gap: 10px; border: 1px solid var(--border); border-radius: 9px; padding: 12px; }
+      .dot { width: 10px; height: 10px; margin-top: 5px; border-radius: 999px; background: #f59e0b; }
+      .dot.ok { background: #10b981; }
+      .dot.error { background: var(--danger); }
+      .status strong { display: block; }
+      .status span { display: block; margin-top: 2px; color: var(--muted); font-size: 0.82rem; }
+      .log { margin-top: 16px; overflow: hidden; border: 1px solid var(--border); border-radius: 9px; }
+      .log header { border-bottom: 1px solid var(--border); background: var(--soft); padding: 9px 12px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+      pre { min-height: 180px; max-height: 360px; margin: 0; overflow: auto; padding: 12px; white-space: pre-wrap; color: var(--muted); font-size: 0.78rem; }
+      a { color: var(--primary); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card" aria-labelledby="title">
+        <h1 id="title">Addis AI Realtime Audio</h1>
+        <p>Standalone microphone, PCM16, playback, interruption, and WebSocket event demo. Use localhost or HTTPS so the browser can request microphone access.</p>
+
+        <label for="jwt">Short-lived user JWT</label>
+        <input id="jwt" type="password" autocomplete="off" placeholder="Paste a short-lived JWT" />
+        <p class="hint">The token remains in this page's memory and is sent only to the Addis realtime relay.</p>
+
+        <div class="actions">
+          <button id="start" class="primary" type="button">Start</button>
+          <button id="stop" class="danger" type="button" disabled>Stop</button>
+          <button id="clear" type="button">Clear logs</button>
+        </div>
+
+        <div class="status" role="status" aria-live="polite">
+          <div id="dot" class="dot" aria-hidden="true"></div>
+          <div><strong id="status-title">Idle</strong><span id="status-detail">Paste a short-lived user JWT to start.</span></div>
+        </div>
+
+        <div class="log">
+          <header>Events</header>
+          <pre id="logs" aria-label="Realtime event log"></pre>
+        </div>
+
+        <p class="hint">Return to the <a href="/docs/capabilities/realtime">Realtime Audio guide</a> for protocol and security guidance.</p>
+      </section>
+    </main>
+
+    <script>
+      const ENDPOINT = "wss://relay.addisassistant.com/ws";
+      const INPUT_RATE = 16000;
+      const OUTPUT_RATE = 24000;
+      const PROCESSOR_SIZE = 2048;
+      const elements = {
+        jwt: document.querySelector("#jwt"),
+        start: document.querySelector("#start"),
+        stop: document.querySelector("#stop"),
+        clear: document.querySelector("#clear"),
+        dot: document.querySelector("#dot"),
+        title: document.querySelector("#status-title"),
+        detail: document.querySelector("#status-detail"),
+        logs: document.querySelector("#logs"),
+      };
+
+      const runtime = {
+        socket: null,
+        inputContext: null,
+        outputContext: null,
+        microphone: null,
+        source: null,
+        processor: null,
+        mute: null,
+        scheduled: new Set(),
+        nextPlaybackTime: 0,
+        ready: false,
+        runId: 0,
+      };
+
+      function setStatus(title, detail, tone = "warn") {
+        elements.title.textContent = title;
+        elements.detail.textContent = detail;
+        elements.dot.className = `dot ${tone === "warn" ? "" : tone}`;
+      }
+
+      function log(message) {
+        const lines = elements.logs.textContent.split("\n").filter(Boolean);
+        lines.push(`[${new Date().toLocaleTimeString()}] ${message}`);
+        elements.logs.textContent = lines.slice(-200).join("\n");
+        elements.logs.scrollTop = elements.logs.scrollHeight;
+      }
+
+      function audioContext(sampleRate) {
+        const Context = window.AudioContext || window.webkitAudioContext;
+        if (!Context) throw new Error("AudioContext is not supported in this browser.");
+        return new Context({ sampleRate });
+      }
+
+      function floatToPcm16(input) {
+        const output = new Int16Array(input.length);
+        for (let index = 0; index < input.length; index += 1) {
+          const sample = Math.max(-1, Math.min(1, input[index]));
+          output[index] = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+        }
+        return output;
+      }
+
+      function bytesToBase64(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let binary = "";
+        for (const byte of bytes) binary += String.fromCharCode(byte);
+        return btoa(binary);
+      }
+
+      function base64ToPcm16(value) {
+        const binary = atob(value);
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+        return new Int16Array(bytes.buffer);
+      }
+
+      function stopPlayback() {
+        for (const source of runtime.scheduled) {
+          try { source.stop(); } catch {}
+        }
+        runtime.scheduled.clear();
+        runtime.nextPlaybackTime = runtime.outputContext?.currentTime || 0;
+      }
+
+      function playAudio(value) {
+        if (!runtime.outputContext) return;
+        const pcm16 = base64ToPcm16(value);
+        const samples = Float32Array.from(pcm16, (sample) => sample / 32768);
+        const buffer = runtime.outputContext.createBuffer(1, samples.length, OUTPUT_RATE);
+        buffer.copyToChannel(samples, 0);
+        const source = runtime.outputContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(runtime.outputContext.destination);
+        source.onended = () => runtime.scheduled.delete(source);
+        const startAt = Math.max(runtime.outputContext.currentTime, runtime.nextPlaybackTime);
+        runtime.scheduled.add(source);
+        source.start(startAt);
+        runtime.nextPlaybackTime = startAt + buffer.duration;
+      }
+
+      async function cleanup(closeSocket = true) {
+        runtime.ready = false;
+        stopPlayback();
+        if (closeSocket && runtime.socket) {
+          runtime.socket.onclose = null;
+          if (runtime.socket.readyState < WebSocket.CLOSING) runtime.socket.close(1000, "client-stop");
+        }
+        runtime.socket = null;
+        runtime.processor?.disconnect();
+        runtime.source?.disconnect();
+        runtime.mute?.disconnect();
+        runtime.microphone?.getTracks().forEach((track) => track.stop());
+        runtime.processor = runtime.source = runtime.mute = runtime.microphone = null;
+        await runtime.inputContext?.close().catch(() => {});
+        await runtime.outputContext?.close().catch(() => {});
+        runtime.inputContext = runtime.outputContext = null;
+      }
+
+      async function setupAudio(runId) {
+        runtime.outputContext = audioContext(OUTPUT_RATE);
+        await runtime.outputContext.resume();
+        runtime.nextPlaybackTime = runtime.outputContext.currentTime;
+        runtime.inputContext = audioContext(INPUT_RATE);
+        await runtime.inputContext.resume();
+        runtime.microphone = await navigator.mediaDevices.getUserMedia({
+          audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+          video: false,
+        });
+        if (runId !== runtime.runId) throw new Error("Session canceled");
+        runtime.source = runtime.inputContext.createMediaStreamSource(runtime.microphone);
+        runtime.processor = runtime.inputContext.createScriptProcessor(PROCESSOR_SIZE, 1, 1);
+        runtime.mute = runtime.inputContext.createGain();
+        runtime.mute.gain.value = 0;
+        runtime.processor.onaudioprocess = (event) => {
+          if (!runtime.ready || runtime.socket?.readyState !== WebSocket.OPEN) return;
+          const pcm16 = floatToPcm16(event.inputBuffer.getChannelData(0));
+          runtime.socket.send(JSON.stringify({ data: bytesToBase64(pcm16.buffer), mimeType: "audio/pcm;rate=16000" }));
+        };
+        runtime.source.connect(runtime.processor);
+        runtime.processor.connect(runtime.mute);
+        runtime.mute.connect(runtime.inputContext.destination);
+      }
+
+      async function stop(unexpected = false) {
+        runtime.runId += 1;
+        elements.start.disabled = false;
+        elements.stop.disabled = true;
+        elements.jwt.disabled = false;
+        await cleanup();
+        setStatus(unexpected ? "Disconnected" : "Stopped", unexpected ? "The realtime connection closed." : "Microphone and connection closed.", unexpected ? "error" : "warn");
+      }
+
+      async function start() {
+        const jwt = elements.jwt.value.trim();
+        if (!jwt) return setStatus("JWT required", "Paste a short-lived user JWT.", "error");
+        const runId = runtime.runId + 1;
+        runtime.runId = runId;
+        elements.start.disabled = true;
+        elements.stop.disabled = false;
+        elements.jwt.disabled = true;
+        setStatus("Connecting", "Requesting microphone permission.");
+        log("Starting a short-lived realtime session.");
+        try {
+          await cleanup();
+          await setupAudio(runId);
+          const url = new URL(ENDPOINT);
+          url.searchParams.set("jwt", jwt);
+          runtime.socket = new WebSocket(url);
+          runtime.socket.onopen = () => {
+            setStatus("Connected", "Waiting for setupComplete.");
+            log("WebSocket connected; waiting for readiness.");
+          };
+          runtime.socket.onmessage = (message) => {
+            let event;
+            try { event = JSON.parse(message.data); } catch { return log("Ignored malformed JSON."); }
+            if (event.setupComplete) {
+              runtime.ready = true;
+              setStatus("Live", "Streaming microphone and model audio.", "ok");
+              log("Setup complete.");
+            }
+            if (event.serverContent?.interrupted) { stopPlayback(); log("Playback interrupted."); }
+            const audio = event.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+            if (audio) playAudio(audio);
+            if (event.serverContent?.turnComplete) log("Turn complete.");
+            if (event.usageMetadata) log("Usage metadata received.");
+            if (event.type === "warning" && event.message) log(`Warning: ${event.message}`);
+            if (event.error) setStatus("Server error", event.error.message || "Unknown realtime error.", "error");
+          };
+          runtime.socket.onerror = () => { setStatus("Connection error", "The WebSocket transport failed.", "error"); log("WebSocket transport error."); };
+          runtime.socket.onclose = (event) => { log(`Socket closed with code ${event.code}.`); void stop(true); };
+        } catch (error) {
+          log("Could not start the session.");
+          setStatus("Start failed", error.message || "Could not initialize realtime audio.", "error");
+          await stop(true);
+        }
+      }
+
+      elements.start.addEventListener("click", start);
+      elements.stop.addEventListener("click", () => stop(false));
+      elements.clear.addEventListener("click", () => { elements.logs.textContent = ""; });
+      window.addEventListener("beforeunload", () => { runtime.runId += 1; void cleanup(); });
+    </script>
+  </body>
+</html>
