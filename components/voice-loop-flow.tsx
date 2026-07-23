@@ -17,7 +17,7 @@ export function VoiceLoopFlow() {
   }, []);
 
   // Styles
-  const nodeBaseClass = "w-12 h-12 md:w-14 md:h-14 rounded-xl border-2 flex items-center justify-center transition-all duration-500 shadow-lg z-10 bg-fd-background shrink-0";
+  const nodeBaseClass = "w-12 h-12 md:w-14 md:h-14 border flex items-center justify-center transition-all duration-500 z-10 bg-fd-background shrink-0";
   const activeNodeClass = "border-blue-500 shadow-blue-500/20 scale-110";
   const inactiveNodeClass = "border-fd-border text-fd-muted-foreground opacity-50 grayscale";
   const labelClass = "text-[10px] md:text-xs font-bold text-center mt-2 transition-opacity absolute top-full w-24";
@@ -25,14 +25,14 @@ export function VoiceLoopFlow() {
   // Connection Line Logic
   const ConnectionLine = ({ active, label }: { active: boolean, label: string }) => (
     <div className="flex-1 relative mx-1 md:mx-2 h-10 flex items-center justify-center min-w-[20px]">
-      <div className="absolute inset-x-0 h-1 bg-fd-border rounded-full overflow-hidden">
+      <div className="absolute inset-x-0 h-px bg-fd-border overflow-hidden">
          <div className={cn(
           "absolute inset-0 bg-blue-500 transition-transform duration-1000 ease-in-out origin-left",
           active ? "scale-x-100" : "scale-x-0"
         )} />
       </div>
       <div className={cn(
-        "absolute -top-3 bg-fd-background border border-blue-200 dark:border-blue-900 text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 transform",
+        "absolute -top-3 bg-fd-background border border-blue-200 dark:border-blue-900 text-blue-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-all duration-300 transform",
         active ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-2 scale-95"
       )}>
         {label}
@@ -41,7 +41,7 @@ export function VoiceLoopFlow() {
   );
 
   return (
-    <div className="w-full my-8 p-6 md:p-8 border border-fd-border rounded-xl bg-fd-card/50 flex flex-col items-center justify-center overflow-hidden">
+    <div className="addis-offset-shell addis-panel w-full my-10 p-6 md:p-8 flex flex-col items-center justify-center overflow-hidden">
       
       {/* Wrapper for horizontal scrolling on very small mobile screens if needed */}
       <div className="flex flex-row items-center justify-between w-full max-w-4xl relative">

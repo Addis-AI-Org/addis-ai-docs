@@ -46,13 +46,7 @@ export function AnnouncementHero({
   date: string;
 }) {
   return (
-    <div className="not-prose relative my-10">
-      <div aria-hidden="true" className="pointer-events-none absolute -inset-3">
-        <span className="absolute inset-x-0 top-3 border-t border-fd-border" />
-        <span className="absolute inset-x-0 bottom-3 border-b border-fd-border" />
-        <span className="absolute inset-y-0 left-3 border-l border-fd-border" />
-        <span className="absolute inset-y-0 right-3 border-r border-fd-border" />
-      </div>
+    <div className="not-prose addis-offset-shell my-10">
       <div className="relative border border-fd-border bg-fd-background">
         <div className="flex items-stretch justify-between border-b border-fd-border">
           <div className="flex items-center gap-2 px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fd-primary">
@@ -82,13 +76,7 @@ export function AnnouncementHero({
 
 export function AnnouncementFeed({ children }: { children: ReactNode }) {
   return (
-    <div className="not-prose relative my-10">
-      <div aria-hidden="true" className="pointer-events-none absolute -inset-3">
-        <span className="absolute inset-x-0 top-3 border-t border-fd-border" />
-        <span className="absolute inset-x-0 bottom-3 border-b border-fd-border" />
-        <span className="absolute inset-y-0 left-3 border-l border-fd-border" />
-        <span className="absolute inset-y-0 right-3 border-r border-fd-border" />
-      </div>
+    <div className="not-prose addis-offset-shell my-10">
       <div className="relative border border-fd-border bg-fd-background">
         {children}
       </div>

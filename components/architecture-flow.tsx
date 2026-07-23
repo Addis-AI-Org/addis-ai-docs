@@ -18,7 +18,7 @@ export function ArchitectureFlow() {
   }, []);
 
   // Common class for the node container to ensure perfect symmetry
-  const nodeBaseClass = "w-16 h-16 rounded-2xl border-2 flex items-center justify-center transition-all duration-500 shadow-lg z-10 bg-fd-background";
+  const nodeBaseClass = "w-16 h-16 border flex items-center justify-center transition-all duration-500 z-10 bg-fd-background";
   
   // Active state style (Blue border, Blue shadow)
   const activeNodeClass = "border-blue-500 shadow-blue-500/20 scale-110";
@@ -29,7 +29,7 @@ export function ArchitectureFlow() {
   const inactiveNodeClass = "border-fd-border text-fd-muted-foreground opacity-50 grayscale";
 
   return (
-    <div className="w-full my-8 p-8 border border-fd-border rounded-xl bg-fd-card/50 flex flex-col items-center justify-center overflow-hidden">
+    <div className="addis-offset-shell addis-panel w-full my-10 p-8 flex flex-col items-center justify-center overflow-hidden">
       
       <div className="flex flex-row items-center justify-between w-full max-w-3xl gap-2 md:gap-4 relative">
         
@@ -46,7 +46,7 @@ export function ArchitectureFlow() {
         {/* ================= CONNECTION 1 ================= */}
         <div className="flex-1 relative mx-2 h-10 flex items-center justify-center">
           {/* The Line Background */}
-          <div className="absolute inset-x-0 h-1 bg-fd-border rounded-full overflow-hidden">
+          <div className="absolute inset-x-0 h-px bg-fd-border overflow-hidden">
              {/* The Animated Bar */}
              <div className={cn(
               "absolute inset-0 bg-blue-400 transition-transform duration-1000 ease-in-out origin-left",
@@ -56,7 +56,7 @@ export function ArchitectureFlow() {
 
           {/* The Pop-up Text (Now floating above, not clipped) */}
           <div className={cn(
-            "absolute bg-fd-background border border-blue-200 dark:border-blue-900 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 transform",
+            "absolute bg-fd-background border border-blue-200 dark:border-blue-900 text-blue-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-all duration-300 transform",
             step >= 1 ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-2 scale-95"
           )}>
             Sends Data
@@ -71,13 +71,13 @@ export function ArchitectureFlow() {
               "absolute left-1/2 top-0 z-30 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-out",
               step >= 2 ? "opacity-100 scale-100" : "opacity-0 scale-95"
             )}>
-              <span className="whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-blue-500 border border-blue-500/40 bg-fd-background/80 backdrop-blur-md shadow-sm">
+              <span className="whitespace-nowrap px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-500 border border-blue-500/40 bg-fd-background">
                 Secure Zone
               </span>
             </div>
 
             {/* Lock Icon Overlay */}
-            <div className="absolute -right-2 -top-2 bg-fd-background rounded-full p-1 border border-fd-border shadow-sm z-20">
+            <div className="absolute -right-2 -top-2 bg-fd-background p-1 border border-fd-border z-20">
                <Lock className={cn("w-3 h-3", step >= 2 ? "text-blue-600" : "text-fd-muted-foreground")} />
             </div>
             <Server className={cn("w-8 h-8", step >= 2 ? "text-blue-500" : "text-fd-muted-foreground")} />
@@ -89,7 +89,7 @@ export function ArchitectureFlow() {
 
         {/* ================= CONNECTION 2 ================= */}
         <div className="flex-1 relative mx-2 h-10 flex items-center justify-center">
-          <div className="absolute inset-x-0 h-1 bg-fd-border rounded-full overflow-hidden">
+          <div className="absolute inset-x-0 h-px bg-fd-border overflow-hidden">
              <div className={cn(
               "absolute inset-0 bg-blue-500 transition-transform duration-1000 ease-in-out origin-left",
               step >= 3 ? "scale-x-100" : "scale-x-0"
@@ -97,7 +97,7 @@ export function ArchitectureFlow() {
           </div>
 
           <div className={cn(
-            "absolute bg-fd-background border border-blue-200 dark:border-blue-900 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 transform",
+            "absolute bg-fd-background border border-blue-200 dark:border-blue-900 text-blue-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-all duration-300 transform",
             step >= 3 ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-2 scale-95"
           )}>
             + Adds API Key

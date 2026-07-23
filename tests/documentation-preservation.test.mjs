@@ -73,7 +73,7 @@ test('preserves original onboarding screenshots and page structures', () => {
   assert.match(read('content/docs/integration/web.mdx'), /## Security: The Golden Rule/);
   assert.match(read('content/docs/integration/server.mdx'), /<ArchitectureFlow \/>/);
   assert.match(read('content/docs/integration/voice-interface.mdx'), /<VoiceLoopFlow \/>/);
-  assert.match(introduction, /pointer-events-none absolute -inset-3/);
+  assert.match(introduction, /addis-offset-shell/);
   assert.doesNotMatch(introduction, /bg-gradient/);
 });
 
@@ -131,7 +131,7 @@ test('documents Voice 2 while retaining the full hidden legacy workflow', () => 
   assert.match(catalogComponent, /voices\.slice\(0, INITIAL_VISIBLE_VOICES\)/);
   assert.match(catalogComponent, /aria-expanded=\{isExpanded\}/);
   assert.match(catalogComponent, /Show fewer voices/);
-  assert.match(catalogComponent, /absolute -inset-3/);
+  assert.match(catalogComponent, /addis-offset-shell/);
   assert.match(catalogComponent, /grid border-l border-fd-border/);
   assert.doesNotMatch(catalogComponent, /bg-gradient/);
 });
@@ -187,8 +187,45 @@ test('renders announcements as a release feed with in-card cyan New labels', () 
   assert.doesNotMatch(announcements, /<NewBadge/);
   assert.match(components, /justify-between/);
   assert.match(components, /text-fd-primary/);
-  assert.match(components, /pointer-events-none absolute -inset-3/);
+  assert.match(components, /addis-offset-shell/);
   assert.doesNotMatch(components, /bg-gradient/);
+});
+
+test('uses one reversible visual system across custom documentation surfaces', () => {
+  const styles = read('app/global.css');
+
+  for (const className of ['addis-offset-shell', 'addis-panel', 'addis-grid', 'addis-cell', 'addis-meta']) {
+    assert.match(styles, new RegExp(`\\.${className}\\b`), `Missing centralized ${className} utility`);
+  }
+
+  for (const path of [
+    'content/docs/index.mdx',
+    'content/docs/get-started/introduction.mdx',
+    'content/docs/get-started/sdks.mdx',
+    'content/docs/capabilities/text-generation.mdx',
+    'content/docs/capabilities/text-to-speech.mdx',
+    'content/docs/capabilities/text-to-speech-legacy.mdx',
+    'content/docs/capabilities/speech-to-text.mdx',
+    'content/docs/capabilities/multimodal.mdx',
+    'content/docs/capabilities/realtime.mdx',
+    'content/docs/capabilities/translation.mdx',
+    'content/docs/integration/web.mdx',
+    'content/docs/integration/mobile.mdx',
+    'content/docs/integration/server.mdx',
+    'content/docs/integration/voice-interface.mdx',
+    'content/docs/platform/pricing.mdx',
+    'content/docs/platform/limits.mdx',
+    'content/docs/platform/errors.mdx',
+  ]) {
+    assert.match(read(path), /addis-(?:offset-shell|panel|grid)/, `${path} is missing the shared visual system`);
+  }
+
+  const customSurfaces = [
+    ...walk('content/docs').filter((path) => path.endsWith('.mdx')),
+    ...walk('components').filter((path) => path.endsWith('.tsx')),
+  ].map((path) => readFileSync(path, 'utf8')).join('\n');
+
+  assert.doesNotMatch(customSurfaces, /bg-gradient/);
 });
 
 test('uses only the production Voice 2 example and API-key realtime auth', () => {

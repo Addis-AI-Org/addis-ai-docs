@@ -47,16 +47,9 @@ export function VoiceCatalog() {
 
   return (
     <section
-      className="not-prose relative my-10"
+      className="not-prose addis-offset-shell my-10"
       aria-labelledby="voice-catalog-title"
     >
-      <div aria-hidden="true" className="pointer-events-none absolute -inset-3">
-        <span className="absolute inset-x-0 top-3 border-t border-fd-border" />
-        <span className="absolute inset-x-0 bottom-3 border-b border-fd-border" />
-        <span className="absolute inset-y-0 left-3 border-l border-fd-border" />
-        <span className="absolute inset-y-0 right-3 border-r border-fd-border" />
-      </div>
-
       <div className="relative bg-fd-background">
         <div className="grid border-x border-fd-border md:grid-cols-[minmax(0,1fr)_auto]">
           <div className="p-5 sm:p-6">

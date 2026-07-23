@@ -6,34 +6,29 @@ mode: "custom"
 
 import { Rocket, Terminal, Book, MessageSquare, Mic, Image as ImageIcon, Zap, Code2, Cpu, Globe } from 'lucide-react';
 
-{/* 
-  HERO SECTION 
-  Fix: Changed <p> to <div> to prevent "p inside p" hydration errors.
-*/}
-<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600/10 via-purple-500/10 to-transparent p-10 border border-fd-border my-8">
-  <div className="relative z-10 flex flex-col gap-4">
-    <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-fd-foreground to-fd-foreground/60">
+<div className="not-prose addis-offset-shell addis-panel my-10">
+  <div className="border-b border-fd-border px-5 py-3 addis-meta text-fd-primary">
+    Developer platform
+  </div>
+  <div className="flex flex-col gap-4 p-8 sm:p-10">
+    <div className="h-px w-10 bg-fd-primary" aria-hidden="true" />
+    <h1 className="text-4xl font-bold tracking-tight text-fd-foreground">
       Build with Addis AI
     </h1>
     
-    {/* THIS DIV WAS THE CAUSE. CHANGED FROM <P> TO <DIV> */}
     <div className="text-lg text-fd-muted-foreground max-w-xl text-balance">
       The standard for integrating <strong className="text-fd-foreground">African Language Intelligence</strong> into your software. Access Text, Vision, and Speech models via a unified API.
     </div>
 
-    <div className="flex gap-3 pt-4">
-       <a href="/docs/get-started/quickstart" className="inline-flex items-center justify-center rounded-full bg-fd-primary px-6 py-2.5 text-sm font-medium text-fd-primary-foreground shadow transition-colors hover:bg-fd-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+    <div className="flex flex-wrap gap-0 pt-4">
+       <a href="/docs/get-started/quickstart" className="inline-flex items-center justify-center bg-fd-primary px-6 py-2.5 text-sm font-medium text-fd-primary-foreground transition-colors hover:bg-fd-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
         Start Integration
       </a>
-      <a href="https://platform.addisassistant.com" target="_blank" className="inline-flex items-center justify-center rounded-full border border-fd-border bg-fd-background px-6 py-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
+      <a href="https://platform.addisassistant.com" target="_blank" className="inline-flex items-center justify-center border border-fd-border bg-fd-background px-6 py-2.5 text-sm font-medium transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
         Get API Key
       </a>
     </div>
   </div>
-  
-  {/* Background Decoration */}
-  <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
-  <div className="absolute bottom-0 right-10 h-40 w-40 rounded-full bg-purple-500/20 blur-3xl" />
 </div>
 
 ## Platform Overview
@@ -44,7 +39,7 @@ Addis AI bridges the gap between modern AI and African languages. We provide the
 
 Generic models often fail at Amharic grammar or Afan Oromo idioms.
 
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+<div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-3 mb-10">
   <div className="p-4 border rounded-lg bg-fd-card">
     <Globe className="w-6 h-6 mb-2 text-blue-500" />
     <h4 className="font-bold">Linguistically Native</h4>
