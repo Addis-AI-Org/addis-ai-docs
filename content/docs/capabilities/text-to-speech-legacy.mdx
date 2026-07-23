@@ -1,0 +1,396 @@
+---
+title: Legacy Text to Speech
+description: Maintain the deprecated Voice 1 Base64 and streaming integration.
+icon: AudioWaveform
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Callout } from 'fumadocs-ui/components/callout';
+import { AudioWaveform, Languages, Zap, Database } from 'lucide-react';
+import { Base64Player } from '@/components/base64-player';
+
+<StatusBadge status="deprecated">Legacy</StatusBadge>
+
+<Callout type="warn" title="Voice 1 is deprecated">
+This page preserves the original Voice 1 Base64 and streaming workflow for existing applications. New integrations should use [Text to Speech with Voice 2](/docs/capabilities/text-to-speech).
+</Callout>
+
+The Text to Speech (TTS) API is powered by our **`አሌፍ-Audio`** engine. It is designed to produce human-quality speech for African languages, correctly handling **Ge'ez punctuation** (like `።`, `፣`) for natural pausing and intonation.
+
+## Endpoint
+<div className="flex items-center gap-2 border border-fd-border p-3 rounded-lg bg-fd-muted/50 font-mono text-sm my-4">
+  <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-bold">POST</span>
+  <span className="text-fd-foreground">https://api.addisassistant.com/api/v1/audio</span>
+</div>
+---
+## Usage Guide
+
+The API accepts text and returns a **Base64 encoded audio string** (WAV format). This allows you to easily embed audio in web apps or save it to disk.
+
+### 1. Basic Synthesis
+Generate audio from a simple text string.
+
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```ts
+    import AddisAI from "addisai";
+
+    const addis = new AddisAI();
+    const audio = await addis.legacy.audio.generate({
+      text: "ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።",
+      language: "am",
+    });
+
+    await audio.toFile("output.wav");
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from addisai import AddisAI
+
+    addis = AddisAI()
+    audio = addis.legacy.audio.generate(
+        text="ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።",
+        language="am",
+    )
+
+    audio.to_file("output.wav")
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    curl -X POST https://api.addisassistant.com/api/v1/audio \\
+      -H "Content-Type: application/json" \\
+      -H "X-API-Key: $ADDIS_API_KEY" \\
+      -d '{
+        "text": "ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።",
+        "language": "am"
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+### 2. Streaming (Long Text)
+Generating audio for long paragraphs takes time. To minimize the wait (latency), use **Streaming**. 
+
+The API will send chunks of audio immediately as they are generated, allowing your app to start playing audio within milliseconds, even if the text is very long.
+
+**Usage:** Set `"stream": true` in your request body.
+
+<Tabs items={['Node.js (Server)', 'Python', 'Browser (Client)', 'cURL']}>
+  <Tab value="Node.js (Server)">
+    ```ts
+    import AddisAI from "addisai";
+    import { createWriteStream } from "node:fs";
+
+    const addis = new AddisAI();
+    const stream = await addis.legacy.audio.stream({
+      text: "ይህ ረጅም ጽሑፍ ነው።",
+      language: "am",
+    });
+
+    const output = createWriteStream("output_stream.wav");
+    for await (const chunk of stream) output.write(chunk);
+    output.end();
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from addisai import AddisAI
+
+    addis = AddisAI()
+    stream = addis.legacy.audio.stream(
+        text="ይህ ረጅም ጽሑፍ ነው።",
+        language="am",
+    )
+
+    stream.to_file("output_stream.wav")
+    ```
+  </Tab>
+  <Tab value="Browser (Client)">
+    **Best for:** Chatbots and Web Apps. This script creates a queue to play chunks smoothly in order.
+
+    ```javascript
+    async function streamAudio() {
+      const audioQueue = [];
+      let isPlaying = false;
+
+      try {
+        const response = await fetch("/api/legacy-audio/stream", {
+          method: "POST",
+          body: JSON.stringify({
+            text: "ይህ ረጅም ጽሑፍ ነው። የአዲስ ኤአይ የድምጽ ቴክኖሎጂ ትልልቅ ጽሑፎችን በቀላሉ አንብቦ ድምጽ ሊያወጣ ይችላል።",
+            language: "am",
+            stream: true,
+          }),
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        // Play audio chunks sequentially
+        function playNext() {
+          if (audioQueue.length === 0) {
+            isPlaying = false;
+            return;
+          }
+          isPlaying = true;
+          const nextChunk = audioQueue.shift();
+          const audio = new Audio("data:audio/wav;base64," + nextChunk);
+          audio.onended = playNext; 
+          audio.play().catch(e => console.error("Playback failed:", e));
+        }
+
+        // Read the stream
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n").filter((line) => line.trim());
+
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line);
+              if (data.audio_chunk) {
+                audioQueue.push(data.audio_chunk);
+                if (!isPlaying) playNext();
+              }
+            } catch (e) {
+              console.error("JSON Parse Error:", e);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Stream connection failed:", error);
+      }
+    }
+    
+    streamAudio();
+    ```
+  </Tab>
+  <Tab value="cURL">
+    **Best for:** testing the legacy stream from a terminal.
+
+    ```bash
+    curl -X POST https://api.addisassistant.com/api/v1/audio \\
+      -H "Content-Type: application/json" \\
+      -H "X-API-Key: $ADDIS_API_KEY" \\
+      -d '{
+        "text": "ይህ ረጅም ጽሑፍ ነው።",
+        "language": "am",
+        "stream": true
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## API Reference
+
+### Request Parameters
+These parameters go in the root of your JSON body.
+
+<TypeTable
+  type={{
+    'text': {
+      description: 'The text content to be spoken.',
+      type: 'string',
+      required: true
+    },
+    'language': {
+      description: 'Language code. "am" (Amharic) or "om" (Afan Oromo).',
+      type: 'string',
+      required: true
+    },
+    'stream': {
+      description: 'Set to true for real-time chunked response.',
+      type: 'boolean',
+      default: 'false'
+    },
+  }}
+/>
+
+### Response Schema (Basic Mode)
+If `stream: false`, you receive a single JSON object.
+
+```json
+{
+  "audio": "//NIxAAAAANIAAAAAExBTUVVVV..."
+}
+```
+<TypeTable
+type={{
+'audio': {
+description: 'The Base64 encoded string of the audio file.',
+type: 'string'
+}
+}}
+/>
+
+### Response Schema (Streaming Mode)
+If stream: true, you receive newline-delimited JSON objects.
+```json
+{"audio_chunk": "//NIxAAAAANIA...", "index": 0}
+{"audio_chunk": "AAAEkSRJ...", "index": 1}
+```
+
+---
+
+## Handling the Audio Output
+
+The API returns audio as a **Base64 encoded string**. This makes it easy to send JSON data, but you cannot play it directly without decoding it.
+
+### Audio Tool
+Use this tool to test your API output. Paste the `audio` string from your response to hear it immediately.
+
+<Base64Player />
+
+### Code Implementation
+Here is how to decode and save the audio file programmatically in your application.
+
+<div className="flex flex-col gap-4 p-5 rounded-lg border border-fd-border bg-fd-card mt-6">
+  <div className="text-sm text-fd-muted-foreground">
+    Choose your environment:
+  </div>
+
+  <Tabs items={['cURL / Terminal', 'Node.js', 'Python', 'Browser JS']}>
+    
+    <Tab value="cURL / Terminal">
+      **Universal Command (Windows/Mac/Linux)**
+      
+      You can decode and save the file in one command line using Python (pre-installed on most systems).
+
+      ```bash
+      curl -X POST https://api.addisassistant.com/api/v1/audio \
+        -H "Content-Type: application/json" \
+        -H "X-API-Key: $ADDIS_API_KEY" \
+        -d '{"text": "ሰላም", "language": "am"}' \
+        | python3 -c "import sys, json, base64; open('output.wav', 'wb').write(base64.b64decode(json.load(sys.stdin)['audio']))"
+      ```
+    </Tab>
+
+    <Tab value="Node.js">
+      To save the file to disk in a backend environment:
+
+      ```javascript
+      import fs from 'fs';
+
+      // Assuming 'data' is the JSON response from fetch()
+      const base64String = data.audio;
+      const buffer = Buffer.from(base64String, 'base64');
+      
+      fs.writeFileSync('speech.wav', buffer);
+      console.log('Saved to speech.wav');
+      ```
+    </Tab>
+
+    <Tab value="Python">
+      To decode and save the file in a Python script:
+
+      ```python
+      import base64
+
+      # Assuming 'response_json' is the dict from requests.post().json()
+      base64_string = response_json['audio']
+      audio_data = base64.b64decode(base64_string)
+
+      with open("speech.wav", "wb") as f:
+          f.write(audio_data)
+          
+      print("Saved to speech.wav")
+      ```
+    </Tab>
+
+    <Tab value="Browser JS">
+      To play the audio immediately in a React or Vue app:
+
+      ```javascript
+      // Assuming 'data' is the JSON response from the API
+      const base64String = data.audio;
+      
+      // Create a playable Audio object directly
+      const audio = new Audio("data:audio/wav;base64," + base64String);
+      audio.play();
+      ```
+    </Tab>
+  </Tabs>
+</div>
+---
+### Best Practices
+
+Ensure high-quality voice output with these guidelines.
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+
+  {/* Script Card */}
+  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+    <div className="flex items-center gap-2.5 mb-4">
+      <Languages className="w-4 h-4 text-blue-500" />
+      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Script & Punctuation</h3>
+    </div>
+    <div className="space-y-3 text-sm text-fd-muted-foreground">
+      <div>
+        <strong className="text-fd-foreground">Use Punctuation:</strong> The model relies on commas (`፣`) and periods (`።`) to determine pauses. Text without punctuation will sound rushed.
+      </div>
+      <div>
+        <strong className="text-fd-foreground">Avoid Mixed Scripts:</strong> Mixing English words inside an Amharic sentence may result in unnatural pronunciation. Transliterate English terms into Fidel if possible.
+      </div>
+    </div>
+  </div>
+
+  {/* Latency Card */}
+  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+    <div className="flex items-center gap-2.5 mb-4">
+      <Zap className="w-4 h-4 text-orange-500" />
+      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Latency Optimization</h3>
+    </div>
+    <div className="space-y-3 text-sm text-fd-muted-foreground">
+      <div className="flex items-center justify-between p-2 rounded bg-fd-secondary/40 border border-fd-border/50">
+        <span className="text-xs font-medium">Long Documents</span>
+        <code className="text-xs text-fd-foreground">Use stream: true</code>
+      </div>
+      <div>
+        There is no hard character limit, but generating a large file takes time. For texts longer than 2 sentences, <strong>always use Streaming</strong> to ensure immediate playback.
+      </div>
+    </div>
+  </div>
+
+  {/* Caching Card */}
+  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+    <div className="flex items-center gap-2.5 mb-4">
+      <Database className="w-4 h-4 text-purple-500" />
+      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Efficiency</h3>
+    </div>
+    <div className="space-y-3 text-sm text-fd-muted-foreground">
+      <div>
+        <strong className="text-fd-foreground">Cache Everything:</strong> TTS is deterministic. If the input text hasn't changed, serve the saved audio file instead of calling the API again to save money and bandwidth.
+      </div>
+    </div>
+  </div>
+
+  {/* Audio Output Card */}
+  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+    <div className="flex items-center gap-2.5 mb-4">
+      <FileAudio className="w-4 h-4 text-green-500" />
+      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Output Format</h3>
+    </div>
+    <div className="space-y-3 text-sm text-fd-muted-foreground">
+      <div>
+        <strong className="text-fd-foreground">Base64 WAV:</strong> The API returns a Base64 string inside JSON. You must decode this string to get the playable WAV file.
+      </div>
+      <div>
+        <strong className="text-fd-foreground">Compression:</strong> Since WAV is large and uncompressed, consider converting the decoded audio to MP3 on your backend if your users are on mobile data.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+---
+
+## Migrate to Voice 2
+
+Voice 2 adds catalog discovery, previews, estimates, durable clips, idempotency, and minute-based billing. Start with the [Voice 2 Text to Speech guide](/docs/capabilities/text-to-speech), select a current catalog voice such as `am-hamen`, and migrate one existing use case at a time.
