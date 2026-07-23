@@ -72,7 +72,7 @@ Generate audio from a simple text string.
 </Tabs>
 
 ### 2. Streaming (Long Text)
-Generating audio for long paragraphs takes time. To minimize the wait (latency), use **Streaming**. 
+Generating audio for long paragraphs takes time. To minimize the wait (latency), use **Streaming**.
 
 The API will send chunks of audio immediately as they are generated, allowing your app to start playing audio within milliseconds, even if the text is very long.
 
@@ -138,7 +138,7 @@ The API will send chunks of audio immediately as they are generated, allowing yo
           isPlaying = true;
           const nextChunk = audioQueue.shift();
           const audio = new Audio("data:audio/wav;base64," + nextChunk);
-          audio.onended = playNext; 
+          audio.onended = playNext;
           audio.play().catch(e => console.error("Playback failed:", e));
         }
 
@@ -166,7 +166,7 @@ The API will send chunks of audio immediately as they are generated, allowing yo
         console.error("Stream connection failed:", error);
       }
     }
-    
+
     streamAudio();
     ```
   </Tab>
@@ -257,10 +257,10 @@ Here is how to decode and save the audio file programmatically in your applicati
   </div>
 
   <Tabs items={['cURL / Terminal', 'Node.js', 'Python', 'Browser JS']}>
-    
+
     <Tab value="cURL / Terminal">
       **Universal Command (Windows/Mac/Linux)**
-      
+
       You can decode and save the file in one command line using Python (pre-installed on most systems).
 
       ```bash
@@ -281,7 +281,7 @@ Here is how to decode and save the audio file programmatically in your applicati
       // Assuming 'data' is the JSON response from fetch()
       const base64String = data.audio;
       const buffer = Buffer.from(base64String, 'base64');
-      
+
       fs.writeFileSync('speech.wav', buffer);
       console.log('Saved to speech.wav');
       ```
@@ -299,7 +299,7 @@ Here is how to decode and save the audio file programmatically in your applicati
 
       with open("speech.wav", "wb") as f:
           f.write(audio_data)
-          
+
       print("Saved to speech.wav")
       ```
     </Tab>
@@ -310,7 +310,7 @@ Here is how to decode and save the audio file programmatically in your applicati
       ```javascript
       // Assuming 'data' is the JSON response from the API
       const base64String = data.audio;
-      
+
       // Create a playable Audio object directly
       const audio = new Audio("data:audio/wav;base64," + base64String);
       audio.play();
