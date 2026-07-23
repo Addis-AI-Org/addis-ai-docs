@@ -128,6 +128,9 @@ test('documents Voice 2 while retaining the full hidden legacy workflow', () => 
   assert.match(catalogComponent, /voices\.slice\(0, INITIAL_VISIBLE_VOICES\)/);
   assert.match(catalogComponent, /aria-expanded=\{isExpanded\}/);
   assert.match(catalogComponent, /Show fewer voices/);
+  assert.match(catalogComponent, /absolute -inset-3/);
+  assert.match(catalogComponent, /grid border-l border-fd-border/);
+  assert.doesNotMatch(catalogComponent, /bg-gradient/);
 });
 
 test('keeps SDK examples primary without removing cURL interoperability', () => {
