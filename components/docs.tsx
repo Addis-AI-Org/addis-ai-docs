@@ -46,30 +46,35 @@ export function AnnouncementHero({
   date: string;
 }) {
   return (
-    <div className="not-prose relative my-8 overflow-hidden rounded-2xl border border-fd-primary/20 bg-gradient-to-br from-fd-primary/12 via-fd-card to-fd-card px-6 py-7 sm:px-8 sm:py-9">
-      <div
-        aria-hidden="true"
-        className="absolute -right-16 -top-20 size-56 rounded-full bg-fd-primary/10 blur-3xl"
-      />
-      <div className="relative max-w-2xl">
-        <div className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-fd-primary">
-          <span className="grid size-7 place-items-center rounded-full border border-fd-primary/25 bg-fd-primary/10">
+    <div className="not-prose relative my-10">
+      <div aria-hidden="true" className="pointer-events-none absolute -inset-3">
+        <span className="absolute inset-x-0 top-3 border-t border-fd-border" />
+        <span className="absolute inset-x-0 bottom-3 border-b border-fd-border" />
+        <span className="absolute inset-y-0 left-3 border-l border-fd-border" />
+        <span className="absolute inset-y-0 right-3 border-r border-fd-border" />
+      </div>
+      <div className="relative border border-fd-border bg-fd-background">
+        <div className="flex items-stretch justify-between border-b border-fd-border">
+          <div className="flex items-center gap-2 px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fd-primary">
             <Megaphone aria-hidden="true" className="size-3.5" />
-          </span>
-          Product updates
+            Product updates
+          </div>
+          <time
+            className="flex items-center border-l border-fd-border px-5 font-mono text-[10px] uppercase tracking-[0.14em] text-fd-muted-foreground"
+            dateTime={date}
+          >
+            {date}
+          </time>
         </div>
-        <p className="m-0 text-2xl font-semibold tracking-tight text-fd-foreground sm:text-3xl">
-          Built for the next generation of Addis AI applications.
-        </p>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-fd-muted-foreground sm:text-base">
-          {children}
-        </p>
-        <time
-          className="mt-6 inline-flex rounded-full border border-fd-border bg-fd-background/70 px-3 py-1.5 text-xs font-medium text-fd-muted-foreground"
-          dateTime={date}
-        >
-          Released {date}
-        </time>
+        <div className="px-6 py-8 sm:px-9 sm:py-10">
+          <div className="mb-6 h-px w-9 bg-fd-primary" aria-hidden="true" />
+          <p className="m-0 max-w-2xl text-2xl font-semibold tracking-tight text-fd-foreground sm:text-3xl">
+            Built for the next generation of Addis AI applications.
+          </p>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-fd-muted-foreground sm:text-base">
+            {children}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -77,8 +82,16 @@ export function AnnouncementHero({
 
 export function AnnouncementFeed({ children }: { children: ReactNode }) {
   return (
-    <div className="not-prose my-8 divide-y divide-fd-border overflow-hidden rounded-2xl border border-fd-border bg-fd-card/50 shadow-sm">
-      {children}
+    <div className="not-prose relative my-10">
+      <div aria-hidden="true" className="pointer-events-none absolute -inset-3">
+        <span className="absolute inset-x-0 top-3 border-t border-fd-border" />
+        <span className="absolute inset-x-0 bottom-3 border-b border-fd-border" />
+        <span className="absolute inset-y-0 left-3 border-l border-fd-border" />
+        <span className="absolute inset-y-0 right-3 border-r border-fd-border" />
+      </div>
+      <div className="relative border border-fd-border bg-fd-background">
+        {children}
+      </div>
     </div>
   );
 }
@@ -95,12 +108,12 @@ export function AnnouncementItem({
   isNew?: boolean;
 }) {
   return (
-    <article className="group relative grid gap-4 p-5 transition-colors hover:bg-fd-accent/30 sm:grid-cols-[7.5rem_minmax(0,1fr)] sm:gap-6 sm:p-7">
-      <div className="flex items-center gap-2 self-start pt-1 text-xs font-semibold uppercase tracking-[0.16em] text-fd-muted-foreground">
-        <span aria-hidden="true" className="size-1.5 rounded-full bg-fd-primary" />
-        {label}
+    <article className="group relative grid border-b border-fd-border bg-fd-background transition-colors last:border-b-0 hover:bg-fd-accent/20 sm:grid-cols-[8rem_minmax(0,1fr)]">
+      <div className="flex items-start gap-2 border-b border-fd-border px-5 py-5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-fd-muted-foreground sm:border-b-0 sm:border-r sm:py-7">
+        <span aria-hidden="true" className="mt-1.5 h-px w-4 shrink-0 bg-fd-primary" />
+        <span>{label}</span>
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 px-5 py-6 sm:px-7 sm:py-7">
         <div className="flex items-start justify-between gap-4">
           <h2 className="m-0 text-xl font-semibold tracking-tight text-fd-foreground">
             {title}

@@ -58,6 +58,7 @@ test('keeps the approved SDK resources permanently visible above the tree', () =
 
 test('preserves original onboarding screenshots and page structures', () => {
   const quickstart = read('content/docs/get-started/quickstart.mdx');
+  const introduction = read('content/docs/get-started/introduction.mdx');
   for (const image of [
     '/images/playgroundchat.png',
     '/images/api_page.png',
@@ -72,6 +73,8 @@ test('preserves original onboarding screenshots and page structures', () => {
   assert.match(read('content/docs/integration/web.mdx'), /## Security: The Golden Rule/);
   assert.match(read('content/docs/integration/server.mdx'), /<ArchitectureFlow \/>/);
   assert.match(read('content/docs/integration/voice-interface.mdx'), /<VoiceLoopFlow \/>/);
+  assert.match(introduction, /pointer-events-none absolute -inset-3/);
+  assert.doesNotMatch(introduction, /bg-gradient/);
 });
 
 test('preserves capability depth and best-practice guidance', () => {
@@ -184,6 +187,8 @@ test('renders announcements as a release feed with in-card cyan New labels', () 
   assert.doesNotMatch(announcements, /<NewBadge/);
   assert.match(components, /justify-between/);
   assert.match(components, /text-fd-primary/);
+  assert.match(components, /pointer-events-none absolute -inset-3/);
+  assert.doesNotMatch(components, /bg-gradient/);
 });
 
 test('uses only the production Voice 2 example and API-key realtime auth', () => {

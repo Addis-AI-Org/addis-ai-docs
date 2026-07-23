@@ -6,49 +6,61 @@ icon: House
 
 import { Cpu, Rocket, Book, Terminal, PlayCircle, Zap, Globe, MessageSquare, Mic, Image as ImageIcon, Sparkles, LayoutTemplate } from 'lucide-react';
 
-{/* 
-  HERO SECTION
-  Interactive, Engaging, and Error-Free.
-*/}
-<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600/10 via-dark-blue-700/10 to-transparent p-10 border border-fd-border my-6">
-  <div className="relative z-10 p-4 md:p-8 flex flex-col items-start">
-    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 text-xs font-medium mb-6 border border-blue-500/20">
-      <Sparkles className="w-3 h-3" />
-      <span>v2 Models Live</span>
-    </div>
-    
-    <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-none mb-6 text-fd-foreground not-prose">
-      The Engine for <br />
-      <span className="text-fd-primary">African Intelligence.</span>
-    </h1>
-    
-    <div className="text-lg text-fd-muted-foreground leading-relaxed max-w-3xl">
-      Addis AI provides the raw, unified infrastructure (**LLMs**, **Vision**, and **Audio**) designed to process African languages as primary data. By using a native tokenization architecture, we eliminate the translation layer overhead that causes standard APIs to struggle with Ge'ez logic and local accents.
-    </div>
-
-    <div className="flex flex-wrap gap-4 mt-8">
-      <a 
-        href="https://platform.addisassistant.com/playground" 
-        target="_blank" 
-        className="inline-flex h-9 items-center justify-center rounded-md bg-fd-primary px-4 text-sm font-medium text-fd-primary-foreground shadow-sm transition-all hover:bg-fd-primary/90 hover:scale-[1.02]"
-      >
-        <PlayCircle className="w-4 h-4 mr-2" />
-        Open Playground
-      </a>
-      
-      <a 
-        href="/docs/get-started/quickstart" 
-        className="inline-flex h-9 items-center justify-center rounded-md border border-fd-border bg-fd-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground"
-      >
-        <Terminal className="w-4 h-4 mr-2" />
-        Start Coding
-      </a>
-    </div>
+<div className="not-prose relative my-10">
+  <div aria-hidden="true" className="pointer-events-none absolute -inset-3">
+    <span className="absolute inset-x-0 top-3 border-t border-fd-border" />
+    <span className="absolute inset-x-0 bottom-3 border-b border-fd-border" />
+    <span className="absolute inset-y-0 left-3 border-l border-fd-border" />
+    <span className="absolute inset-y-0 right-3 border-r border-fd-border" />
   </div>
 
-   {/* Background Decoration */}
-  <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
-  <div className="absolute bottom-0 right-10 h-40 w-40 rounded-full bg-blue-500/20 blur-3xl" />
+  <div className="relative border border-fd-border bg-fd-background">
+    <div className="flex items-stretch justify-between border-b border-fd-border">
+      <div className="flex items-center gap-2 px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fd-primary">
+        <Sparkles className="size-3.5" aria-hidden="true" />
+        <span>v2 Models Live</span>
+      </div>
+      <div className="hidden items-center border-l border-fd-border px-5 font-mono text-[10px] uppercase tracking-[0.16em] text-fd-muted-foreground sm:flex">
+        Addis AI / Developer platform
+      </div>
+    </div>
+
+    <div className="p-6 sm:p-9 md:p-12">
+      <div className="mb-7 h-px w-10 bg-fd-primary" aria-hidden="true" />
+      <h1 className="m-0 max-w-3xl text-4xl font-bold leading-[0.98] tracking-tight text-fd-foreground md:text-5xl">
+        The Engine for <br />
+        <span className="text-fd-primary">African Intelligence.</span>
+      </h1>
+
+      <div className="mt-8 max-w-3xl text-base leading-7 text-fd-muted-foreground md:text-lg md:leading-8">
+        Addis AI provides the raw, unified infrastructure (**LLMs**, **Vision**, and **Audio**) designed to process African languages as primary data. By using a native tokenization architecture, we eliminate the translation layer overhead that causes standard APIs to struggle with Ge'ez logic and local accents.
+      </div>
+    </div>
+
+    <div className="flex flex-col border-t border-fd-border sm:flex-row">
+      <a
+        href="https://platform.addisassistant.com/playground"
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex min-h-12 items-center justify-center bg-fd-primary px-5 text-sm font-semibold text-fd-primary-foreground transition-colors hover:bg-fd-primary/90 sm:min-w-48"
+      >
+        <PlayCircle className="mr-2 size-4" />
+        Open Playground
+      </a>
+
+      <a
+        href="/docs/get-started/quickstart"
+        className="inline-flex min-h-12 items-center justify-center border-t border-fd-border bg-fd-background px-5 text-sm font-semibold text-fd-foreground transition-colors hover:bg-fd-accent sm:min-w-44 sm:border-l sm:border-t-0"
+      >
+        <Terminal className="mr-2 size-4" />
+        Start Coding
+      </a>
+
+      <div className="hidden flex-1 items-center justify-end border-l border-fd-border px-5 font-mono text-[10px] uppercase tracking-[0.16em] text-fd-muted-foreground md:flex">
+        LLM · Vision · Audio
+      </div>
+    </div>
+  </div>
 </div>
 
 ## Why Addis AI?
