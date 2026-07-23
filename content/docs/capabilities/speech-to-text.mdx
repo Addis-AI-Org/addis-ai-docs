@@ -11,18 +11,9 @@ import { AudioWaveform, Mic, FileAudio, AlertTriangle } from 'lucide-react';
 
 Our Speech-to-Text (STT) technology is powered by specialized models trained to accurately recognize African languages. Unlike generic transcription services, our models are optimized for the specific phonemes, accents, and dialects of **Amharic** and **Afan Oromo**.
 
-## Endpoint
-
-<div className="flex items-center gap-2 border border-fd-border p-3 rounded-lg bg-fd-muted/50 font-mono text-sm my-4">
-  <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-bold">POST</span>
-  <span className="text-fd-foreground">https://api.addisassistant.com/api/v2/stt</span>
-</div>
-
----
-
 ## Usage Guide
 
-This endpoint requires a **`multipart/form-data`** request. You must send the audio file binary along with a JSON string containing the configuration.
+Speech-to-text uploads use **`multipart/form-data`**. The SDK handles the transport format when you pass an audio file and language.
 
 ### Transcribe a File
 Upload an audio file to get the text transcription.

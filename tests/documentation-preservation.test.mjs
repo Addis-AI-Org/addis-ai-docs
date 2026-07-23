@@ -151,6 +151,33 @@ test('keeps SDK examples primary without removing cURL interoperability', () => 
   assert.doesNotMatch(sdks, /cURL/);
 });
 
+test('keeps raw endpoint panels only where the Realtime protocol requires one', () => {
+  for (const path of [
+    'content/docs/capabilities/text-generation.mdx',
+    'content/docs/capabilities/text-to-speech.mdx',
+    'content/docs/capabilities/text-to-speech-legacy.mdx',
+    'content/docs/capabilities/speech-to-text.mdx',
+    'content/docs/capabilities/multimodal.mdx',
+    'content/docs/capabilities/translation.mdx',
+  ]) {
+    assert.doesNotMatch(read(path), /^## Endpoint$/m, `${path} should lead with SDK usage, not a raw endpoint panel`);
+  }
+
+  assert.match(read('content/docs/capabilities/realtime.mdx'), /^## Endpoint$/m);
+});
+
+test('renders announcements as a release feed with in-card cyan New labels', () => {
+  const announcements = read('content/docs/announcements.mdx');
+  const components = read('components/docs.tsx');
+
+  assert.match(announcements, /<AnnouncementHero date="2026-07-23">/);
+  assert.equal((announcements.match(/<AnnouncementItem/g) ?? []).length, 4);
+  assert.equal((announcements.match(/\bisNew\b/g) ?? []).length, 3);
+  assert.doesNotMatch(announcements, /<NewBadge/);
+  assert.match(components, /justify-between/);
+  assert.match(components, /text-fd-primary/);
+});
+
 test('uses only the production Voice 2 example and API-key realtime auth', () => {
   const searchable = [
     ...walk('content'),

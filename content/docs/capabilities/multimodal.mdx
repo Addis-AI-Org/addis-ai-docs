@@ -15,20 +15,11 @@ The **Multimodal** capability extends `Addis-፩-አሌፍ` beyond text. You can
 *   **Audio Analysis:** Summarize voice notes, analyze sentiment, or extract action items from meetings (distinct from simple transcription).
 *   **OCR:** Extract text from scanned African documents.
 
-## Endpoint
-
-<div className="flex items-center gap-2 border border-fd-border p-3 rounded-lg bg-fd-muted/50 font-mono text-sm my-4">
-  <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-bold">POST</span>
-  <span className="text-fd-foreground">https://api.addisassistant.com/api/v1/chat_generate</span>
-</div>
-
 <Callout type="warn" title="Important: Data Format">
   Unlike standard text generation, this request **must** be sent as `multipart/form-data`.
   
   The configuration (prompt, model, parameters) must be passed as a **stringified JSON object** in a field named `request_data`.
 </Callout>
-
----
 
 ## Usage Guide
 
