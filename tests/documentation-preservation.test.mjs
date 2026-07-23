@@ -290,6 +290,19 @@ test('animates the voice pipeline as sequential nodes and connections', () => {
   assert.match(voiceLoop, /Live request path/);
 });
 
+test('uses the same sequential motion system for server-side integration', () => {
+  const architecture = read('components/architecture-flow.tsx');
+
+  assert.match(architecture, /activationStep=\{0\}/);
+  assert.match(architecture, /activationStep=\{4\}/);
+  assert.match(architecture, /transition-\[left,opacity\] duration-700/);
+  assert.match(architecture, /Secure request path/);
+  assert.match(architecture, /annotation="Secure zone"/);
+  assert.match(architecture, /overflow-x-auto/);
+  assert.match(architecture, /aria-live="polite"/);
+  assert.match(architecture, /prefers-reduced-motion: reduce/);
+});
+
 test('uses only the production Voice 2 example and API-key realtime auth', () => {
   const searchable = [
     ...walk('content'),
