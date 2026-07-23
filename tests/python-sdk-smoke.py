@@ -129,7 +129,7 @@ estimate = addis.voice.estimate(**voice_input)
 assert estimate["can_generate"] and estimate["pricing_unit"] == "minute"
 clip = addis.voice.generate(**voice_input, client_request_id="test-operation")
 assert clip.voice_id == "am-hamen" and clip.usage["pricing_unit"] == "minute"
-# Published 0.1.1 drops the backend's price_per_minute field; the docs disclose it.
+# Keep this published 0.1.1 mapper regression explicit until the Python SDK is corrected.
 assert "price_per_minute" not in clip.usage
 with TemporaryDirectory() as directory:
     output = Path(directory) / "speech.mp3"
