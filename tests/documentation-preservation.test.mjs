@@ -69,6 +69,15 @@ test('preserves original onboarding screenshots and page structures', () => {
     assert.ok(existsSync(join(root, 'public', image)));
   }
 
+  assert.match(quickstart, /https:\/\/addisassistant\.com\/playground/);
+  assert.match(quickstart, /Open the Addis AI Playground/);
+  assert.match(quickstart, /https:\/\/addisassistant\.com\/apikeys/);
+  assert.match(quickstart, /Voice Labs/);
+  assert.match(quickstart, /Current Addis AI Playground showing model, language, output, temperature, and token controls/);
+  assert.match(quickstart, /Addis AI API Keys page with the Create API Key button/);
+  assert.match(quickstart, /Create API Key dialog with the key-name field/);
+  assert.match(quickstart, /one-time Copy action/);
+
   assert.match(read('content/docs/platform/faq.mdx'), /<Accordions>/);
   assert.match(read('content/docs/integration/web.mdx'), /## Security: The Golden Rule/);
   assert.match(read('content/docs/integration/server.mdx'), /<ArchitectureFlow \/>/);
@@ -106,7 +115,9 @@ test('documents Voice 2 while retaining the full hidden legacy workflow', () => 
     '## Generate and save a clip',
     '## Usage and clip history',
     '## Best Practices',
+    '## Migrate from Legacy Text-to-Speech',
     '/api/v1/voice/generations',
+    'no credential change',
     '5 ETB per generated minute',
     '/docs/capabilities/text-to-speech-legacy',
   ]) {
@@ -134,6 +145,29 @@ test('documents Voice 2 while retaining the full hidden legacy workflow', () => 
   assert.match(catalogComponent, /addis-offset-shell/);
   assert.match(catalogComponent, /grid border-l border-fd-border/);
   assert.doesNotMatch(catalogComponent, /bg-gradient/);
+});
+
+test('applies the second-round Introduction and chat-control refinements', () => {
+  const introduction = read('content/docs/get-started/introduction.mdx');
+  const textGeneration = read('content/docs/capabilities/text-generation.mdx');
+
+  assert.doesNotMatch(introduction, /GPT-4|Silicon Valley/);
+  assert.match(introduction, /major general-purpose AI models can misinterpret or hallucinate/);
+  assert.match(introduction, /Addis Voices 2/);
+  assert.match(introduction, /<NewBadge \/>/);
+  assert.match(introduction, /### 🚀 Get Started/);
+  assert.match(introduction, /### ⚡ Capabilities/);
+  assert.match(introduction, /### 🧩 Integration/);
+  assert.match(introduction, /### ⚙️ Platform/);
+
+  for (const parameter of ["'persona'", "'system'"]) {
+    assert.match(textGeneration, new RegExp(parameter));
+  }
+  assert.match(textGeneration, /'persona': \{[\s\S]*?type: 'string',[\s\S]*?required: false/);
+  assert.match(textGeneration, /'system': \{[\s\S]*?type: 'string',[\s\S]*?required: false/);
+  assert.match(textGeneration, /System Instructions and Personas <NewBadge/);
+  assert.match(textGeneration, /Function Calling <NewBadge/);
+  assert.match(textGeneration, /platform safeguards remain in force/);
 });
 
 test('keeps SDK examples primary without removing cURL interoperability', () => {
@@ -185,10 +219,25 @@ test('renders announcements as a release feed with in-card cyan New labels', () 
   assert.equal((announcements.match(/<AnnouncementItem/g) ?? []).length, 4);
   assert.equal((announcements.match(/\bisNew\b/g) ?? []).length, 3);
   assert.doesNotMatch(announcements, /<NewBadge/);
-  assert.match(components, /justify-between/);
+  assert.match(components, /flex flex-wrap items-center gap-2/);
+  assert.match(components, /\{isNew \? <NewBadge \/> : null\}/);
   assert.match(components, /text-fd-primary/);
   assert.match(components, /addis-offset-shell/);
   assert.doesNotMatch(components, /bg-gradient/);
+});
+
+test('uses the shared cyan New badge for page, section, and announcement titles', () => {
+  const components = read('components/docs.tsx');
+  const page = read('app/docs/[[...slug]]/page.tsx');
+  const schema = read('source.config.ts');
+  const voice = read('content/docs/capabilities/text-to-speech.mdx');
+
+  assert.match(components, /export function NewBadge/);
+  assert.match(components, /border-fd-primary\/35 bg-fd-primary\/10/);
+  assert.match(page, /page\.data\.isNew \? <NewBadge \/> : null/);
+  assert.match(schema, /isNew: z\.boolean\(\)\.default\(false\)/);
+  assert.match(voice, /^title: Text-to-Speech$/m);
+  assert.match(voice, /^isNew: true$/m);
 });
 
 test('uses one reversible visual system across custom documentation surfaces', () => {
@@ -257,8 +306,26 @@ test('keeps pricing as documentation rather than a public JSON interface', () =>
   assert.match(pricing, /0\.3 ETB \/ 1,000 tokens/);
   assert.match(pricing, /0\.8 ETB \/ 1,000 tokens/);
   assert.match(pricing, /3\.5 ETB \/ 1,000 characters/);
+  assert.match(pricing, /Text Generation & Translation \(Input\)/);
+  assert.match(pricing, /Text Generation & Translation \(Output\)/);
+  assert.match(pricing, /Realtime Audio \(Input\)/);
+  assert.match(pricing, /Realtime Audio \(Output\)/);
+  assert.doesNotMatch(pricing, /Text Generation & Translation —|Realtime Audio —/);
   assert.equal(existsSync(join(root, 'public/pricing.json')), false);
   assert.equal(existsSync(join(root, 'app/pricing.json')), false);
+});
+
+test('uses current platform routes and consistent release terminology', () => {
+  const docsText = walk('content/docs')
+    .filter((path) => path.endsWith('.mdx'))
+    .map((path) => readFileSync(path, 'utf8'))
+    .join('\n');
+
+  assert.doesNotMatch(docsText, /platform\.addisassistant\.com/);
+  assert.doesNotMatch(docsText, /Addis Voice 2/);
+  assert.doesNotMatch(docsText, /Legacy Text to Speech/);
+  assert.match(docsText, /Addis Voices 2/);
+  assert.match(docsText, /Legacy Text-to-Speech/);
 });
 
 test('resolves local documentation links and image assets', () => {

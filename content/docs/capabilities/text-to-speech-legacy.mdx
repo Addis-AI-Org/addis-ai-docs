@@ -1,5 +1,5 @@
 ---
-title: Legacy Text to Speech
+title: Legacy Text-to-Speech
 description: Maintain the deprecated Voice 1 Base64 and streaming integration.
 icon: AudioWaveform
 ---
@@ -13,10 +13,10 @@ import { Base64Player } from '@/components/base64-player';
 <StatusBadge status="deprecated">Legacy</StatusBadge>
 
 <Callout type="warn" title="Voice 1 is deprecated">
-This page preserves the original Voice 1 Base64 and streaming workflow for existing applications. New integrations should use [Text to Speech with Voice 2](/docs/capabilities/text-to-speech).
+This page preserves the original Voice 1 Base64 and streaming workflow for existing applications. New integrations should use [Text-to-Speech with Addis Voices 2](/docs/capabilities/text-to-speech).
 </Callout>
 
-The Text to Speech (TTS) API is powered by our **`አሌፍ-Audio`** engine. It is designed to produce human-quality speech for African languages, correctly handling **Ge'ez punctuation** (like `።`, `፣`) for natural pausing and intonation.
+The legacy Text-to-Speech (TTS) API is powered by our **`አሌፍ-Audio`** engine. It is designed to produce human-quality speech for African languages, correctly handling **Ge'ez punctuation** (like `።`, `፣`) for natural pausing and intonation.
 
 ## Usage Guide
 
@@ -385,6 +385,6 @@ Ensure high-quality voice output with these guidelines.
 
 ---
 
-## Migrate to Voice 2
+## Migrate to Addis Voices 2
 
-Voice 2 adds catalog discovery, previews, estimates, durable clips, idempotency, and minute-based billing. Start with the [Voice 2 Text to Speech guide](/docs/capabilities/text-to-speech), select a current catalog voice such as `am-hamen`, and migrate one existing use case at a time.
+Addis Voices 2 adds catalog discovery, previews, estimates, durable clips, idempotency, and minute-based billing. Start with the [Addis Voices 2 Text-to-Speech guide](/docs/capabilities/text-to-speech), select a current catalog voice such as `am-hamen`, and migrate one existing use case at a time. The current guide includes a [field-by-field migration summary](/docs/capabilities/text-to-speech#migrate-from-legacy-text-to-speech).

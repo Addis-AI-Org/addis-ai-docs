@@ -10,14 +10,14 @@ Addis AI bills natively in Ethiopian birr (ETB). Any USD or EUR amount shown in 
 
 | Capability | Billing unit | Price |
 | :--- | :--- | :--- |
-| **Addis Voice 2** | Generated audio | **5 ETB / minute** |
-| **Text Generation & Translation — Input** | Input tokens | **0.3 ETB / 1,000 tokens** |
-| **Text Generation & Translation — Output** | Output tokens | **0.8 ETB / 1,000 tokens** |
+| **Addis Voices 2** | Generated audio | **5 ETB / minute** |
+| **Text Generation & Translation (Input)** | Input tokens | **0.3 ETB / 1,000 tokens** |
+| **Text Generation & Translation (Output)** | Output tokens | **0.8 ETB / 1,000 tokens** |
 | **Speech to Text** | Transcribed output | **3.5 ETB / 1,000 characters** |
-| **Realtime Audio — Input** | Input tokens | **1 ETB / 1,000 tokens** |
-| **Realtime Audio — Output** | Output tokens | **4 ETB / 1,000 tokens** |
+| **Realtime Audio (Input)** | Input tokens | **1 ETB / 1,000 tokens** |
+| **Realtime Audio (Output)** | Output tokens | **4 ETB / 1,000 tokens** |
 
-<Callout type="info" title="Voice 2 estimates">
+<Callout type="info" title="Addis Voices 2 estimates">
 Use `voice.estimate` before generation when a user must approve spend. The estimate reports the expected duration, billable duration, cost, balance, currency, and whether generation can proceed.
 </Callout>
 
@@ -40,7 +40,7 @@ Use `voice.estimate` before generation when a user must approve spend. The estim
       Retry safely
     </h3>
     <div className="text-sm text-fd-muted-foreground">
-      Reuse the same Voice 2 client request ID only when retrying the same logical generation, so an uncertain response does not create duplicate billed clips.
+      Reuse the same Addis Voices 2 client request ID only when retrying the same logical generation, so an uncertain response does not create duplicate billed clips.
     </div>
   </div>
 </div>

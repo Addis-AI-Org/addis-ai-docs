@@ -7,6 +7,7 @@ icon: MessageSquareText
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 import { Callout } from 'fumadocs-ui/components/callout';
+import { NewBadge } from '@/components/docs';
 
 The Text Generation API is powered by **`Addis-፩-አሌፍ`**, our flagship Large Language Model. 
 
@@ -121,9 +122,11 @@ The SDK accepts the same turns as `messages` and maps them to the native convers
 
 ---
 
-### 3. System Instructions and Personas
+### 3. System Instructions and Personas <NewBadge className="ml-2 align-middle" />
 
 Use a **persona** for the assistant's identity and a **system instruction** for behavior, constraints, language, or output format. Conversation turns remain in `messages`.
+
+Both fields are optional plain strings. `persona` defines who the assistant is; `system` defines how it should behave. The current user message supplies the task or input. System instructions are higher-level guidance than user messages, while Addis AI's platform safeguards remain in force if any instruction conflicts with them. Keep identity and behavioral rules consistent instead of asking the persona and system instruction to pull in different directions.
 
 <Tabs items={['Node.js', 'Python', 'cURL']}>
   <Tab value="Node.js">
@@ -159,7 +162,7 @@ Use a **persona** for the assistant's identity and a **system instruction** for 
   </Tab>
 </Tabs>
 
-### 4. Function Calling
+### 4. Function Calling <NewBadge className="ml-2 align-middle" />
 
 Function calling lets the model request an action that your application owns. The model never executes the function itself. Validate arguments, authorize the current user, run the function with a timeout, return the result, and cap the number of tool rounds.
 
@@ -407,6 +410,16 @@ These parameters go in the root of your JSON body.
       description: 'Array of previous message objects to maintain context.',
       type: 'array',
       default: '[]'
+    },
+    'persona': {
+      description: 'Optional plain-text assistant identity. It shapes voice and role, for example: "You are a patient Ethiopian language tutor." Use system for behavior and constraints.',
+      type: 'string',
+      required: false
+    },
+    'system': {
+      description: 'Optional plain-text behavior, language, constraint, or output instruction, for example: "Answer in Amharic, then include one short English gloss." It guides behavior above user messages; platform safeguards always remain in force.',
+      type: 'string',
+      required: false
     },
     'generation_config': {
       description: 'Configuration object for model behavior (see below).',

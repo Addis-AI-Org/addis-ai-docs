@@ -38,7 +38,7 @@ These examples call a developer-owned backend. That backend uses the official No
 ### 1. Flutter (Dart)
 Flutter is the dominant framework in our ecosystem. Use the `http` package.
 
-<Tabs items={['Chat Request', 'Voice 2 Playback', 'Legacy Base64 Playback']}>
+<Tabs items={['Chat Request', 'Addis Voices 2 Playback', 'Legacy Base64 Playback']}>
   <Tab value="Chat Request">
     ```dart
     import 'dart:convert';
@@ -73,8 +73,8 @@ Flutter is the dominant framework in our ecosystem. Use the `http` package.
     }
     ```
   </Tab>
-  <Tab value="Voice 2 Playback">
-    Voice 2 returns a signed clip URL through your backend.
+  <Tab value="Addis Voices 2 Playback">
+    Addis Voices 2 returns a signed clip URL through your backend.
     *Dependency:* `audioplayers`
 
     ```dart
@@ -187,7 +187,7 @@ Using `OkHttp` for networking.
 
 ## Handling Audio (TTS)
 
-Voice 2 returns a completed clip with a signed audio URL. Your backend should return that URL—or proxy the clip after authorizing the user—and the mobile app can pass it to its native player.
+Addis Voices 2 returns a completed clip with a signed audio URL. Your backend should return that URL—or proxy the clip after authorizing the user—and the mobile app can pass it to its native player.
 
 ```dart
 final player = AudioPlayer();
@@ -195,7 +195,7 @@ await player.play(UrlSource(response.audioUrl));
 ```
 
 <Callout type="warn" title="Legacy Voice 1">
-The Base64 workflow below is preserved for existing Voice 1 applications. New applications should use [Text to Speech](/docs/capabilities/text-to-speech); see the [Legacy Text to Speech guide](/docs/capabilities/text-to-speech-legacy) only when maintaining the retired response format.
+The Base64 workflow below is preserved for existing Voice 1 applications. New applications should use [Text-to-Speech](/docs/capabilities/text-to-speech); see the [Legacy Text-to-Speech guide](/docs/capabilities/text-to-speech-legacy) only when maintaining the retired response format.
 </Callout>
 
 Legacy Voice 1 returns a **Base64 string**, not a URL.

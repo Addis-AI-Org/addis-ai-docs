@@ -16,15 +16,18 @@ This guide will take you through the complete lifecycle: testing your ideas visu
     Before writing code, we recommend testing your prompts interactively.
 
     ### Test your Parameters
-    Go to the **[Addis AI Playground](https://platform.addisassistant.com/playground)**.
+    **[Open the Addis AI Playground](https://addisassistant.com/playground)**.
     
-    ![Addis AI Playground Interface](/images/playgroundchat.png)
+    ![Current Addis AI Playground showing model, language, output, temperature, and token controls](/images/playgroundchat.png)
     
-    1.  **Select a Model:** Choose `Addis-፩-አሌፍ` for text or `Addis-Audio` for voice.
-    2.  **Adjust Temperature:** 
+    1.  **Select a model:** Choose `Addis-፩-አሌፍ` for text generation.
+    2.  **Choose the language and output type:** Select Amharic or Afaan Oromo and the response format you want to test.
+    3.  **Adjust temperature:**
         *   Set to **0.2** for factual answers (History, Math).
         *   Set to **0.7** for creative writing (Stories, Poems).
-    3.  **Check Tokens:** See how many tokens your Amharic query consumes.
+    4.  **Set the response length and check usage:** Adjust the maximum completion tokens, send a text or audio prompt, and review the token count.
+
+    The **Voice Labs** experience is available from the **Voice Lab** navigation item when you want to discover and preview Addis Voices 2 separately from the Playground.
 
     Once you are happy with the result, you are ready to integrate.
   </Step>
@@ -35,14 +38,14 @@ This guide will take you through the complete lifecycle: testing your ideas visu
     Authentication is handled via a secret `x-api-key` header.
     
     ### Generate New Key
-    1.  Navigate to the **[API Keys Dashboard](https://platform.addisassistant.com/api-keys)**.
+    1.  Navigate to the **[API Keys Dashboard](https://addisassistant.com/apikeys)**.
     2.  Click **Create API Key**.
 
-    ![API Key Generation](/images/api_page.png)
+    ![Addis AI API Keys page with the Create API Key button](/images/api_page.png)
 
     3.  **Name your key** (e.g., `Addis AI App`) in the popup window.
 
-    ![API Key Generation](/images/api_name.png)
+    ![Create API Key dialog with the key-name field](/images/api_name.png)
     
     ### Copy Secret
     <Callout title="Important" type="info">
@@ -51,7 +54,7 @@ This guide will take you through the complete lifecycle: testing your ideas visu
       You will not be able to see it again after closing the window.
     </Callout>
 
-    ![API Key Generation](/images/secretkey.png)
+    ![New Addis AI API key confirmation with the one-time Copy action](/images/secretkey.png)
   </Step>
  
   <Step>
@@ -85,7 +88,7 @@ This guide will take you through the complete lifecycle: testing your ideas visu
     | Goal | Endpoint | Method |
     | :--- | :--- | :--- |
     | **Chat / Text** | `/api/v1/chat_generate` | `POST` |
-    | **Text-to-Speech (Voice 2)** | `/api/v1/voice/generations` | `POST` |
+    | **Text-to-Speech (Addis Voices 2)** | `/api/v1/voice/generations` | `POST` |
     | **Speech-to-Text** | `/api/v2/stt` | `POST` |
 
   </Step>
@@ -231,7 +234,7 @@ This guide will take you through the complete lifecycle: testing your ideas visu
   </Step>
 
   <Step>
-    ## Generate your first Voice 2 clip
+    ## Generate your first Addis Voices 2 clip
 
     Use `am-hamen` for the first Amharic example. For production, query the voice catalog and preview a voice before saving its ID.
 

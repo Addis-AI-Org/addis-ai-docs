@@ -60,7 +60,7 @@ To minimize latency and manage secrets, this pipeline should run on your server.
         });
         const answer = completion.choices[0].message.content;
 
-        // 3. Speak with Voice 2
+        // 3. Speak with Addis Voices 2
         const clip = await addis.voice.generate({
           text: answer,
           voiceId: "am-hamen",
@@ -101,7 +101,7 @@ To minimize latency and manage secrets, this pipeline should run on your server.
         )
         answer = completion["choices"][0]["message"]["content"]
 
-        # 3. Speak with Voice 2
+        # 3. Speak with Addis Voices 2
         clip = addis.voice.generate(
             text=answer,
             voice_id="am-hamen",
@@ -148,7 +148,7 @@ On the client side (React, Flutter, etc.), your job is to record audio, send it 
   
   <Step>
     ### Play Response
-    Play the completed Voice 2 clip URL returned by your backend.
+    Play the completed Addis Voices 2 clip URL returned by your backend.
     
     ```javascript
     const audio = new Audio(data.audio_url);
@@ -172,7 +172,7 @@ The "Request-Response" model adds up latency (STT time + LLM time + TTS time). T
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
       <div>
-        **Segment deliberately.** For long responses, split complete sentences into separate Voice 2 clips and queue them in order. Voice 2 returns completed clips; it does not stream one generation.
+        **Segment deliberately.** For long responses, split complete sentences into separate Addis Voices 2 clips and queue them in order. Addis Voices 2 returns completed clips; it does not stream one generation.
       </div>
     </div>
   </div>

@@ -5,6 +5,7 @@ icon: House
 ---
 
 import { Cpu, Rocket, Book, Terminal, PlayCircle, Zap, Globe, MessageSquare, Mic, Image as ImageIcon, Sparkles, LayoutTemplate } from 'lucide-react';
+import { NewBadge } from '@/components/docs';
 
 <div className="not-prose addis-offset-shell my-10">
   <div className="relative border border-fd-border bg-fd-background">
@@ -32,7 +33,7 @@ import { Cpu, Rocket, Book, Terminal, PlayCircle, Zap, Globe, MessageSquare, Mic
 
     <div className="flex flex-col border-t border-fd-border sm:flex-row">
       <a
-        href="https://platform.addisassistant.com/playground"
+        href="https://addisassistant.com/playground"
         target="_blank"
         rel="noreferrer"
         className="inline-flex min-h-12 items-center justify-center bg-fd-primary px-5 text-sm font-semibold text-fd-primary-foreground transition-colors hover:bg-fd-primary/90 sm:min-w-48"
@@ -58,11 +59,11 @@ import { Cpu, Rocket, Book, Terminal, PlayCircle, Zap, Globe, MessageSquare, Mic
 
 ## Why Addis AI?
 
-Building AI for Africa is different. Generic models from Silicon Valley treat our languages as an edge case. We treat them as the core product.
+Building AI for Africa requires language-specific training. Many general-purpose models have limited exposure to the morphology, scripts, and cultural context of African languages. Addis AI treats those languages as the core product.
 
 We solve the **three hardest problems** in African NLP:
 
-1.  **Morphology:** Amharic verbs fuse subject, object, and tense into single words. Our models parse this correctly where GPT-4 often hallucinates.
+1.  **Morphology:** Amharic verbs fuse subject, object, and tense into single words. This complex structure requires language-specific training. Our models parse it correctly, while major general-purpose AI models can misinterpret or hallucinate the underlying meaning.
 2.  **Culture:** Our models understand African history, regional geography, and contemporary legal and regulatory contexts.
 3.  **Voice:** We don't just do text. We built the most natural sounding TTS engines for Amharic and Afan Oromo.
 
@@ -80,12 +81,12 @@ Our flagship Large Language Model. It is optimized for instruction following, re
 
 ### 2. አሌፍ-Audio (Voice)
 A suite of high-fidelity audio models.
-*   **Addis Voice 2:** The current text-to-speech engine with a discoverable voice catalog, previews, cost estimates, and durable clips.
+*   <span className="inline-flex flex-wrap items-center gap-2"><strong>Addis Voices 2</strong><NewBadge /></span>: The latest generation of Addis AI's Text-to-Speech technology, with multiple production-ready Amharic and Afaan Oromo voices designed for natural, expressive delivery. Use the catalog, previews, cost estimates, and durable clips to build conversational AI, narration, customer support, announcements, and other voice-first applications. [Explore the complete Text-to-Speech guide](/docs/capabilities/text-to-speech).
 *   **`አሌፍ-Audio-AM`:** Amharic Text-to-Speech with natural intonation.
 *   **`አሌፍ-Audio-OM`:** Afan Oromo Text-to-Speech.
 *   **`addis-whisper`:** Speech-to-Text transcription that handles dialect variations.
 
-The previous Voice 1 text-to-speech API remains available only for existing applications and is documented in the [Legacy Text to Speech guide](/docs/capabilities/text-to-speech-legacy).
+The previous Voice 1 Text-to-Speech API remains available only for existing applications and is documented in the [Legacy Text-to-Speech guide](/docs/capabilities/text-to-speech-legacy).
 
 ### 3. Realtime Audio
 Powered by **`አሌፍ-1.2-realtime-audio`**.
@@ -102,11 +103,18 @@ We have structured the docs to get you into production fast.
 *   **[Playground Guide](/docs/get-started/playground-guide):** Learn how to prompt the models visually.
 *   **[Quick Start](/docs/get-started/quickstart):** Get your API Key, choose a model, and make your first request (Auth & Code included).
 
-### ⚡ Capabilities & API
+### ⚡ Capabilities
 Deep dives into the specific endpoints and parameters.
 *   **[Text Generation](/docs/capabilities/text-generation):** Context management, parameters, and JSON schemas.
-*   **[Voice Intelligence](/docs/capabilities/text-to-speech):** Discovering voices, estimating cost, and generating Voice 2 clips.
+*   **[Text-to-Speech](/docs/capabilities/text-to-speech):** Discovering voices, estimating cost, and generating Addis Voices 2 clips.
 *   **[Vision](/docs/capabilities/vision):** OCR and Image analysis.
+
+### 🧩 Integration
+Patterns for connecting Addis AI securely to your application.
+*   **[Web Applications](/docs/integration/web):** Keep API keys on your backend and expose only the routes your web client needs.
+*   **[Mobile Applications](/docs/integration/mobile):** Use a backend proxy for mobile requests and audio delivery.
+*   **[Server-side Integration](/docs/integration/server):** Structure production Node.js and Python services.
+*   **[Voice Interface](/docs/integration/voice-interface):** Orchestrate speech, text generation, and voice playback.
 
 ### ⚙️ Platform
 *   **[Rate Limits](/docs/platform/limits):** Understanding tiers and quotas.

@@ -22,9 +22,21 @@ export function StatusBadge({
   );
 }
 
-export function NewBadge({ children = 'New' }: { children?: ReactNode }) {
+export function NewBadge({
+  children = 'New',
+  className,
+}: {
+  children?: ReactNode;
+  className?: string;
+}) {
   return (
-    <span className="not-prose inline-flex rounded-full border border-fd-primary/35 bg-fd-primary/10 px-2.5 py-1 text-xs font-semibold text-fd-primary">
+    <span
+      aria-label="New"
+      className={cn(
+        'not-prose inline-flex shrink-0 items-center rounded-full border border-fd-primary/35 bg-fd-primary/10 px-2.5 py-1 text-xs font-semibold leading-none text-fd-primary',
+        className,
+      )}
+    >
       {children}
     </span>
   );
@@ -102,15 +114,11 @@ export function AnnouncementItem({
         <span>{label}</span>
       </div>
       <div className="min-w-0 px-5 py-6 sm:px-7 sm:py-7">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
           <h2 className="m-0 text-xl font-semibold tracking-tight text-fd-foreground">
             {title}
           </h2>
-          {isNew ? (
-            <span className="shrink-0">
-              <NewBadge />
-            </span>
-          ) : null}
+          {isNew ? <NewBadge /> : null}
         </div>
         <div className="mt-3 space-y-3 text-sm leading-6 text-fd-muted-foreground [&_a]:font-medium [&_a]:text-fd-foreground [&_a]:underline [&_a]:decoration-fd-primary/50 [&_a]:underline-offset-4 [&_a:hover]:text-fd-primary [&_li]:pl-1 [&_p]:m-0 [&_ul]:my-0 [&_ul]:space-y-1 [&_ul]:pl-5">
           {children}

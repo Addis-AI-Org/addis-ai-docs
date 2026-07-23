@@ -1,15 +1,16 @@
 ---
-title: Text to Speech
+title: Text-to-Speech
 description: Discover voices, estimate cost, generate speech, and manage durable audio clips.
 icon: AudioLines
+isNew: true
 ---
 
 import { VoiceCatalog } from '@/components/voice-catalog';
 
-Addis Voice 2 turns Amharic and Afan Oromo text into durable audio clips. It is billed by generated duration at **5 ETB per minute** and does not stream partial audio.
+Addis Voices 2 turns Amharic and Afaan Oromo text into durable audio clips. It is billed by generated duration at **5 ETB per minute** and does not stream partial audio.
 
 <Callout type="warn" title="Maintaining a Voice 1 integration?">
-The original Text to Speech API is deprecated and hidden from the primary navigation. [Open the Legacy Text to Speech guide →](/docs/capabilities/text-to-speech-legacy)
+The original Text-to-Speech API is deprecated and hidden from the primary navigation. [Open the Legacy Text-to-Speech guide →](/docs/capabilities/text-to-speech-legacy)
 </Callout>
 
 ## Discover voices
@@ -241,7 +242,7 @@ curl -X DELETE https://api.addisassistant.com/api/v1/voice/clips/CLIP_ID \
   </Tab>
 </Tabs>
 
-Voice 2 usage is billed at **5 ETB per generated minute**. Use the estimate before generation when a user must approve spend, and use the usage response to display current ETB balance and total spend.
+Addis Voices 2 usage is billed at **5 ETB per generated minute**. Use the estimate before generation when a user must approve spend, and use the usage response to display current ETB balance and total spend.
 
 ## Errors
 
@@ -294,11 +295,25 @@ Ensure high-quality output and reliable billing with these production patterns.
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
       <div><strong className="text-fd-foreground">Persist IDs:</strong> Store durable clip IDs instead of expiring signed URLs.</div>
-      <div><strong className="text-fd-foreground">Completed audio:</strong> Split very long text at natural boundaries; Voice 2 does not stream partial audio.</div>
+      <div><strong className="text-fd-foreground">Completed audio:</strong> Split very long text at natural boundaries; Addis Voices 2 does not stream partial audio.</div>
     </div>
   </div>
 </div>
 
-Continue to [Legacy Text to Speech (deprecated)](/docs/capabilities/text-to-speech-legacy) only when maintaining an existing Voice 1 integration.
+## Migrate from Legacy Text-to-Speech
+
+Addis Voices 2 uses the same Addis AI API key as the legacy API, so no credential migration is required. HTTP header names are case-insensitive: the SDK reads `ADDIS_API_KEY`, and raw requests send it through `x-api-key`.
+
+| Area | Legacy Text-to-Speech | Addis Voices 2 |
+| --- | --- | --- |
+| Endpoint | `/api/v1/audio` | `/api/v1/voice/generations` |
+| Authentication | Existing Addis AI API key in `X-API-Key` | The same API key through the SDK or `x-api-key`; no credential change |
+| Request | `text`, `language`, and optional `stream` | `text`, `voice_id`, `language`, `output_format`, and optional `client_request_id` |
+| Voice selection | Language selects the legacy engine | Query the [voice catalog](#discover-voices), preview an available voice, then send its exact ID |
+| Response | Base64 WAV JSON or a legacy audio stream | Durable clip metadata and a signed `audio_url`; partial streaming is not supported |
+| SDK | `legacy.audio.generate()` or `legacy.audio.stream()` | `voice.generate()`, `voices.list()`, estimates, usage, and clip management |
+| Pricing | Existing Voice 1 account pricing remains unchanged | **5 ETB per generated minute**, with a pre-generation estimate |
+
+For a new integration, follow [Generate and save a clip](#generate-and-save-a-clip). Existing applications can keep using the complete [Legacy Text-to-Speech guide](/docs/capabilities/text-to-speech-legacy) while migrating one use case at a time. Review [Pricing](/docs/platform/pricing) before switching production traffic.
 
 <LastVerified date="2026-07-23" />
