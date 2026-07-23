@@ -1,6 +1,8 @@
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import * as FilesComponents from "fumadocs-ui/components/files";
-import * as TabsComponents from "fumadocs-ui/components/tabs";
+import { Tab, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/tabs';
+import { AudioPreview, Endpoint, LastVerified, NewBadge, RestDisclosure, StatusBadge } from '@/components/docs';
+import { PricingTable } from '@/components/pricing-table';
 import type { MDXComponents } from "mdx/types";
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import * as icons from "lucide-react";
@@ -9,7 +11,18 @@ export function getMDXComponents(components?: MDXComponents) {
   return {
     ...(icons as unknown as MDXComponents),
     ...defaultMdxComponents,
-    ...TabsComponents,
+    Tab,
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+    AudioPreview,
+    Endpoint,
+    LastVerified,
+    NewBadge,
+    RestDisclosure,
+    StatusBadge,
+    PricingTable,
     ...FilesComponents,
     Accordion,
     Accordions,

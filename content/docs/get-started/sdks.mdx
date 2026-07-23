@@ -1,0 +1,166 @@
+---
+title: SDKs and integration
+description: Install Addis AI for Node.js or Python and choose a safe application architecture.
+icon: Package
+---
+
+
+The Node.js and Python packages expose the same Addis AI resources: chat, files, speech-to-text, translation, Voice 2, voice catalog, usage, and clips.
+
+<Tabs items={['Node.js', 'Python']} groupId="integration-language">
+  <Tab>
+```bash
+npm install addisai
+```
+
+[npm package](https://www.npmjs.com/package/addisai) · [Node.js source](https://github.com/Addis-AI-Org/addisai-js)
+  </Tab>
+  <Tab>
+```bash
+pip install addisai
+```
+
+[PyPI package](https://pypi.org/project/addisai/) · [Python source](https://github.com/Addis-AI-Org/addisai-py)
+  </Tab>
+</Tabs>
+
+The clients read `ADDIS_API_KEY` from the environment by default. Python currently provides a synchronous client; do not assume an async client is available.
+
+## Keep keys on your server
+
+Never embed an Addis AI API key in browser JavaScript, a mobile application, or a public environment variable. Your frontend should call a route you own; that route authenticates the user and calls Addis AI.
+
+```text
+Web or mobile app → your authenticated backend → Addis AI SDK → Addis AI API
+```
+
+Create one SDK client per server process, validate user input, apply per-user limits, and return only the response fields the frontend needs. Use idempotency values for billed voice generation.
+
+### A protected server route
+
+Authenticate the caller before forwarding a validated prompt. This route keeps the Addis key outside the browser and limits the response returned to the client.
+
+<Tabs items={['Node.js', 'Python']} groupId="server-language">
+  <Tab>
+```ts
+import AddisAI from "addisai";
+
+const addis = new AddisAI();
+
+export async function answer(userId: string, prompt: string) {
+  await authorize(userId, "chat:create");
+  if (!prompt || prompt.length > 4_000) throw new Error("Invalid prompt");
+
+  const response = await addis.chat.completions.create({
+    messages: [{ role: "user", content: prompt }],
+  });
+  return { text: response.choices[0].message.content };
+}
+```
+  </Tab>
+  <Tab>
+```python
+from addisai import AddisAI
+
+addis = AddisAI()
+
+def answer(user_id: str, prompt: str):
+    authorize(user_id, "chat:create")
+    if not prompt or len(prompt) > 4_000:
+        raise ValueError("Invalid prompt")
+
+    response = addis.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return {"text": response["choices"][0]["message"]["content"]}
+```
+  </Tab>
+</Tabs>
+
+## Secure web applications
+
+The browser sends user input to an authenticated route you own. The route validates the request, enforces tenant limits, calls the Addis SDK, and returns only the fields the interface needs.
+
+```text
+Browser → session/auth → your /api/answer route → Addis Node.js or Python SDK
+```
+
+```ts
+export async function POST(request: Request) {
+  const user = await requireUser(request);
+  const { prompt } = promptSchema.parse(await request.json());
+  await enforceQuota(user.id, "chat");
+
+  const response = await addis.chat.completions.create({
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  return Response.json({
+    text: response.choices[0].message.content,
+    usage: response.usage,
+  });
+}
+```
+
+Apply CSRF protection when the authentication mechanism requires it. Never forward arbitrary Addis parameters, headers, tool definitions, or attachment paths directly from an untrusted client.
+
+## Mobile applications
+
+Mobile binaries can be inspected, so hiding an API key in native code, build configuration, or remote config does not make it secret. Use the same authenticated backend boundary as a web application.
+
+```text
+iOS / Android / Flutter / React Native → your mobile API → Addis SDK
+```
+
+For generated audio, return a short-lived URL or application-owned media URL instead of copying large Base64 values through multiple layers. Existing Voice 1 applications can decode Base64 locally:
+
+```dart
+final bytes = base64Decode(response.audioBase64);
+await audioPlayer.play(BytesSource(bytes));
+```
+
+Validate the authenticated user's access to each clip before proxying or returning its URL.
+
+## Voice-agent orchestration
+
+A turn-based voice agent composes three APIs:
+
+```text
+recorded audio
+  → speech.transcribe
+  → chat.completions.create
+  → voice.generate
+  → completed audio clip
+```
+
+Keep the orchestration on your backend so transcription, conversation state, tools, billing approval, and Voice 2 idempotency share one trusted boundary. Generate a stable client request ID for each logical spoken response.
+
+Use [Realtime Audio](/docs/capabilities/realtime) when the product requires continuous bidirectional audio, interruption, and lower turn latency.
+
+## Production deployment
+
+- Create one SDK client per server process rather than one per request.
+- Set explicit request timeouts and bounded retry counts.
+- Apply per-user and per-tenant quotas before calling Addis AI.
+- Store keys in the deployment secret manager, not the repository or container image.
+- Log request IDs, status, latency, and usage while redacting prompts and credentials.
+- Validate uploads and delete temporary files after processing.
+- Use idempotency for billed generation and other retryable side effects.
+- Monitor `401`, `402`, `429`, and `5xx` rates separately.
+
+## Integration Best Practices
+
+- Prefer the official SDK for Node.js and Python backends; use REST for unsupported runtimes.
+- Keep the permanent Addis API key on a trusted server.
+- Authenticate and authorize the caller before forwarding work.
+- Validate only the fields your product supports.
+- Return a small application response rather than exposing the provider response unchanged.
+- Keep browser, mobile, and voice clients independent of private Addis API details.
+- Version your own backend contract so you can adopt SDK changes without breaking clients.
+
+## Resources
+
+- [Node.js SDK reference](/docs/reference/node)
+- [Python SDK reference](/docs/reference/python)
+- [REST and OpenAPI reference](/docs/reference/rest)
+- [Authentication and key safety](/docs/get-started/authentication)

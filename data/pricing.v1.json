@@ -1,0 +1,84 @@
+{
+  "schema_version": "2026-07-17",
+  "last_verified_at": "2026-07-17",
+  "native_currency": "ETB",
+  "conversion_policy": "USD and EUR displays are indicative conversions of ETB-native prices.",
+  "signup_credit": {
+    "amount": 500,
+    "currency": "ETB",
+    "eligibility": "Available to eligible new accounts only."
+  },
+  "models": [
+    {
+      "id": "addis-voice",
+      "name": "Addis Voice 2",
+      "nameEtb": "Addis Voice ፪",
+      "modality": "TTS · Voice",
+      "blurb": "Lifelike speech in every supported language at one flat rate.",
+      "languages": ["All languages"],
+      "bestFor": "Voice apps, narration & IVR",
+      "status": "current",
+      "lines": [{ "amount": 5, "currency": "ETB", "unit": "/ min", "sub": "generated audio" }]
+    },
+    {
+      "id": "addis-1-nlp",
+      "name": "Addis-Aleph-1",
+      "nameEtb": "Addis-አሌፍ-፩",
+      "modality": "LLM · Multimodal",
+      "blurb": "Flagship African-language model for chat, generation, and translation.",
+      "languages": ["Amharic", "Afan Oromo"],
+      "bestFor": "Chatbots, content & translation",
+      "status": "current",
+      "lines": [
+        { "label": "Input", "amount": 0.3, "currency": "ETB", "unit": "/ 1k tokens" },
+        { "label": "Output", "amount": 0.8, "currency": "ETB", "unit": "/ 1k tokens" }
+      ],
+      "note": "Translation is included, no separate endpoint pricing."
+    },
+    {
+      "id": "alef-stt",
+      "name": "Addis Scribe",
+      "modality": "STT · Speech",
+      "blurb": "Accurate speech to text for Amharic and Afan Oromo.",
+      "languages": ["Amharic", "Afan Oromo"],
+      "bestFor": "Transcription",
+      "status": "current",
+      "lines": [{ "amount": 3.5, "currency": "ETB", "unit": "/ 1,000 output characters" }],
+      "note": "Billed on transcribed text only, audio input is free. About ETB 1.40 per minute of speech."
+    },
+    {
+      "id": "alef-realtime-audio",
+      "name": "Addis Live",
+      "modality": "Realtime · Audio",
+      "blurb": "Native-like speech to speech with under 300ms response. Built for live audio.",
+      "languages": ["Amharic"],
+      "bestFor": "Live audio agents",
+      "status": "beta",
+      "lines": [
+        { "label": "Input", "amount": 1, "currency": "ETB", "unit": "/ 1k tokens" },
+        { "label": "Output", "amount": 4, "currency": "ETB", "unit": "/ 1k tokens" },
+        { "label": "Typical", "amount": 13, "currency": "ETB", "unit": "/ min", "estimate": true }
+      ]
+    },
+    {
+      "id": "alef-audio-am",
+      "name": "Addis Voice 1 · AM",
+      "nameEtb": "Addis Voice ፩ · AM",
+      "modality": "TTS · Voice",
+      "blurb": "Previous-generation Amharic voice. Superseded by Addis Voice.",
+      "languages": ["Amharic"],
+      "status": "deprecated",
+      "lines": [{ "amount": 1, "currency": "ETB", "unit": "/ min" }]
+    },
+    {
+      "id": "alef-audio-om",
+      "name": "Addis Voice 1 · OM",
+      "nameEtb": "Addis Voice ፩ · OM",
+      "modality": "TTS · Voice",
+      "blurb": "Previous-generation Afan Oromo voice. Superseded by Addis Voice.",
+      "languages": ["Afan Oromo"],
+      "status": "deprecated",
+      "lines": [{ "amount": 5, "currency": "ETB", "unit": "/ min" }]
+    }
+  ]
+}

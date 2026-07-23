@@ -1,120 +1,88 @@
 ---
 title: Introduction
-description: The comprehensive guide to the Addis AI developer platform.
+description: The developer platform for African language intelligence.
 icon: House
 ---
 
-import { Cpu, Rocket, Book, Terminal, PlayCircle, Zap, Globe, MessageSquare, Mic, Image as ImageIcon, Sparkles, LayoutTemplate } from 'lucide-react';
+import { AudioLines, Braces, Globe2, PlayCircle, Radio, Sparkles, Terminal } from 'lucide-react';
 
-{/* 
-  HERO SECTION
-  Interactive, Engaging, and Error-Free.
-*/}
-<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600/10 via-dark-blue-700/10 to-transparent p-10 border border-fd-border my-6">
-  <div className="relative z-10 p-4 md:p-8 flex flex-col items-start">
-    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 text-xs font-medium mb-6 border border-blue-500/20">
-      <Sparkles className="w-3 h-3" />
-      <span>v2 Models Live</span>
+<div className="relative my-6 overflow-hidden rounded-2xl border border-fd-border bg-gradient-to-br from-blue-600/10 via-cyan-500/5 to-transparent p-8 md:p-12">
+  <div className="relative z-10 max-w-3xl">
+    <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-300">
+      <Sparkles className="h-3 w-3" />
+      Built for African languages
     </div>
-    
-    <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-none mb-6 text-fd-foreground not-prose">
-      The Engine for <br />
-      <span className="text-fd-primary">African Intelligence.</span>
+
+    <h1 className="not-prose mb-6 text-4xl font-bold leading-none tracking-tight text-fd-foreground md:text-5xl">
+      The engine for <br />
+      <span className="text-fd-primary">African intelligence.</span>
     </h1>
-    
-    <div className="text-lg text-fd-muted-foreground leading-relaxed max-w-3xl">
-      Addis AI provides the raw, unified infrastructure (**LLMs**, **Vision**, and **Audio**) designed to process African languages as primary data. By using a native tokenization architecture, we eliminate the translation layer overhead that causes standard APIs to struggle with Ge'ez logic and local accents.
+
+    <div className="max-w-2xl text-lg leading-relaxed text-fd-muted-foreground">
+      Build chat, voice, transcription, translation, and multimodal experiences for Amharic and Afan Oromo with one platform.
     </div>
 
-    <div className="flex flex-wrap gap-4 mt-8">
-      <a 
-        href="https://platform.addisassistant.com/playground" 
-        target="_blank" 
-        className="inline-flex h-9 items-center justify-center rounded-md bg-fd-primary px-4 text-sm font-medium text-fd-primary-foreground shadow-sm transition-all hover:bg-fd-primary/90 hover:scale-[1.02]"
-      >
-        <PlayCircle className="w-4 h-4 mr-2" />
+    <div className="mt-8 flex flex-wrap gap-3">
+      <a href="https://addisassistant.com/playground" target="_blank" className="inline-flex h-10 items-center justify-center rounded-md bg-fd-primary px-4 text-sm font-medium text-fd-primary-foreground shadow-sm transition-colors hover:bg-fd-primary/90">
+        <PlayCircle className="mr-2 h-4 w-4" />
         Open Playground
       </a>
-      
-      <a 
-        href="/docs/get-started/quickstart" 
-        className="inline-flex h-9 items-center justify-center rounded-md border border-fd-border bg-fd-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground"
-      >
-        <Terminal className="w-4 h-4 mr-2" />
-        Start Coding
+      <a href="/docs/get-started/quickstart" className="inline-flex h-10 items-center justify-center rounded-md border border-fd-border bg-fd-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-fd-accent">
+        <Terminal className="mr-2 h-4 w-4" />
+        Start coding
       </a>
     </div>
   </div>
 
-   {/* Background Decoration */}
-  <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
-  <div className="absolute bottom-0 right-10 h-40 w-40 rounded-full bg-blue-500/20 blur-3xl" />
+  <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
+  <div className="absolute bottom-0 right-10 h-40 w-40 rounded-full bg-cyan-500/15 blur-3xl" />
 </div>
+
+## What you can build
+
+<Cards>
+  <Card href="/docs/capabilities/text-generation" title="Text and multimodal" icon={<Braces className="text-blue-500" />}>
+    Generate, analyze, and converse using text, images, documents, and audio.
+  </Card>
+  <Card href="/docs/capabilities/text-to-speech" title="Addis Voice 2" icon={<AudioLines className="text-cyan-500" />}>
+    Turn Amharic and Afan Oromo text into natural speech using a discoverable voice catalog.
+  </Card>
+  <Card href="/docs/capabilities/realtime" title="Realtime Audio" icon={<Radio className="text-amber-500" />}>
+    Build low-latency, bidirectional voice experiences with interruption support.
+  </Card>
+  <Card href="/docs/capabilities/translation" title="Language infrastructure" icon={<Globe2 className="text-emerald-500" />}>
+    Translate and transcribe across supported African languages.
+  </Card>
+</Cards>
 
 ## Why Addis AI?
 
-Building AI for Africa is different. Generic models from Silicon Valley treat our languages as an edge case. We treat them as the core product.
+African languages are not an edge case here. The platform is designed around the morphology, scripts, accents, and cultural context of the languages it serves.
 
-We solve the **three hardest problems** in African NLP:
+1. **Language-native models** handle Amharic and Afan Oromo as primary data instead of adding a translation layer to every request.
+2. **Local context** improves answers about regional history, geography, language use, and everyday communication.
+3. **Text and voice together** let one application understand input, reason over it, and answer in natural speech.
 
-1.  **Morphology:** Amharic verbs fuse subject, object, and tense into single words. Our models parse this correctly where GPT-4 often hallucinates.
-2.  **Culture:** Our models understand African history, regional geography, and contemporary legal and regulatory contexts.
-3.  **Voice:** We don't just do text. We built the most natural sounding TTS engines for Amharic and Afan Oromo.
+## The core engines
 
----
+- **Addis text and multimodal** — chat, instruction following, analysis, translation, and file input.
+- **Addis Voice 2 and speech-to-text** — voice discovery, preview, speech generation, and transcription.
+- **Realtime Audio (Beta)** — low-latency conversations with interruption and live audio events.
 
-## The Core Engines
+Use [Models and capabilities](/docs/get-started/models) when you need the detailed language and feature matrix.
 
-The platform is powered by three specialized model families. You will select these using the `model` parameter in your API calls.
+## The shortest path to your first request
 
-### 1. Addis-፩-አሌፍ (NLP)
-Our flagship Large Language Model. It is optimized for instruction following, reasoning, and content generation.
-*   **Best for:** Chatbots, RAG (Document Search), and Summarization.
-*   **Languages:** Amharic and Afan Oromo are fully supported, and the model also understands English instructions.
-*   **Context Window:** 128k tokens.
+The [Quick Start](/docs/get-started/quickstart) shows every screen: test a prompt in Playground, create and copy an API key, install the official Node.js or Python SDK, and run a request. No prior knowledge of the platform is assumed.
 
-### 2. አሌፍ-Audio (Voice)
-A suite of high-fidelity audio models.
-*   **`አሌፍ-Audio-AM`:** Amharic Text-to-Speech with natural intonation.
-*   **`አሌፍ-Audio-OM`:** Afan Oromo Text-to-Speech.
-*   **`addis-whisper`:** Speech-to-Text transcription that handles dialect variations.
+Use the official `addisai` SDK whenever one is available. cURL is included beside every first-party example for developers using another runtime.
 
-### 3. Realtime Audio
-Powered by **`አሌፍ-1.2-realtime-audio`**.
-*   **Latency:** &lt;300ms response time.
-*   **Use Case:** Live conversational agents (like Siri/Alexa) that need to interrupt and respond instantly.
+## Documentation roadmap
 
----
+- **Get Started** takes you from Playground to a protected API key, first request, and safe SDK integration patterns.
+- **Capabilities** contains focused guides for chat, function calling, Voice 2, transcription, multimodal input, realtime audio, and translation.
+- **Platform** contains pricing, API reference, limits, errors, and release history.
 
-## Documentation Roadmap
+## Community and support
 
-We have structured the docs to get you into production fast.
-
-### 🚀 Get Started
-*   **[Playground Guide](/docs/get-started/playground-guide):** Learn how to prompt the models visually.
-*   **[Quick Start](/docs/get-started/quickstart):** Get your API Key, choose a model, and make your first request (Auth & Code included).
-
-### ⚡ Capabilities & API
-Deep dives into the specific endpoints and parameters.
-*   **[Text Generation](/docs/capabilities/text-generation):** Context management, parameters, and JSON schemas.
-*   **[Voice Intelligence](/docs/capabilities/text-to-speech):** Handling audio binaries and `multipart` uploads.
-*   **[Vision](/docs/capabilities/vision):** OCR and Image analysis.
-
-### ⚙️ Platform
-*   **[Rate Limits](/docs/platform/limits):** Understanding tiers and quotas.
-*   **[Errors](/docs/platform/errors):** Troubleshooting status codes like `429` and `500`.
-
----
-
-## Community & Support
-
-We are building this together.
-
-<Cards>
-  <Card href="https://t.me/addisassistantai" icon={<MessageSquare />} title="Join our Telegram Community">
-    Join 500+ developers building with Addis AI.
-  </Card>
-  <Card href="mailto:support@addisassistant.com" icon={<Zap />} title="Enterprise Support">
-    Need higher rate limits or custom fine-tuning? Contact us.
-  </Card>
-</Cards>
+Join the [Addis AI Telegram community](https://t.me/addisassistantai) for developer discussion, or email [support@addisassistant.com](mailto:support@addisassistant.com) for account and production support.

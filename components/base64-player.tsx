@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Play, Download, Trash2, FileAudio, AlertCircle } from 'lucide-react';
 
 export function Base64Player() {
@@ -19,11 +19,12 @@ export function Base64Player() {
       if (cleanBase64.startsWith('"') && cleanBase64.endsWith('"')) {
         cleanBase64 = cleanBase64.slice(1, -1);
       }
+      cleanBase64 = cleanBase64.replace(/^data:audio\/[a-zA-Z0-9.+-]+;base64,/, '');
+      cleanBase64 = cleanBase64.replace(/[\r\n\s]+/g, '');
       
       // 2. Check if valid base64 (rudimentary check)
       if (!/^[A-Za-z0-9+/=]+$/.test(cleanBase64)) {
-        // It might be valid but have newlines, so we try to strip them
-        cleanBase64 = cleanBase64.replace(/[\r\n]+/g, "");
+        throw new Error('INVALID_BASE64');
       }
 
       // 3. Create Blob
@@ -38,7 +39,10 @@ export function Base64Player() {
       const blob = new Blob([byteArray], { type: 'audio/wav' });
       const url = URL.createObjectURL(blob);
 
-      setAudioSrc(url);
+      setAudioSrc((previous) => {
+        if (previous) URL.revokeObjectURL(previous);
+        return url;
+      });
       
       // Auto-play
       setTimeout(() => {
@@ -47,17 +51,25 @@ export function Base64Player() {
         }
       }, 100);
 
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError("Invalid Base64 string. Please check your input.");
     }
   };
 
   const clear = () => {
-    setAudioSrc(null);
+    setAudioSrc((previous) => {
+      if (previous) URL.revokeObjectURL(previous);
+      return null;
+    });
     setInput('');
     setError(null);
   };
+
+  useEffect(() => {
+    return () => {
+      if (audioSrc) URL.revokeObjectURL(audioSrc);
+    };
+  }, [audioSrc]);
 
   return (
     <div className="rounded-xl border border-fd-border bg-fd-card p-6 shadow-sm my-6 not-prose">
@@ -75,6 +87,7 @@ export function Base64Player() {
               Paste the <code>audio</code> string from your API response here to verify it.
             </p>
             <textarea
+              aria-label="Base64 audio value"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Paste Base64 string here (e.g. UklGRiQgAABXQVZF...)"
@@ -96,7 +109,9 @@ export function Base64Player() {
         ) : (
           <div className="animate-in fade-in zoom-in-95 duration-200">
             <div className="flex flex-col items-center justify-center p-6 bg-fd-secondary/30 rounded-lg border border-fd-border border-dashed">
-              <audio ref={audioRef} controls src={audioSrc} className="w-full mb-4" />
+              <audio ref={audioRef} controls src={audioSrc} className="w-full mb-4">
+                Your browser does not support audio playback.
+              </audio>
               
               <div className="flex gap-3 w-full">
                 <a 
@@ -108,6 +123,7 @@ export function Base64Player() {
                 </a>
                 <button 
                   onClick={clear}
+                  aria-label="Clear decoded audio"
                   className="px-4 py-2 hover:bg-red-500/10 text-red-500 rounded-md transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />

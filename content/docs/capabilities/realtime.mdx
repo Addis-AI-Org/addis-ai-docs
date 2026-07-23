@@ -1,622 +1,147 @@
 ---
-title: Realtime API
-description: Low-latency, bidirectional voice conversations via WebSockets.
-icon: Zap
+title: Realtime Audio
+description: Build low-latency bidirectional voice sessions over the Beta WebSocket relay.
+icon: Radio
 ---
 
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
-import { TypeTable } from 'fumadocs-ui/components/type-table';
-import { Callout } from 'fumadocs-ui/components/callout';
 import { RealtimeVoiceDemo } from '@/components/realtime-voice-demo';
-import { Mic, Activity, BookOpen, Tractor, Phone, Car } from 'lucide-react';
 
-The **Realtime API** enables fluid, natural voice conversations. It uses **WebSockets** to stream audio bi-directionally, achieving response times under **300ms**.
+<StatusBadge status="beta">Beta</StatusBadge>
 
-It is powered by **`አሌፍ-1.2-realtime-audio`**, allowing for natural interruptions and back-channeling.
 
-## Endpoint
+Realtime Audio is a stateful WebSocket capability for live conversations. It is separate from completed Voice 2 clips and does not currently have a dedicated method in the Node.js or Python SDKs.
 
-<div className="flex items-center gap-2 border border-fd-border p-3 rounded-lg bg-fd-muted/50 font-mono text-sm my-4">
-  <span className="bg-orange-500 text-white px-2 py-0.5 rounded text-xs font-bold">WSS</span>
-  <span className="text-fd-foreground">wss://relay.addisassistant.com/ws</span>
-</div>
+Public developer integrations authenticate with an Addis API key. The Addis developer portal also supports its own signed-in Supabase user JWT, but that is a first-party portal session—not a credential external developers need to create.
 
-## Authentication
+## Session flow
 
-For browser and mobile clients, pass your API key as a query parameter:
+1. Read `ADDIS_API_KEY` from a server environment variable or secret manager.
+2. Connect to `wss://relay.addisassistant.com/ws?apiKey=...`.
+3. Wait for `{ "setupComplete": true }` before sending audio.
+4. Capture mono PCM16 audio at 16 kHz.
+5. Send base64 PCM16 JSON envelopes.
+6. Decode returned 24 kHz PCM and schedule playback in order.
+7. Stop queued playback when an interruption event arrives.
+8. Record usage metadata and close the socket cleanly.
 
-```text
-wss://relay.addisassistant.com/ws?apiKey=YOUR_API_KEY
+For a shipped browser or mobile product, proxy the WebSocket through infrastructure you control so the permanent Addis API key stays server-side. The direct browser demo on this page is intended for development testing.
+
+## Connect from an application
+
+Use a standard WebSocket client because the official SDKs do not yet wrap the Beta relay.
+
+<Tabs items={['Node.js', 'Python', 'Browser']} groupId="integration-language">
+  <Tab>
+```ts
+import WebSocket from "ws";
+
+const apiKey = process.env.ADDIS_API_KEY;
+if (!apiKey) throw new Error("ADDIS_API_KEY is required");
+
+const socket = new WebSocket(
+  `wss://relay.addisassistant.com/ws?apiKey=${encodeURIComponent(apiKey)}`,
+);
+
+socket.on("message", (raw) => {
+  const event = JSON.parse(raw.toString());
+  if (event.setupComplete) console.log("ready");
+  if (event.serverContent?.interrupted) stopQueuedPlayback();
+});
 ```
-
-You can also use a short-lived JWT token in environments that issue user sessions:
-
-```text
-wss://relay.addisassistant.com/ws?jwt=YOUR_JWT
-```
-
----
-
-## Industry Use Cases
-
-Our Realtime model is already deployed across key African sectors. You can test these specific **Agents** in our Playground.
-
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-  <div className="p-4 border border-fd-border rounded-lg bg-fd-card">
-    <div className="flex items-center gap-2 mb-2 font-bold text-fd-foreground">
-      <Phone className="w-4 h-4 text-blue-500" /> Telecom Assistant
-    </div>
-    <div className="text-xs text-fd-muted-foreground">
-      Automated customer support for balance checks, package purchasing, and troubleshooting in Amharic.
-    </div>
-  </div>
-  
-  <div className="p-4 border border-fd-border rounded-lg bg-fd-card">
-    <div className="flex items-center gap-2 mb-2 font-bold text-fd-foreground">
-      <Car className="w-4 h-4 text-orange-500" /> Ride Hailing
-    </div>
-    <div className="text-xs text-fd-muted-foreground">
-      Voice-first driver negotiation and location finding. "Where are you?" "I'm at Bole near the bank."
-    </div>
-  </div>
-
-  <div className="p-4 border border-fd-border rounded-lg bg-fd-card">
-    <div className="flex items-center gap-2 mb-2 font-bold text-fd-foreground">
-      <Tractor className="w-4 h-4 text-green-500" /> Farmer's Assistant
-    </div>
-    <div className="text-xs text-fd-muted-foreground">
-      Agricultural advisory for weather updates, crop disease diagnosis, and market prices in local dialects.
-    </div>
-  </div>
-</div>
-
----
-
-## Audio Format Requirements
-
-<Callout type="error" title="Critical: Audio Encoding">
-  The API expects **16-bit Signed Integer PCM (PCM16)** audio.
-  
-  **Developer Warning:** The standard browser `AudioContext` returns **32-bit Float** data (-1.0 to 1.0) by default. If you send this directly, it will sound like static noise. You **must** convert Float32 to Int16 before sending it over the WebSocket.
-</Callout>
-
-| Property | Value |
-| :--- | :--- |
-| **Encoding** | PCM 16-bit (Little Endian) |
-| **Client Upload** | `audio/pcm;rate=16000` (Mono) |
-| **Server Audio Output** | PCM16 Mono, typically 24,000Hz |
-
----
-
-## Integration Guide
-
-### 1. Browser Implementation (JavaScript)
-This example establishes a connection, captures microphone audio, **converts it from Float32 to PCM16**, and handles the audio stream.
-
-<Tabs items={['JavaScript (Browser)', 'Python']}>
-  <Tab value="JavaScript (Browser)">
-    ```javascript
-    const API_KEY = "sk_YOUR_KEY";
-    const WS_URL = `wss://relay.addisassistant.com/ws?apiKey=${encodeURIComponent(API_KEY)}`;
-    const INPUT_RATE = 16000;
-    const OUTPUT_RATE = 24000;
-
-    let socket;
-    let inputContext;
-    let outputContext;
-    let stream;
-    let source;
-    let processor;
-    let canStreamAudio = false;
-    let nextStartTime = 0;
-
-    async function startRealtime() {
-      // Output context for AI playback
-      outputContext = new (window.AudioContext || window.webkitAudioContext)({
-        sampleRate: OUTPUT_RATE,
-      });
-      await outputContext.resume();
-      nextStartTime = outputContext.currentTime;
-
-      // Input context for mic capture
-      inputContext = new (window.AudioContext || window.webkitAudioContext)({
-        sampleRate: INPUT_RATE,
-      });
-      await inputContext.resume();
-
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      source = inputContext.createMediaStreamSource(stream);
-      processor = inputContext.createScriptProcessor(2048, 1, 1);
-
-      // Connect processor through a muted gain so callback keeps firing without mic echo
-      const mute = inputContext.createGain();
-      mute.gain.value = 0;
-      source.connect(processor);
-      processor.connect(mute);
-      mute.connect(inputContext.destination);
-
-      processor.onaudioprocess = (event) => {
-        if (!canStreamAudio || socket?.readyState !== WebSocket.OPEN) return;
-
-        // Browser gives Float32 (-1..1), convert to PCM16 and send as base64 JSON envelope
-        const float32 = event.inputBuffer.getChannelData(0);
-        const int16 = floatTo16BitPCM(float32);
-
-        socket.send(
-          JSON.stringify({
-            data: arrayBufferToBase64(int16.buffer),
-            mimeType: "audio/pcm;rate=16000",
-          }),
-        );
-      };
-
-      socket = new WebSocket(WS_URL);
-
-      socket.onopen = () => {
-        console.log("Connected. Waiting for setupComplete...");
-      };
-
-      socket.onmessage = async (event) => {
-        const message = JSON.parse(event.data);
-        console.log("Event:", message);
-
-        if (message.setupComplete || (message.type === "status" && /ready/i.test(message.message || ""))) {
-          canStreamAudio = true;
-          return;
-        }
-
-        const b64 = message?.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-        if (typeof b64 === "string" && b64.length) {
-          await playPcm16Base64(b64, OUTPUT_RATE);
-        }
-
-        if (message?.error) {
-          console.error("Realtime error:", message.error);
-        }
-      };
-
-      socket.onerror = (event) => {
-        console.error("WebSocket error:", event);
-      };
-
-      socket.onclose = (event) => {
-        console.log(`WebSocket closed code=${event.code} reason=${event.reason || "n/a"}`);
-      };
-    }
-
-    function stopRealtime() {
-      canStreamAudio = false;
-
-      if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
-        socket.close(1000, "client-stop");
-      }
-
-      if (processor) processor.disconnect();
-      if (source) source.disconnect();
-      if (stream) stream.getTracks().forEach((t) => t.stop());
-
-      if (inputContext) inputContext.close();
-      if (outputContext) outputContext.close();
-    }
-
-    function floatTo16BitPCM(float32Array) {
-      const int16Array = new Int16Array(float32Array.length);
-      for (let i = 0; i < float32Array.length; i++) {
-        const s = Math.max(-1, Math.min(1, float32Array[i]));
-        int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-      }
-      return int16Array;
-    }
-
-    function arrayBufferToBase64(arrayBuffer) {
-      const bytes = new Uint8Array(arrayBuffer);
-      let binary = "";
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      return btoa(binary);
-    }
-
-    function base64ToUint8Array(base64) {
-      const binary = atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-      return bytes;
-    }
-
-    async function playPcm16Base64(base64Audio, sampleRate = 24000) {
-      const bytes = base64ToUint8Array(base64Audio);
-      const pcm16 = new Int16Array(bytes.buffer);
-      const float32 = new Float32Array(pcm16.length);
-
-      for (let i = 0; i < pcm16.length; i++) {
-        float32[i] = pcm16[i] / 32768;
-      }
-
-      const buffer = outputContext.createBuffer(1, float32.length, sampleRate);
-      buffer.copyToChannel(float32, 0);
-
-      const src = outputContext.createBufferSource();
-      src.buffer = buffer;
-      src.connect(outputContext.destination);
-
-      const startAt = Math.max(outputContext.currentTime, nextStartTime);
-      src.start(startAt);
-      nextStartTime = startAt + buffer.duration;
-    }
-    ```
   </Tab>
-  <Tab value="Python">
-    ```python
-    import asyncio
-    import base64
-    import json
-    import pyaudio
-    import websockets
+  <Tab>
+```python
+import asyncio
+import json
+import os
+import urllib.parse
+import websockets
 
-    # Audio Config
-    FORMAT = pyaudio.paInt16
-    CHANNELS = 1
-    RATE = 16000
-    CHUNK = 1024  # ~64ms
+async def run():
+    api_key = os.environ["ADDIS_API_KEY"]
+    url = "wss://relay.addisassistant.com/ws?apiKey=" + urllib.parse.quote(api_key)
+    async with websockets.connect(url) as socket:
+        async for raw in socket:
+            event = json.loads(raw)
+            if event.get("setupComplete"):
+                print("ready")
 
-    async def realtime_chat():
-        api_key = "sk_YOUR_KEY"
-        uri = f"wss://relay.addisassistant.com/ws?apiKey={api_key}"
-        ready_event = asyncio.Event()
-        
-        async with websockets.connect(uri) as websocket:
-            # 1. Setup Microphone
-            p = pyaudio.PyAudio()
-            stream = p.open(
-                format=FORMAT,
-                channels=CHANNELS,
-                rate=RATE,
-                input=True,
-                frames_per_buffer=CHUNK,
-            )
-
-            async def receive_messages():
-                async for raw in websocket:
-                    message = json.loads(raw)
-                    print("<", message)
-
-                    if message.get("setupComplete"):
-                        ready_event.set()
-                        continue
-
-                    if (
-                        message.get("type") == "status"
-                        and "ready" in message.get("message", "").lower()
-                    ):
-                        ready_event.set()
-                        continue
-
-            print("Listening... (Press Ctrl+C to stop)")
-
-            try:
-                receive_task = asyncio.create_task(receive_messages())
-                await ready_event.wait()
-
-                while True:
-                    # Read raw PCM16 bytes from mic and send as base64 JSON message
-                    data = stream.read(CHUNK)
-                    await websocket.send(
-                        json.dumps(
-                            {
-                                "data": base64.b64encode(data).decode("utf-8"),
-                                "mimeType": "audio/pcm;rate=16000",
-                            }
-                        )
-                    )
-                    
-            except KeyboardInterrupt:
-                pass
-            finally:
-                receive_task.cancel()
-                stream.stop_stream()
-                stream.close()
-                p.terminate()
-
-    asyncio.run(realtime_chat())
-    ```
+asyncio.run(run())
+```
+  </Tab>
+  <Tab>
+```js
+const socket = new WebSocket(
+  `wss://relay.addisassistant.com/ws?apiKey=${encodeURIComponent(apiKey)}`,
+);
+```
   </Tab>
 </Tabs>
 
----
+<Callout type="warn" title="Direct browser authentication is for testing">
+The browser example and interactive demo send the API key in the WebSocket upgrade URL because browser WebSocket clients cannot set `x-api-key`. The demo keeps the key in memory and never stores it. Do not ship this pattern: place a WebSocket proxy you control between your application and the Addis relay.
+</Callout>
 
-## Protocol & Events
+## Audio messages
 
-The WebSocket handles bidirectional traffic.
-
-### 1. Connect + Setup Handshake
-After connecting, wait for a readiness event before streaming microphone frames.
-
-```json
-{
-  "setupComplete": true
-}
-```
-
-Some integrations may also emit:
+Send mono 16-bit PCM at 16 kHz:
 
 ```json
 {
-  "type": "status",
-  "message": "Ready to start conversation"
-}
-```
-
-### 2. Client to Server Audio
-Send JSON envelopes with base64 PCM16 chunks.
-
-```json
-{
-  "data": "BASE64_ENCODED_PCM16_CHUNK",
+  "data": "<base64-pcm16>",
   "mimeType": "audio/pcm;rate=16000"
 }
 ```
 
-### 3. Server to Client
-Server events are JSON messages.
+Model audio arrives as base64 PCM at 24 kHz under `serverContent.modelTurn.parts[0].inlineData`. Decode it to signed 16-bit samples and queue buffers in arrival order.
 
-#### AI Audio Response
-The model audio is returned as base64 PCM16 under `inlineData.data`.
+## Events
 
-```json
-{
-  "serverContent": {
-    "modelTurn": {
-      "parts": [
-        {
-          "inlineData": {
-            "data": "BASE64_ENCODED_PCM16_AUDIO"
-          }
-        }
-      ]
-    }
-  }
-}
-```
+| Event | Action |
+| --- | --- |
+| `setupComplete` | Start sending microphone frames. |
+| `serverContent.modelTurn` | Decode and queue model audio. |
+| `serverContent.interrupted` | Stop and clear queued playback. |
+| `serverContent.turnComplete` | Finalize the turn in your UI. |
+| `usageMetadata` | Record safe usage data. |
+| `type: "warning"` | Show recoverable feedback. |
+| `error` | Stop or reconnect according to the error. |
 
-#### Turn Complete & Usage
-When the AI finishes speaking, the server sends a completion event with billing details.
+See the [Realtime event reference](/docs/reference/realtime) for the current wire shape.
 
-```json
-{
-  "serverContent": {
-    "turnComplete": true
-  },
-  "usageMetadata": {
-    "totalBilledAudioDurationSeconds": 5.2
-  }
-}
-```
-#### Warning Messages
-Sent if there are non-critical issues, such as billing thresholds.
+## Reconnection and backpressure
 
-```json
-{
-  "type": "warning",
-  "message": "Your wallet balance is low. Please top up to avoid service interruption."
-}
-```
+Use bounded reconnection with exponential backoff and jitter. Do not replay microphone frames from a previous session unless the protocol explicitly supports it.
 
-#### Error Messages
-Sent if a critical failure occurs.
+If encoding or the socket cannot keep up with capture, apply a bounded queue and drop or stop capture rather than growing memory indefinitely. Suspend capture when the tab is hidden or the application loses microphone permission.
 
-```json
-{
-  "error": {
-    "message": "AI service error",
-    "status": 500,
-    "timestamp": "2025-07-15T10:00:00.000Z"
-  }
-}
-```
+## Interactive demo
 
-### Connection Troubleshooting
-- If the socket closes with `1006`, verify:
-  - You used the correct endpoint.
-  - Auth query is valid (`apiKey` or `jwt`).
-  - Client audio is sent as JSON (`data` + `mimeType`), not raw binary.
-
----
-
-## Live Interactive Demo
-
-Use the embedded tool below to test the Realtime API directly from this page.
+Create or copy an Addis API key from [API Keys](https://addisassistant.com/apikeys), then paste it into the demo. The key remains in page memory, is not stored in local or session storage, and is sent only to the Addis Realtime relay. Use a restricted development key and revoke it after testing when appropriate.
 
 <RealtimeVoiceDemo />
 
-### Standalone HTML (Local Testing)
+[Open the standalone Realtime Audio demo](/realtime-demo.html)
 
-Use this standalone file if you want to run the same flow outside the docs site.
+## Troubleshooting
 
-```html
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Realtime Voice Test</title>
-  </head>
-  <body style="font-family: Arial, sans-serif; margin: 24px;">
-    <h2>Realtime Voice Test</h2>
-    <input id="apiKey" type="password" placeholder="sk_..." style="width: 340px; padding: 8px;" />
-    <button id="startBtn">Start</button>
-    <button id="stopBtn" disabled>Stop</button>
-    <pre id="log" style="margin-top: 16px; border: 1px solid #ddd; padding: 12px; min-height: 140px;"></pre>
+- **Connection rejected:** confirm the API key is active, copied completely, and belongs to an account with available balance.
+- **No setup event:** do not send audio yet; log the close code and server error.
+- **No transcription or response:** verify mono PCM16 at 16 kHz and the JSON envelope.
+- **Fast or slow playback:** model audio is 24 kHz; do not play it at the 16 kHz input rate.
+- **Overlapping speech:** clear queued audio immediately on `interrupted`.
+- **Audio distortion:** check byte order, clipping, and Float32-to-PCM16 conversion.
 
-    <script>
-      const WS_URL = "wss://relay.addisassistant.com/ws";
-      const INPUT_RATE = 16000;
-      const OUTPUT_RATE = 24000;
+## Best Practices
 
-      let ws;
-      let inputCtx;
-      let outputCtx;
-      let stream;
-      let sourceNode;
-      let processorNode;
-      let muteNode;
-      let canStream = false;
-      let nextStartTime = 0;
+- Keep permanent credentials on your backend for production browser and mobile applications.
+- Use a separate restricted key for direct development testing.
+- Ask for microphone permission only after a clear user action.
+- Wait for readiness before transmitting audio.
+- Use bounded audio queues and ordered playback.
+- Implement explicit mute, disconnect, interruption, and permission states.
+- Keep protocol parsing behind an adapter because Realtime is Beta.
+- Log session IDs, close codes, latency, and usage without recording sensitive audio by default.
+- Test with slow networks, revoked keys, exhausted balance, tab suspension, and rapid interruptions.
 
-      const logEl = document.getElementById("log");
-      const startBtn = document.getElementById("startBtn");
-      const stopBtn = document.getElementById("stopBtn");
-      const apiKeyEl = document.getElementById("apiKey");
-
-      function log(message) {
-        const t = new Date().toLocaleTimeString();
-        logEl.textContent += `[${t}] ${message}\n`;
-        logEl.scrollTop = logEl.scrollHeight;
-      }
-
-      function f32ToPcm16(float32) {
-        const out = new Int16Array(float32.length);
-        for (let i = 0; i < float32.length; i++) {
-          const s = Math.max(-1, Math.min(1, float32[i]));
-          out[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-        }
-        return out;
-      }
-
-      function abToBase64(arrayBuffer) {
-        const bytes = new Uint8Array(arrayBuffer);
-        let binary = "";
-        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-        return btoa(binary);
-      }
-
-      function base64ToAb(base64) {
-        const bin = atob(base64);
-        const bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        return bytes.buffer;
-      }
-
-      async function playPcm16(arrayBuffer) {
-        if (!outputCtx) return;
-        const pcm16 = new Int16Array(arrayBuffer);
-        const f32 = new Float32Array(pcm16.length);
-        for (let i = 0; i < pcm16.length; i++) f32[i] = pcm16[i] / 32768;
-
-        const buffer = outputCtx.createBuffer(1, f32.length, OUTPUT_RATE);
-        buffer.copyToChannel(f32, 0);
-        const src = outputCtx.createBufferSource();
-        src.buffer = buffer;
-        src.connect(outputCtx.destination);
-        const startAt = Math.max(outputCtx.currentTime, nextStartTime);
-        src.start(startAt);
-        nextStartTime = startAt + buffer.duration;
-      }
-
-      async function stop() {
-        canStream = false;
-        if (ws && (ws.readyState === 0 || ws.readyState === 1)) ws.close(1000, "client-stop");
-        ws = null;
-
-        try { if (processorNode) processorNode.disconnect(); } catch {}
-        try { if (sourceNode) sourceNode.disconnect(); } catch {}
-        try { if (muteNode) muteNode.disconnect(); } catch {}
-        if (stream) stream.getTracks().forEach((t) => t.stop());
-
-        if (inputCtx) await inputCtx.close().catch(() => {});
-        if (outputCtx) await outputCtx.close().catch(() => {});
-        inputCtx = outputCtx = null;
-        stream = sourceNode = processorNode = muteNode = null;
-        nextStartTime = 0;
-        startBtn.disabled = false;
-        stopBtn.disabled = true;
-        log("Stopped.");
-      }
-
-      async function start() {
-        const apiKey = apiKeyEl.value.trim();
-        if (!apiKey) return log("Missing API key.");
-
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-
-        outputCtx = new AudioContext({ sampleRate: OUTPUT_RATE });
-        await outputCtx.resume();
-        nextStartTime = outputCtx.currentTime;
-
-        inputCtx = new AudioContext({ sampleRate: INPUT_RATE });
-        await inputCtx.resume();
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        sourceNode = inputCtx.createMediaStreamSource(stream);
-        processorNode = inputCtx.createScriptProcessor(2048, 1, 1);
-        muteNode = inputCtx.createGain();
-        muteNode.gain.value = 0;
-
-        processorNode.onaudioprocess = (event) => {
-          if (!canStream || !ws || ws.readyState !== 1) return;
-          const f32 = event.inputBuffer.getChannelData(0);
-          const pcm16 = f32ToPcm16(f32);
-          ws.send(JSON.stringify({ data: abToBase64(pcm16.buffer), mimeType: "audio/pcm;rate=16000" }));
-        };
-
-        sourceNode.connect(processorNode);
-        processorNode.connect(muteNode);
-        muteNode.connect(inputCtx.destination);
-
-        const url = new URL(WS_URL);
-        url.searchParams.set("apiKey", apiKey);
-        ws = new WebSocket(url.toString());
-
-        ws.onopen = () => log("Connected. Waiting for setupComplete...");
-
-        ws.onmessage = async (event) => {
-          const msg = JSON.parse(event.data);
-          if (msg.setupComplete || (msg.type === "status" && /ready/i.test(msg.message || ""))) {
-            canStream = true;
-            return log("Setup complete. Streaming live.");
-          }
-          const b64 = msg?.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-          if (typeof b64 === "string" && b64.length) await playPcm16(base64ToAb(b64));
-          if (msg?.error) log(`Server error: ${JSON.stringify(msg.error)}`);
-        };
-
-        ws.onclose = (e) => log(`Closed code=${e.code} reason=${e.reason || "n/a"}`);
-        ws.onerror = () => log("WebSocket error");
-      }
-
-      startBtn.onclick = () => void start();
-      stopBtn.onclick = () => void stop();
-      window.addEventListener("beforeunload", () => void stop());
-    </script>
-  </body>
-</html>
-```
-
----
-## Capabilities Roadmap
-We are rapidly expanding the Realtime engine.
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-<div className="p-4 border border-fd-border rounded-lg bg-fd-card">
-<h3 className="font-bold flex items-center gap-2 mb-2 text-fd-foreground">
-<Activity className="w-4 h-4 text-green-500" />
-VAD (Voice Activity Detection)
-</h3>
-<div className="text-sm text-fd-muted-foreground">
-The model currently uses server-side VAD to determine when the user has stopped speaking.
-</div>
-</div>
-<div className="p-4 border border-fd-border rounded-lg bg-fd-card opacity-80">
-<div className="flex items-center justify-between mb-2">
-<h3 className="font-bold flex items-center gap-2 text-fd-foreground">
-<BookOpen className="w-4 h-4 text-purple-500" />
-Knowledge Base
-</h3>
-<span className="text-[10px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full border border-blue-500/20 font-medium">Coming Soon</span>
-</div>
-<div className="text-sm text-fd-muted-foreground">
-Soon you will be able to attach PDFs or Text documents to the Realtime session. This will allow the voice assistant to answer questions specifically based on your uploaded data (RAG).
-</div>
-</div>
-</div>
+<LastVerified date="2026-07-23" />

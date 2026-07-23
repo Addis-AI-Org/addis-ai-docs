@@ -1,0 +1,123 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Addis AI API",
+    "version": "2026-07-17",
+    "description": "Public Addis AI REST contract. Official Node.js and Python SDKs are the recommended integration.",
+    "license": { "name": "Proprietary", "identifier": "LicenseRef-AddisAI-Proprietary" }
+  },
+  "servers": [{ "url": "https://api.addisassistant.com" }],
+  "security": [{ "ApiKeyAuth": [] }],
+  "tags": [
+    { "name": "Chat", "description": "Text, conversation, multimodal, and tool-enabled generation." },
+    { "name": "Voice 2", "description": "Voice discovery, generation, estimates, usage, and clip management." },
+    { "name": "Speech", "description": "Speech-to-text transcription." },
+    { "name": "Translation", "description": "Text translation between supported languages." },
+    { "name": "Legacy", "description": "Deprecated endpoints retained for migration reference." }
+  ],
+  "paths": {
+    "/v1/chat/completions": {
+      "post": {
+        "tags": ["Chat"], "summary": "Create a chat completion", "operationId": "createChatCompletion",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChatRequest" } } } },
+        "responses": { "200": { "description": "Completion", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChatResponse" } } } }, "4XX": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/api/v1/chat_generate": {
+      "post": {
+        "tags": ["Chat"], "summary": "Create a native chat response with multipart attachments", "operationId": "createMultipartChatResponse",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NativeChatRequest" } }, "multipart/form-data": { "schema": { "type": "object", "required": ["request_data"], "properties": { "request_data": { "type": "string", "description": "JSON-encoded NativeChatRequest. Include attachment_field_names for uploaded attachment fields." }, "chat_audio_input": { "type": "string", "format": "binary" } }, "additionalProperties": { "type": "string", "format": "binary", "description": "Attachment fields named in request_data.attachment_field_names" } } } } },
+        "responses": { "200": { "description": "Native chat response", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NativeChatEnvelope" } } } }, "4XX": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/api/v1/voice/generations": {
+      "post": {
+        "tags": ["Voice 2"], "summary": "Generate a Voice 2 clip", "operationId": "generateVoiceClip",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VoiceGenerateRequest" } } } },
+        "responses": { "201": { "description": "Generated clip metadata and a signed audio URL", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VoiceClipEnvelope" } } } }, "4XX": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/api/v1/voice/estimate": {
+      "post": {
+        "tags": ["Voice 2"], "summary": "Estimate Voice 2 duration and cost", "operationId": "estimateVoiceClip",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VoiceEstimateRequest" } } } },
+        "responses": { "200": { "description": "Minute-based estimate", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VoiceEstimateEnvelope" } } } }, "4XX": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/api/v1/voice/usage": {
+      "get": { "tags": ["Voice 2"], "summary": "Get voice usage", "operationId": "getVoiceUsage", "responses": { "200": { "description": "Voice usage", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VoiceUsageEnvelope" } } } }, "4XX": { "$ref": "#/components/responses/Error" } } }
+    },
+    "/api/v1/voice/voices": {
+      "get": {
+        "tags": ["Voice 2"], "summary": "List production voices", "operationId": "listVoices",
+        "parameters": [{ "name": "language", "in": "query", "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Voice catalog", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VoiceCatalogEnvelope" } } } }, "4XX": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/api/v1/voice/voices/{voice_id}/preview": {
+      "get": {
+        "tags": ["Voice 2"], "summary": "Get voice preview metadata", "operationId": "getVoicePreview",
+        "parameters": [{ "$ref": "#/components/parameters/VoiceId" }],
+        "responses": { "200": { "description": "Preview metadata and signed audio URL", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VoicePreviewEnvelope" } } } }, "4XX": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/api/v1/voice/clips": {
+      "get": { "tags": ["Voice 2"], "summary": "List generated clips", "operationId": "listVoiceClips", "responses": { "200": { "description": "Clip list", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VoiceClipListEnvelope" } } } }, "4XX": { "$ref": "#/components/responses/Error" } } }
+    },
+    "/api/v1/voice/clips/{clip_id}": {
+      "get": { "tags": ["Voice 2"], "summary": "Get clip metadata", "operationId": "getVoiceClip", "parameters": [{ "$ref": "#/components/parameters/ClipId" }], "responses": { "200": { "description": "Clip metadata", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/VoiceClipMetadataEnvelope" } } } }, "4XX": { "$ref": "#/components/responses/Error" } } },
+      "delete": { "tags": ["Voice 2"], "summary": "Delete a clip", "operationId": "deleteVoiceClip", "parameters": [{ "$ref": "#/components/parameters/ClipId" }], "responses": { "204": { "description": "Deleted" }, "4XX": { "$ref": "#/components/responses/Error" } } }
+    },
+    "/api/v1/voice/clips/{clip_id}/file": {
+      "get": { "tags": ["Voice 2"], "summary": "Download clip audio", "operationId": "downloadVoiceClip", "parameters": [{ "$ref": "#/components/parameters/ClipId" }], "responses": { "200": { "description": "Audio bytes", "headers": { "Accept-Ranges": { "schema": { "type": "string" } } }, "content": { "audio/mpeg": { "schema": { "type": "string", "format": "binary" } }, "audio/wav": { "schema": { "type": "string", "format": "binary" } } } }, "206": { "description": "Partial audio bytes" }, "4XX": { "$ref": "#/components/responses/Error" } } }
+    },
+    "/api/v2/stt": {
+      "post": {
+        "tags": ["Speech"], "summary": "Transcribe audio", "operationId": "transcribeAudio",
+        "requestBody": { "required": true, "content": { "multipart/form-data": { "schema": { "type": "object", "required": ["audio", "request_data"], "properties": { "audio": { "type": "string", "format": "binary" }, "request_data": { "type": "string", "description": "JSON object with language_code: am, om, en, ha, or sw" } } } } } },
+        "responses": { "200": { "description": "Transcription", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TranscriptionEnvelope" } } } }, "4XX": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/api/v1/translate": {
+      "post": {
+        "tags": ["Translation"], "summary": "Translate text", "operationId": "translateText",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["text", "source_language", "target_language"], "properties": { "text": { "type": "string" }, "source_language": { "type": "string", "enum": ["am", "om", "en"] }, "target_language": { "type": "string", "enum": ["am", "om", "en"] } } } } } },
+        "responses": { "200": { "description": "Translation", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TranslationEnvelope" } } } }, "4XX": { "$ref": "#/components/responses/Error" } }
+      }
+    },
+    "/api/v1/audio": {
+      "post": { "deprecated": true, "tags": ["Legacy"], "summary": "Legacy Voice 1 generation", "operationId": "generateLegacyAudio", "responses": { "200": { "description": "Legacy response; migrate to Voice 2" }, "410": { "description": "Legacy endpoint unavailable; migrate to Voice 2" } } }
+    }
+  },
+  "components": {
+    "securitySchemes": { "ApiKeyAuth": { "type": "apiKey", "in": "header", "name": "x-api-key" } },
+    "parameters": {
+      "VoiceId": { "name": "voice_id", "in": "path", "required": true, "schema": { "type": "string", "example": "am-hamen" } },
+      "ClipId": { "name": "clip_id", "in": "path", "required": true, "schema": { "type": "string" } }
+    },
+    "responses": { "Error": { "description": "Structured API error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } },
+    "schemas": {
+      "Message": { "type": "object", "required": ["role", "content"], "properties": { "role": { "type": "string", "enum": ["system", "developer", "user", "assistant", "tool"] }, "content": { "type": ["string", "null"] }, "tool_calls": { "type": "array", "items": { "type": "object" } } } },
+      "ChatRequest": { "type": "object", "required": ["messages"], "properties": { "messages": { "type": "array", "items": { "$ref": "#/components/schemas/Message" } }, "system": { "type": "string" }, "persona": { "type": "string" }, "stream": { "type": "boolean", "default": false }, "tools": { "type": "array", "items": { "type": "object" } }, "tool_choice": {} } },
+      "ChatResponse": { "type": "object", "properties": { "id": { "type": "string" }, "choices": { "type": "array", "items": { "type": "object", "properties": { "message": { "$ref": "#/components/schemas/Message" }, "finish_reason": { "type": ["string", "null"] } } } }, "usage": { "type": "object" } } },
+      "NativeChatRequest": { "type": "object", "properties": { "prompt": { "type": "string", "description": "Optional when messages contains a user turn or multipart includes chat_audio_input." }, "target_language": { "type": "string", "enum": ["am", "om"], "default": "am" }, "messages": { "type": "array", "items": { "$ref": "#/components/schemas/Message" } }, "model": { "type": "string", "description": "Accepted for native compatibility; official SDKs let Addis AI select the production model." }, "conversation_history": { "type": "array", "items": { "type": "object", "required": ["role", "content"], "properties": { "role": { "type": "string", "enum": ["user", "assistant"] }, "content": { "type": "string" } } } }, "system": { "type": "string" }, "persona": { "type": "string" }, "tools": { "type": "array", "items": { "type": "object" } }, "tool_choice": {}, "generation_config": { "type": "object", "properties": { "temperature": { "type": "number" }, "maxOutputTokens": { "type": "integer" }, "stream": { "type": "boolean" } } }, "attachment_field_names": { "type": "array", "items": { "type": "string" } }, "metadata": { "type": "object", "additionalProperties": true } } },
+      "NativeChatEnvelope": { "type": "object", "required": ["data"], "properties": { "status": { "type": "string" }, "data": { "type": "object", "properties": { "response_text": { "type": "string" }, "finish_reason": { "type": ["string", "null"] }, "usage_metadata": { "$ref": "#/components/schemas/TokenUsage" }, "tool_calls": { "type": "array", "items": { "type": "object" } }, "uploaded_attachments": { "type": "array", "items": { "type": "object", "properties": { "fileUri": { "type": "string", "format": "uri" }, "mimeType": { "type": "string" } } } }, "transcription_raw": { "type": "string" }, "transcription_clean": { "type": "string" } } } } },
+      "TokenUsage": { "type": "object", "properties": { "prompt_token_count": { "type": "integer" }, "candidates_token_count": { "type": "integer" }, "total_token_count": { "type": "integer" } } },
+      "VoiceEstimateRequest": { "type": "object", "required": ["text", "language", "voice_id"], "properties": { "text": { "type": "string", "minLength": 1, "maxLength": 5000 }, "language": { "type": "string", "enum": ["am", "om"] }, "voice_id": { "type": "string", "example": "am-hamen" }, "output_format": { "type": "string", "enum": ["mp3_44100", "wav_44100", "pcm_16000"], "default": "mp3_44100" } } },
+      "VoiceGenerateRequest": { "allOf": [{ "$ref": "#/components/schemas/VoiceEstimateRequest" }, { "type": "object", "required": ["client_request_id"], "properties": { "client_request_id": { "type": "string", "description": "Stable idempotency value for this generation operation" }, "stream": { "const": false } } }] },
+      "VoiceClipEnvelope": { "type": "object", "required": ["data"], "properties": { "data": { "type": "object", "required": ["id", "audio_url", "voice_id", "language", "output_format", "usage"], "properties": { "id": { "type": "string" }, "audio": { "type": ["string", "null"], "description": "A data URL on the first generation; may be null for an idempotent replay" }, "audio_url": { "type": "string", "format": "uri", "description": "Signed URL used to download or play the generated audio" }, "mime_type": { "type": "string" }, "duration_seconds": { "type": ["number", "null"] }, "voice_id": { "type": "string", "example": "am-hamen" }, "language": { "type": "string", "enum": ["am", "om"] }, "output_format": { "type": "string" }, "usage": { "type": "object", "properties": { "pricing_unit": { "const": "minute" }, "price_per_minute": { "type": "number", "example": 5 }, "credits_used": { "type": "number" }, "credits_remaining": { "type": "number" }, "currency": { "const": "ETB" } } } } } } },
+      "VoiceEstimateEnvelope": { "type": "object", "required": ["data"], "properties": { "data": { "$ref": "#/components/schemas/VoiceEstimate" } } },
+      "VoiceEstimate": { "type": "object", "properties": { "pricing_unit": { "const": "minute" }, "price_per_minute": { "type": "number", "example": 5 }, "estimated_duration_seconds": { "type": "number" }, "estimated_billable_seconds": { "type": "number" }, "estimated_billable_minutes": { "type": "number" }, "estimated_cost": { "type": "number" }, "current_balance": { "type": "number" }, "estimated_balance_after": { "type": "number" }, "currency": { "const": "ETB" }, "can_generate": { "type": "boolean" } } },
+      "VoiceUsageEnvelope": { "type": "object", "required": ["data"], "properties": { "data": { "type": "object", "properties": { "wallet_id": { "type": ["string", "null"] }, "balance": { "type": "number" }, "formatted_balance": { "type": "string" }, "currency": { "type": "string" }, "last_deduction_at": { "type": ["string", "null"], "format": "date-time" }, "total_spend": { "type": "number" }, "formatted_total_spend": { "type": "string" }, "pricing": { "type": "object", "properties": { "unit": { "const": "minute" }, "price_per_minute": { "type": "number", "example": 5 }, "price_per_audio_minute": { "type": "number", "example": 5 }, "minimum_charge": { "type": "number" }, "currency": { "const": "ETB" } } }, "budget": {} } } } },
+      "VoiceClip": { "type": "object", "required": ["id", "voice_id", "language", "output_format", "audio_url"], "properties": { "id": { "type": "string" }, "text": { "type": "string" }, "text_preview": { "type": "string" }, "voice_id": { "type": "string", "example": "am-hamen" }, "voice_name": { "type": "string" }, "voice_descriptor": { "type": "string" }, "language": { "type": "string", "enum": ["am", "om"] }, "output_format": { "type": "string", "enum": ["mp3_44100", "wav_44100", "pcm_16000"] }, "audio": { "type": ["string", "null"] }, "audio_url": { "type": "string", "format": "uri" }, "mime_type": { "type": "string" }, "duration_seconds": { "type": ["number", "null"] }, "character_count": { "type": "integer", "description": "Input text length metadata; billing is based on generated audio minutes." }, "download_name": { "type": "string" }, "created_at": { "type": "string", "format": "date-time" }, "usage": { "type": "object", "properties": { "pricing_unit": { "const": "minute" }, "price_per_minute": { "type": "number", "example": 5 }, "price_per_audio_minute": { "type": "number", "example": 5 }, "credits_used": { "type": ["number", "null"] }, "credits_remaining": { "type": ["number", "null"] }, "currency": { "const": "ETB" } } } } },
+      "VoiceClipMetadataEnvelope": { "type": "object", "required": ["data"], "properties": { "data": { "$ref": "#/components/schemas/VoiceClip" } } },
+      "VoiceClipListEnvelope": { "type": "object", "required": ["data", "meta"], "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/VoiceClip" } }, "meta": { "type": "object", "properties": { "next_cursor": { "type": ["string", "null"], "format": "date-time" }, "limit": { "type": "integer" } } } } },
+      "VoiceCatalogEnvelope": { "type": "object", "required": ["data"], "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Voice" } } } },
+      "VoicePreviewEnvelope": { "type": "object", "required": ["data"], "properties": { "data": { "type": "object", "properties": { "voice_id": { "type": "string", "example": "am-hamen" }, "audio_url": { "type": ["string", "null"], "format": "uri" }, "audio": { "type": ["string", "null"] }, "mime_type": { "type": ["string", "null"] }, "duration_seconds": { "type": ["number", "null"] }, "download_name": { "type": "string" } } } } },
+      "Voice": { "type": "object", "required": ["id", "name", "language", "is_available"], "properties": { "id": { "type": "string", "example": "am-hamen" }, "name": { "type": "string" }, "descriptor": { "type": "string" }, "language": { "type": "string", "enum": ["am", "om"] }, "gender": { "type": "string" }, "style": { "type": "string" }, "script_chip": { "type": "string" }, "tags": { "type": "array", "items": { "type": "string" } }, "preview_audio_url": { "type": ["string", "null"], "format": "uri" }, "preview_mime_type": { "type": ["string", "null"] }, "preview_duration_seconds": { "type": ["number", "null"] }, "is_default": { "type": "boolean" }, "is_available": { "type": "boolean" }, "sort_order": { "type": "integer" } } },
+      "TranscriptionEnvelope": { "type": "object", "required": ["data"], "properties": { "status": { "type": "string" }, "data": { "type": "object", "required": ["transcription"], "properties": { "transcription": { "type": "string" }, "confidence": { "type": ["number", "null"] }, "usage_metadata": { "type": ["object", "null"], "additionalProperties": true } } } } },
+      "TranslationEnvelope": { "type": "object", "required": ["data"], "properties": { "status": { "type": "string" }, "data": { "type": "object", "required": ["translation", "source_language", "target_language"], "properties": { "translation": { "type": "string" }, "source_language": { "type": "string", "enum": ["am", "om", "en"] }, "target_language": { "type": "string", "enum": ["am", "om", "en"] }, "quality": { "type": ["string", "null"], "enum": ["high", "medium", "low", null] }, "usage_metadata": { "$ref": "#/components/schemas/TokenUsage" } } } } },
+      "Error": { "type": "object", "properties": { "error": { "type": "object", "properties": { "message": { "type": "string" }, "code": { "type": ["string", "null"] }, "request_id": { "type": ["string", "null"] } } } } }
+    }
+  }
+}

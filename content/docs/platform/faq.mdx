@@ -1,90 +1,48 @@
 ---
 title: FAQ
-description: Frequently asked questions about pricing, technical limits, and data privacy.
+description: Current answers to common Addis AI integration questions.
 icon: BadgeQuestionMark
 ---
 
-import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
-
-Here are answers to the most common questions from developers and enterprise teams.
 
 ## General
 
-<Accordions>
-  <Accordion title="Which languages are currently supported?">
-    We currently provide production-grade support for **Amharic** and **Afan Oromo**. 
-    
-    We also support **English** for translation pairs (e.g., English to Amharic). Experimental support for Tigrinya and Somali is available in our beta models.
-  </Accordion>
+### Which integration should I use?
 
-  <Accordion title="How is Addis AI different from GPT-4 or Claude?">
-    Generic models are trained on English-heavy internet data. They often struggle with the **complex morphology** of African languages, leading to grammatical errors and hallucinations.
-    
-    **Addis AI** models are trained from scratch on native datasets, ensuring high-accuracy syntax, cultural relevance, and correct handling of Ge'ez punctuation.
-  </Accordion>
-  
-  <Accordion title="Can I use this for commercial applications?">
-    **Yes.** You can use our API to build commercial products, internal tools, or public-facing applications. Check our [Terms of Service](https://addisassistant.com/terms-of-service) for content policies regarding hate speech and misinformation.
-  </Accordion>
-</Accordions>
+Use the official Node.js or Python SDK when your backend runs one of those languages. Use cURL or REST for another runtime or when inspecting the wire contract.
 
-## Technical
+### Which languages are supported?
 
-<Accordions>
-  <Accordion title="How are tokens counted for Amharic?">
-    Tokenization for Ge'ez script is denser than Latin scripts. 
-    
-    On average, **1 Amharic word ≈ 1.5 to 1.8 tokens**.
-    For example, the word `"ኢትዮጵያ"` might be tokenized into 2-3 fragments depending on the context. We recommend estimating costs with a buffer compared to English text.
-  </Accordion>
+Amharic and Afan Oromo are the platform's primary languages. Individual capabilities may support additional languages; check the relevant capability page for its current matrix.
 
-  <Accordion title="What is the Context Window size?">
-    Our flagship model `Addis-፩-አሌፍ` supports a context window of **128,000 tokens** (roughly 71,000 to 85,000 Amharic words). 
-    
-    This includes both your input prompt and the model's generated output.
-  </Accordion>
+## Security
 
-  <Accordion title="Why is the audio generation taking time?">
-    Text-to-Speech (TTS) is computationally intensive. A 10-second audio clip takes approximately 1-2 seconds to generate. 
-    
-    For long documents, we strongly recommend using the **Streaming API** (`stream: true`) to play audio chunks instantly as they are generated.
-  </Accordion>
-</Accordions>
+### Can I put my API key in a website or mobile application?
 
-## Privacy & Security
+No. Keep permanent Addis AI API keys on a backend you control. Browser and mobile clients should authenticate to that backend instead.
 
-<Accordions>
-  <Accordion title="Do you train on my API data?">
-    **No.** Data sent to the API is **not** used to train our base models. 
-    
-    We adhere to strict data privacy standards. Your inputs and outputs are processed ephemerally and are not stored for model improvement purposes unless you explicitly opt-in to a feedback program.
-  </Accordion>
+### How should I retry Voice 2 generation?
 
-  <Accordion title="Where is my data processed?">
-    Our inference infrastructure runs on secure, enterprise-grade cloud providers. All data in transit is encrypted via TLS 1.2+.
-  </Accordion>
+Reuse the same client request ID only when retrying the same logical generation. Use a new value for new speech so distinct requests are not treated as idempotent replays.
 
-  <Accordion title="Can I deploy Addis AI on-premise?">
-    Yes. For Enterprise clients in sectors like Banking, Government, or Healthcare, we offer **On-Premise** or **Private Cloud** deployments to meet data sovereignty requirements. 
-    
-    Please [Contact Sales](mailto:enterprise@addisassistant.com) for details.
-  </Accordion>
-</Accordions>
+## SDKs and APIs
 
-## Billing
+### Does Python include an async client?
 
-<Accordions>
-  <Accordion title="Is there a Free Tier?">
-    Yes. Every new account receives **500 ETB free starter credits**. Once these are consumed, you can upgrade to a Pay-As-You-Go plan.
-  </Accordion>
+The current Python package provides a synchronous client. Do not assume an async client is available.
 
-  <Accordion title="How do I check my usage?">
-    You can view real-time usage statistics, token consumption, and remaining credits in the **[Platform Dashboard](https://platform.addisassistant.com/usage)**.
-  </Accordion>
-  
-  <Accordion title="What happens if I hit my Rate Limit?">
-    The API will return a `429 Too Many Requests` error. 
-    
-    If you are on the Free plan, you are limited to 60 requests per minute. Upgrading to Pro increases this limit significantly.
-  </Accordion>
-</Accordions>
+### Does Voice 2 stream audio?
+
+No. Voice 2 returns a completed clip and download URL. Legacy Text to Speech and Realtime Audio have different delivery models.
+
+### Where is the REST contract?
+
+See the [API Reference](/docs/reference/rest) or download the checked-in [OpenAPI document](/openapi.json).
+
+## Billing and support
+
+### Which currency is authoritative?
+
+Addis AI bills natively in Ethiopian birr (ETB). See [Pricing](/docs/platform/pricing) for current units and examples.
+
+For account-specific help, email [support@addisassistant.com](mailto:support@addisassistant.com) or join the [developer community](https://t.me/addisassistantai).

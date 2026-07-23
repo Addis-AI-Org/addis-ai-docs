@@ -5,15 +5,13 @@ import {
   DocsPage,
   DocsTitle,
 } from "fumadocs-ui/page";
-import { notFound, redirect  } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getMDXComponents } from "@/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
-    // 2. ADD THIS BLOCK:
-  // If the user visits "/docs" (no slug), send them to Introduction
   if (!params.slug) {
     redirect('/docs/get-started/introduction');
   }
@@ -59,6 +57,9 @@ export async function generateMetadata(
   return {
     title: page.data.title,
     description: page.data.description,
+    alternates: {
+      canonical: `/docs/${params.slug?.join('/') ?? 'overview'}`,
+    },
     openGraph: {
       images: getPageImage(page).url,
     },

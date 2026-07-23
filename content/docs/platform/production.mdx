@@ -1,0 +1,18 @@
+---
+title: Production checklist
+description: Security, reliability, cost, and observability checks before launch.
+---
+
+
+- Store API keys in a server-side secret manager and rotate them.
+- Authenticate end users and authorize every tool or billed action.
+- Validate text, file type, file size, tool arguments, and output destinations.
+- Set timeouts, bounded retries with jitter, and idempotency for Voice 2.
+- Apply per-user and per-tenant quotas and monitor ETB spend.
+- Redact secrets and sensitive content from logs; record request IDs and latency.
+- Handle `429`, insufficient balance, SDK errors, and partial client disconnects.
+- Pin tested SDK versions and review deprecations before upgrading.
+- Test Amharic and Afan Oromo content, Unicode rendering, and audio playback.
+- Provide human approval for consequential tool actions.
+
+Run smoke tests with a low-balance test account before each release.

@@ -1,0 +1,33 @@
+---
+title: Changelog
+description: Public documentation and contract changes.
+icon: History
+---
+
+
+## 2026-07-23 — Navigation and Voice 2 clarification
+
+- Made API Keys, Node.js on npm, and Python on PyPI permanently visible above the documentation tree.
+- Added recognizable npm and Python package icons and removed the duplicate GitHub resource links.
+- Kept one Text to Speech capability entry and moved deprecated Voice 1 guidance behind a direct migration link.
+- Removed redundant GA labels while preserving Beta and Deprecated status indicators.
+- Clarified Voice 2 billing as **5 ETB per generated minute** across guides and the OpenAPI reference.
+- Kept cURL examples on capability and API pages while simplifying SDK installation to Node.js and Python.
+- Added an Announcements sidebar icon; the full Announcements page redesign remains a separate follow-up.
+- Added an inline Voice 2 browser with all 27 currently available Amharic and Afan Oromo preview clips and visible request IDs.
+- Moved Translation parameters and supported directions directly below the first request example.
+- Corrected Realtime authentication guidance and demos to use the relay's public `apiKey` contract; Supabase JWT authentication remains specific to the signed-in developer portal.
+- Updated Next.js to 16.2.11 to resolve the release dependency audit.
+
+## 2026-07-17 — SDK-first documentation release
+
+- Reorganized documentation around official Node.js and Python SDKs.
+- Added a single [Announcements](/docs/announcements) link for release updates.
+- Added Addis Voice 2 guidance using canonical voice `am-hamen`.
+- Documented minute-based Voice 2 billing at 5 ETB per generated minute.
+- Added system instructions, personas, streaming, multimodal concepts, and the current Function Calling Beta limitations.
+- Added a validated OpenAPI 3.1 contract and private build-time pricing data.
+- Consolidated legacy voice content into the deprecation and migration guide.
+- Marked Realtime Audio and function calling as Beta; function calling remains non-streaming and blocked on coordinated SDK fixes.
+- Added permanent redirects for renamed documentation routes, canonical page metadata, sitemap generation, and `llms-full.txt` coverage.
+- Removed the legacy browser API-key Realtime demo; browser and mobile integrations now require a developer-owned backend or short-lived user session.

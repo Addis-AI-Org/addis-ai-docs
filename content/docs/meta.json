@@ -2,10 +2,11 @@
   "title": "Addis AI docs",
   "root": true,
   "pages": [
+    "announcements",
     "--- Get Started ---",
     "get-started/introduction",
     "get-started/quickstart",
-
+    "get-started/sdks",
     "--- Capabilities ---",
     "capabilities/text-generation",
     "capabilities/text-to-speech",
@@ -13,16 +14,11 @@
     "capabilities/multimodal",
     "capabilities/realtime",
     "capabilities/translation",
-    
-
-    "--- Integration ---",
-    "integration/web",
-    "integration/mobile",
-    "integration/server",
-    "integration/voice-interface",
-
     "--- Platform ---",
+    "platform/pricing",
+    "reference/rest",
     "platform/errors",
-    "platform/faq"
+    "platform/faq",
+    "platform/changelog"
   ]
 }

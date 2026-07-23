@@ -1,464 +1,267 @@
 ---
 title: Text to Speech
-description: Synthesize natural-sounding speech from text.
+description: Discover voices, estimate cost, generate speech, and manage durable audio clips.
 icon: AudioLines
 ---
 
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
-import { TypeTable } from 'fumadocs-ui/components/type-table';
-import { Callout } from 'fumadocs-ui/components/callout';
-import { AudioWaveform, Languages, Zap, Database } from 'lucide-react';
-import { Base64Player } from '@/components/base64-player';
+import { VoiceCatalog } from '@/components/voice-catalog';
 
-The Text to Speech (TTS) API is powered by our **`አሌፍ-Audio`** engine. It is designed to produce human-quality speech for African languages, correctly handling **Ge'ez punctuation** (like `።`, `፣`) for natural pausing and intonation.
+Addis Voice 2 turns Amharic and Afan Oromo text into durable audio clips. It is billed by generated duration at **5 ETB per minute** and does not stream partial audio.
 
-## Endpoint
-<div className="flex items-center gap-2 border border-fd-border p-3 rounded-lg bg-fd-muted/50 font-mono text-sm my-4">
-  <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-bold">POST</span>
-  <span className="text-fd-foreground">https://api.addisassistant.com/api/v1/audio</span>
-</div>
----
-## Usage Guide
+<Callout type="warn" title="Maintaining a Voice 1 integration?">
+The original Text to Speech API is deprecated and hidden from the primary navigation. [Open the Legacy Text to Speech guide →](/docs/capabilities/text-to-speech-legacy)
+</Callout>
 
-The API accepts text and returns a **Base64 encoded audio string** (WAV format). This allows you to easily embed audio in web apps or save it to disk.
+## Discover voices
 
-### 1. Basic Synthesis
-Generate audio from a simple text string.
+Query the catalog rather than copying an arbitrary ID into production configuration. `am-hamen` is the canonical Amharic example.
 
-<Tabs items={['cURL', 'JavaScript', 'Python']}>
-  <Tab value="cURL">
-    ```bash
-    curl -X POST https://api.addisassistant.com/api/v1/audio \
-      -H "Content-Type: application/json" \
-      -H "X-API-Key: sk_YOUR_KEY" \
-      -d '{
-        "text": "ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።",
-        "language": "am"
-      }'
-    ```
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const voices = await addis.voices.list({ language: "am" });
+for (const voice of voices) {
+  console.log(voice.id, voice.name, voice.isAvailable);
+}
+```
   </Tab>
-  <Tab value="JavaScript">
-    ```javascript
-    const fs = require('fs');
-
-    const response = await fetch("https://api.addisassistant.com/api/v1/audio", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-Key": "sk_YOUR_KEY",
-      },
-      body: JSON.stringify({
-        text: "ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።", // "Hello, welcome to Addis AI."
-        language: "am",
-        voice_id: "male_1" // Optional
-      }),
-    });
-
-    const data = await response.json();
-    
-    // Decode Base64 and save to file
-    const audioBuffer = Buffer.from(data.audio, 'base64');
-    fs.writeFileSync('output.wav', audioBuffer);
-    console.log("Audio saved to output.wav");
-    ```
+  <Tab>
+```python
+voices = addis.voices.list(language="am")
+for voice in voices:
+    print(voice["id"], voice["name"], voice["is_available"])
+```
   </Tab>
-  <Tab value="Python">
-    ```python
-    import requests
-    import base64
-
-    url = "https://api.addisassistant.com/api/v1/audio"
-    headers = {"X-API-Key": "sk_YOUR_KEY"}
-    
-    payload = {
-        "text": "ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።",
-        "language": "am",
-        "voice_id": "male_1"
-    }
-
-    response = requests.post(url, headers=headers, json=payload)
-    data = response.json()
-
-    # Decode and save
-    audio_bytes = base64.b64decode(data['audio'])
-    with open('output.wav', 'wb') as f:
-        f.write(audio_bytes)
-        
-    print("Audio saved to output.wav")
-    ```
-  </Tab>
-
-</Tabs>
-
-### 2. Streaming (Long Text)
-Generating audio for long paragraphs takes time. To minimize the wait (latency), use **Streaming**. 
-
-The API will send chunks of audio immediately as they are generated, allowing your app to start playing audio within milliseconds, even if the text is very long.
-
-**Usage:** Set `"stream": true` in your request body.
-
-<Tabs items={['cURL','Browser (Client)', 'Node.js (Server)', 'Python']}>
-  <Tab value="cURL">
-   **Best for:** testing it in postman. This script creates a queue to play chunks smoothly in order.
-    ```bash
-       curl -X POST https://api.addisassistant.com/api/v1/audio \
-      -H "Content-Type: application/json" \
-      -H "X-API-Key: sk_YOUR_KEY" \
-      -d '{
-        "text": "ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።",
-        "language": "am",
-        "stream":true
-      }'
-    ```
-  </Tab>
-  <Tab value="Browser (Client)">
-    **Best for:** Chatbots and Web Apps. This script creates a queue to play chunks smoothly in order.
-
-    ```javascript
-    async function streamAudio() {
-      const audioQueue = [];
-      let isPlaying = false;
-
-      try {
-        const response = await fetch("https://api.addisassistant.com/api/v1/audio", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": "sk_YOUR_KEY",
-          },
-          body: JSON.stringify({
-            text: "ይህ ረጅም ጽሑፍ ነው። የአዲስ ኤአይ የድምጽ ቴክኖሎጂ ትልልቅ ጽሑፎችን በቀላሉ አንብቦ ድምጽ ሊያወጣ ይችላል።",
-            language: "am",
-            stream: true,
-          }),
-        });
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-
-        // Play audio chunks sequentially
-        function playNext() {
-          if (audioQueue.length === 0) {
-            isPlaying = false;
-            return;
-          }
-          isPlaying = true;
-          const nextChunk = audioQueue.shift();
-          const audio = new Audio("data:audio/wav;base64," + nextChunk);
-          audio.onended = playNext; 
-          audio.play().catch(e => console.error("Playback failed:", e));
-        }
-
-        // Read the stream
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n").filter((line) => line.trim());
-
-          for (const line of lines) {
-            try {
-              const data = JSON.parse(line);
-              if (data.audio_chunk) {
-                audioQueue.push(data.audio_chunk);
-                if (!isPlaying) playNext();
-              }
-            } catch (e) {
-              console.error("JSON Parse Error:", e);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Stream connection failed:", error);
-      }
-    }
-    
-    streamAudio();
-    ```
-  </Tab>
-
-  <Tab value="Node.js (Server)">
-    **Best for:** Saving long files efficiently or piping to other services.
-
-    ```javascript
-    const fs = require("fs");
-
-    async function streamAndSave() {
-      const response = await fetch("https://api.addisassistant.com/api/v1/audio", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": "sk_YOUR_KEY",
-        },
-        body: JSON.stringify({
-          text: "ይህ ረጅም ጽሑፍ ነው።",
-          language: "am",
-          stream: true,
-        }),
-      });
-
-      const fileStream = fs.createWriteStream("output_stream.wav");
-
-      for await (const chunk of response.body) {
-        const textChunk = new TextDecoder().decode(chunk);
-        const lines = textChunk.split("\n").filter(line => line.trim());
-
-        for (const line of lines) {
-          try {
-            const json = JSON.parse(line);
-            if (json.audio_chunk) {
-              // Convert Base64 chunk to binary and write
-              const binaryData = Buffer.from(json.audio_chunk, "base64");
-              fileStream.write(binaryData);
-            }
-          } catch (e) {
-            console.error("Chunk Error");
-          }
-        }
-      }
-      
-      fileStream.end();
-      console.log("Stream complete.");
-    }
-
-    streamAndSave();
-    ```
-  </Tab>
-
-  <Tab value="Python">
-    **Best for:** AI Pipelines.
-
-    ```python
-    import requests
-    import json
-    import base64
-
-    url = "https://api.addisassistant.com/api/v1/audio"
-    headers = {"X-API-Key": "sk_YOUR_KEY"}
-    payload = {
-        "text": "ይህ ረጅም ጽሑፍ ነው።",
-        "language": "am",
-        "stream": True
-    }
-
-    with open("stream_output.wav", "wb") as f:
-        # stream=True keeps connection open
-        with requests.post(url, json=payload, headers=headers, stream=True) as r:
-            for line in r.iter_lines():
-                if line:
-                    try:
-                        data = json.loads(line)
-                        if "audio_chunk" in data:
-                            chunk = base64.b64decode(data['audio_chunk'])
-                            f.write(chunk)
-                    except ValueError:
-                        continue
-                        
-    print("Stream saved.")
-    ```
+  <Tab>
+```bash
+curl "https://api.addisassistant.com/api/v1/voice/voices?language=am" \
+  -H "x-api-key: $ADDIS_API_KEY"
+```
   </Tab>
 </Tabs>
 
----
+The catalog is dynamic. Filter for the requested language and store only IDs currently marked available. Each entry includes the voice ID, name, descriptor, language, gender, style, tags, preview URL, default status, and availability.
 
-## API Reference
+### Catalog filters
 
-### Request Parameters
-These parameters go in the root of your JSON body.
+| Filter | Node.js | Python | Values |
+| --- | --- | --- | --- |
+| Language | `language` | `language` | `am` or `om` |
+| Gender | `gender` | `gender` | `female` or `male` |
+| Search | `search` | `search` | Name, ID, descriptor, style, or tag text |
+| Include unavailable voices | `includeUnavailable` | `include_unavailable` | `false` by default |
 
-<TypeTable
-  type={{
-    'text': {
-      description: 'The text content to be spoken.',
-      type: 'string',
-      required: true
-    },
-    'language': {
-      description: 'Language code. "am" (Amharic) or "om" (Afan Oromo).',
-      type: 'string',
-      required: true
-    },
-    'stream': {
-      description: 'Set to true for real-time chunked response.',
-      type: 'boolean',
-      default: 'false'
-    },
-  }}
-/>
+### Browse current voice IDs
 
-### Response Schema (Basic Mode)
-If `stream: false`, you receive a single JSON object.
+The playable catalog below is synchronized with the current backend availability list and developer-platform previews, and was verified on July 23, 2026. Your application should still call `voices.list()` because availability can change without a documentation release.
 
-```json
-{
-  "audio": "//NIxAAAAANIAAAAAExBTUVVVV..."
-}
+<VoiceCatalog />
+
+## Preview a voice
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const preview = await addis.voices.preview("am-hamen");
+console.log(preview.audioUrl);
 ```
-<TypeTable
-type={{
-'audio': {
-description: 'The Base64 encoded string of the audio file.',
-type: 'string'
-}
-}}
-/>
-
-### Response Schema (Streaming Mode)
-If stream: true, you receive newline-delimited JSON objects.
-```json
-{"audio_chunk": "//NIxAAAAANIA...", "index": 0}
-{"audio_chunk": "AAAEkSRJ...", "index": 1}
+  </Tab>
+  <Tab>
+```python
+preview = addis.voices.preview("am-hamen")
+print(preview["audio_url"])
 ```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/voices/am-hamen/preview \
+  -H "x-api-key: $ADDIS_API_KEY"
+```
+  </Tab>
+</Tabs>
 
----
+Preview URLs are signed and can expire. Fetch fresh preview metadata instead of storing the URL permanently.
 
-## Handling the Audio Output
+## Estimate cost
 
-The API returns audio as a **Base64 encoded string**. This makes it easy to send JSON data, but you cannot play it directly without decoding it.
+Estimate before generation when a user must approve spend or the application is close to its available balance.
 
-### Audio Tool
-Use this tool to test your API output. Paste the `audio` string from your response to hear it immediately.
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const input = {
+  text: "ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+  voiceId: "am-hamen",
+  language: "am" as const,
+  outputFormat: "mp3_44100" as const,
+};
 
-<Base64Player />
+const estimate = await addis.voice.estimate(input);
+if (!estimate.canGenerate) throw new Error("Insufficient balance");
+console.log(estimate.estimatedCost, estimate.currency);
+```
+  </Tab>
+  <Tab>
+```python
+input = {
+    "text": "ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+    "voice_id": "am-hamen",
+    "language": "am",
+    "output_format": "mp3_44100",
+}
 
-### Code Implementation
-Here is how to decode and save the audio file programmatically in your application.
+estimate = addis.voice.estimate(**input)
+if not estimate["can_generate"]:
+    raise RuntimeError("Insufficient balance")
+print(estimate["estimated_cost"], estimate["currency"])
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/estimate \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "text":"ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+    "voice_id":"am-hamen",
+    "language":"am",
+    "output_format":"mp3_44100"
+  }'
+```
+  </Tab>
+</Tabs>
 
-<div className="flex flex-col gap-4 p-5 rounded-lg border border-fd-border bg-fd-card mt-6">
-  <div className="text-sm text-fd-muted-foreground">
-    Choose your environment:
-  </div>
+The estimate reports the pricing unit, price per minute, estimated duration, billable duration, cost, current balance, projected balance, currency, and whether generation is currently allowed.
 
-  <Tabs items={['cURL / Terminal', 'Node.js', 'Python', 'Browser JS']}>
-    
-    <Tab value="cURL / Terminal">
-      **Universal Command (Windows/Mac/Linux)**
-      
-      You can decode and save the file in one command line using Python (pre-installed on most systems).
+## Generate and save a clip
 
-      ```bash
-      curl -X POST https://api.addisassistant.com/api/v1/audio \
-        -H "Content-Type: application/json" \
-        -H "X-API-Key: sk_YOUR_KEY" \
-        -d '{"text": "ሰላም", "language": "am"}' \
-        | python3 -c "import sys, json, base64; open('output.wav', 'wb').write(base64.b64decode(json.load(sys.stdin)['audio']))"
-      ```
-    </Tab>
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const clip = await addis.voice.generate({
+  ...input,
+  clientRequestId: crypto.randomUUID(),
+});
 
-    <Tab value="Node.js">
-      To save the file to disk in a backend environment:
+await clip.toFile("speech.mp3");
+console.log(clip.id, clip.audioUrl, clip.usage);
+```
+  </Tab>
+  <Tab>
+```python
+clip = addis.voice.generate(
+    **input,
+    client_request_id="order-123",
+)
 
-      ```javascript
-      import fs from 'fs';
+clip.to_file("speech.mp3")
+print(clip.id, clip.audio_url, clip.usage)
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/generations \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "text":"ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+    "voice_id":"am-hamen",
+    "language":"am",
+    "output_format":"mp3_44100",
+    "client_request_id":"order-123"
+  }' | tee voice.json
 
-      // Assuming 'data' is the JSON response from fetch()
-      const base64String = data.audio;
-      const buffer = Buffer.from(base64String, 'base64');
-      
-      fs.writeFileSync('speech.wav', buffer);
-      console.log('Saved to speech.wav');
-      ```
-    </Tab>
+curl --location "$(jq -r '.data.audio_url' voice.json)" \
+  --output speech.mp3
+```
+  </Tab>
+</Tabs>
 
-    <Tab value="Python">
-      To decode and save the file in a Python script:
+The cURL example requires `jq`. A generation response contains clip metadata and a signed `audio_url`. A first response may also include an audio data URL; an idempotent replay can omit that inline field, so use the signed URL or SDK file helper.
 
-      ```python
-      import base64
+## Output formats
 
-      # Assuming 'response_json' is the dict from requests.post().json()
-      base64_string = response_json['audio']
-      audio_data = base64.b64decode(base64_string)
+| Format | Use |
+| --- | --- |
+| `mp3_44100` | Compact delivery for web, mobile, and downloads. |
+| `wav_44100` | Uncompressed editing and audio pipelines. |
+| `pcm_16000` | Speech pipelines expecting 16 kHz PCM in a WAV container. |
 
-      with open("speech.wav", "wb") as f:
-          f.write(audio_data)
-          
-      print("Saved to speech.wav")
-      ```
-    </Tab>
+Choose the format before estimating because output choice can affect generated duration and storage behavior.
 
-    <Tab value="Browser JS">
-      To play the audio immediately in a React or Vue app:
+## Idempotency and retries
 
-      ```javascript
-      // Assuming 'data' is the JSON response from the API
-      const base64String = data.audio;
-      
-      // Create a playable Audio object directly
-      const audio = new Audio("data:audio/wav;base64," + base64String);
-      audio.play();
-      ```
-    </Tab>
-  </Tabs>
-</div>
----
-### Best Practices
+`clientRequestId` in Node.js and `client_request_id` in Python identifies one logical generation.
 
-Ensure high-quality voice output with these guidelines.
+- Reuse it when retrying the same request after a timeout or uncertain response.
+- Generate a new value for different text, voice, language, or output format.
+- Do not retry a validation error unchanged.
+- For a generation-in-progress response, wait for the reported retry interval before checking again.
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+## Voice settings
 
-  {/* Script Card */}
-  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
-    <div className="flex items-center gap-2.5 mb-4">
-      <Languages className="w-4 h-4 text-blue-500" />
-      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Script & Punctuation</h3>
-    </div>
-    <div className="space-y-3 text-sm text-fd-muted-foreground">
-      <div>
-        <strong className="text-fd-foreground">Use Punctuation:</strong> The model relies on commas (`፣`) and periods (`።`) to determine pauses. Text without punctuation will sound rushed.
-      </div>
-      <div>
-        <strong className="text-fd-foreground">Avoid Mixed Scripts:</strong> Mixing English words inside an Amharic sentence may result in unnatural pronunciation. Transliterate English terms into Fidel if possible.
-      </div>
-    </div>
-  </div>
+`speed` is currently applied. `stability`, `similarity`, and `style` are accepted for compatibility but ignored by the current provider. The response reports ignored settings in `meta.ignoredVoiceSettings` or `meta["ignored_voice_settings"]`.
 
-  {/* Latency Card */}
-  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
-    <div className="flex items-center gap-2.5 mb-4">
-      <Zap className="w-4 h-4 text-orange-500" />
-      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Latency Optimization</h3>
-    </div>
-    <div className="space-y-3 text-sm text-fd-muted-foreground">
-      <div className="flex items-center justify-between p-2 rounded bg-fd-secondary/40 border border-fd-border/50">
-        <span className="text-xs font-medium">Long Documents</span>
-        <code className="text-xs text-fd-foreground">Use stream: true</code>
-      </div>
-      <div>
-        There is no hard character limit, but generating a large file takes time. For texts longer than 2 sentences, <strong>always use Streaming</strong> to ensure immediate playback.
-      </div>
-    </div>
-  </div>
+Do not build user-facing behavior that assumes an ignored control changes the generated clip.
 
-  {/* Caching Card */}
-  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
-    <div className="flex items-center gap-2.5 mb-4">
-      <Database className="w-4 h-4 text-purple-500" />
-      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Efficiency</h3>
-    </div>
-    <div className="space-y-3 text-sm text-fd-muted-foreground">
-      <div>
-        <strong className="text-fd-foreground">Cache Everything:</strong> TTS is deterministic. If the input text hasn't changed, serve the saved audio file instead of calling the API again to save money and bandwidth.
-      </div>
-    </div>
-  </div>
+## Usage and clip history
 
-  {/* Audio Output Card */}
-  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
-    <div className="flex items-center gap-2.5 mb-4">
-      <FileAudio className="w-4 h-4 text-green-500" />
-      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Output Format</h3>
-    </div>
-    <div className="space-y-3 text-sm text-fd-muted-foreground">
-      <div>
-        <strong className="text-fd-foreground">Base64 WAV:</strong> The API returns a Base64 string inside JSON. You must decode this string to get the playable WAV file.
-      </div>
-      <div>
-        <strong className="text-fd-foreground">Compression:</strong> Since WAV is large and uncompressed, consider converting the decoded audio to MP3 on your backend if your users are on mobile data.
-      </div>
-    </div>
-  </div>
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const usage = await addis.voice.usage();
+const page = await addis.voice.clips.list({ limit: 20 });
 
-</div>
+const clip = await addis.voice.clips.get(page.data[0].id);
+await addis.voice.clips.download(clip.id, "saved-clip.mp3");
+await addis.voice.clips.delete(clip.id);
+```
+  </Tab>
+  <Tab>
+```python
+usage = addis.voice.usage()
+page = addis.voice.clips.list(limit=20)
+
+clip = addis.voice.clips.get(page.data[0]["id"])
+addis.voice.clips.download(clip["id"], "saved-clip.mp3")
+addis.voice.clips.delete(clip["id"])
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/usage \
+  -H "x-api-key: $ADDIS_API_KEY"
+
+curl https://api.addisassistant.com/api/v1/voice/clips \
+  -H "x-api-key: $ADDIS_API_KEY"
+
+curl -X DELETE https://api.addisassistant.com/api/v1/voice/clips/CLIP_ID \
+  -H "x-api-key: $ADDIS_API_KEY"
+```
+  </Tab>
+</Tabs>
+
+Voice 2 usage is billed at **5 ETB per generated minute**. Use the estimate before generation when a user must approve spend, and use the usage response to display current ETB balance and total spend.
+
+## Errors
+
+Common failures include unavailable voice IDs, unsupported formats, insufficient balance, idempotency conflicts, generation still in progress, rate limiting, and transient provider errors.
+
+Refresh the voice catalog after an unavailable-voice error. Log the clip ID, request ID, and client request ID, but never the API key or sensitive full text.
+
+## Best Practices
+
+- Query and filter the catalog instead of hardcoding a voice count or copying arbitrary IDs.
+- Preview a voice before storing it as an application default.
+- Estimate before generating when the user approves spend.
+- Use native Ethiopic punctuation and well-formed sentences for natural pauses.
+- Keep language and script consistent; transliterate explicitly when required.
+- Split very long content at sentence or paragraph boundaries and generate separate clips.
+- Use stable idempotency values for uncertain retries.
+- Cache completed clips when the exact same reusable audio is requested frequently.
+- Store durable clip IDs rather than expiring signed URLs.
+- Do not wait for streaming audio from Voice 2.
+
+Continue to [Legacy Text to Speech (deprecated)](/docs/capabilities/text-to-speech-legacy) only when maintaining an existing Voice 1 integration.
+
+<LastVerified date="2026-07-23" />

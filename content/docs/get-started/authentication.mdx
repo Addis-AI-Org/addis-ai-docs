@@ -1,0 +1,37 @@
+---
+title: Authentication
+description: Configure and protect an Addis AI API key.
+---
+
+
+Addis AI authenticates requests with an API key. Create and revoke keys in the developer portal, then provide the key to the SDK through `ADDIS_API_KEY`.
+
+<Tabs items={['Node.js', 'Python']} groupId="sdk-language">
+  <Tab>
+```ts
+import AddisAI from "addisai";
+
+const addis = new AddisAI(); // reads ADDIS_API_KEY
+```
+  </Tab>
+  <Tab>
+```python
+from addisai import AddisAI
+
+addis = AddisAI()  # reads ADDIS_API_KEY
+```
+  </Tab>
+</Tabs>
+
+Keep keys in a server-side secret manager, use separate keys per environment, rotate suspected credentials immediately, and never log a complete key. Browser and mobile clients must call a backend you control.
+
+<RestDisclosure>
+Raw requests send the key in the `x-api-key` header.
+
+```bash
+curl https://api.addisassistant.com/v1/chat/completions \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{"messages":[{"role":"user","content":"Hello"}]}'
+```
+</RestDisclosure>

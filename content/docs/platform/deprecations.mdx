@@ -1,0 +1,19 @@
+---
+title: Deprecations and Voice 1 migration
+description: Migrate legacy audio integrations to Addis Voice 2.
+---
+
+<StatusBadge status="deprecated">Legacy API</StatusBadge>
+
+
+The legacy `/api/v1/audio` endpoint and Voice 1 names are deprecated. New integrations must use Addis Voice 2 through `addis.voice.generate` and discover IDs with `addis.voices.list`.
+
+Migration steps:
+
+1. Replace the legacy audio route with the Voice 2 SDK resource.
+2. Map a catalog voice returned by `voices.list`; `am-hamen` is the canonical example.
+3. Update billing displays and approval flows to **5 ETB per generated minute**.
+4. Choose `mp3_44100`, `wav_44100`, or `pcm_16000`.
+5. Add an idempotency value and test clip history/download behavior.
+
+The current Voice 2 estimate and usage responses report minute-based ETB billing.

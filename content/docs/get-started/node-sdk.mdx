@@ -1,0 +1,29 @@
+---
+title: Node.js SDK
+description: Install and configure the official Addis AI JavaScript and TypeScript SDK.
+---
+
+
+The official Node.js SDK supports Node.js 18+, Bun, Deno, Cloudflare Workers, and Vercel Edge.
+
+Latest live-verified package: `addisai@0.1.2` (2026-07-17).
+
+```bash
+npm install addisai
+```
+
+```ts
+import AddisAI from "addisai";
+
+const addis = new AddisAI({
+  apiKey: process.env.ADDIS_API_KEY,
+  timeout: 30_000,
+  maxRetries: 2,
+});
+```
+
+The client exposes `chat`, `voice`, `voices`, `speech`, and `translate` resources. It refuses browser execution by default because a browser cannot protect a secret API key. Do not enable browser access for production applications.
+
+Voice 2 is billed at **5 ETB per generated minute**. Use [Text to Speech](/docs/capabilities/text-to-speech) for catalog discovery, cost estimation, generation, and clip management.
+
+See the [Node.js SDK reference](/docs/reference/node) and [npm package](https://www.npmjs.com/package/addisai).

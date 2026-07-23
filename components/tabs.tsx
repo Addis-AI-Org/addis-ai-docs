@@ -37,7 +37,13 @@ export interface TabsProps
    * Additional label in tabs list when `items` is provided.
    */
   label?: ReactNode;
+
+  /** Synchronize this tab selection across the documentation site. */
+  groupId?: string;
 }
+
+const TAB_STORAGE_PREFIX = 'addis-docs-tab:';
+const TAB_CHANGE_EVENT = 'addis-docs-tab-change';
 
 const TabsContext = createContext<{
   items?: string[];
@@ -85,12 +91,44 @@ export function Tabs({
   className,
   items,
   label,
+  groupId,
   defaultIndex = 0,
   defaultValue = items ? escapeValue(items[defaultIndex]) : undefined,
   ...props
 }: TabsProps) {
   const [value, setValue] = useState(defaultValue);
   const collection = useMemo<CollectionKey[]>(() => [], []);
+
+  useEffect(() => {
+    if (!groupId) return;
+    let active = true;
+    const stored = window.localStorage.getItem(`${TAB_STORAGE_PREFIX}${groupId}`);
+    if (stored && (!items || items.some((item) => escapeValue(item) === stored))) {
+      queueMicrotask(() => {
+        if (active) setValue(stored);
+      });
+    }
+
+    const handleTabChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ groupId: string; value: string }>).detail;
+      if (detail.groupId === groupId) setValue(detail.value);
+    };
+    window.addEventListener(TAB_CHANGE_EVENT, handleTabChange);
+    return () => {
+      active = false;
+      window.removeEventListener(TAB_CHANGE_EVENT, handleTabChange);
+    };
+  }, [groupId, items]);
+
+  const updateValue = (nextValue: string) => {
+    if (items && !items.some((item) => escapeValue(item) === nextValue)) return;
+    setValue(nextValue);
+    if (!groupId) return;
+    window.localStorage.setItem(`${TAB_STORAGE_PREFIX}${groupId}`, nextValue);
+    window.dispatchEvent(
+      new CustomEvent(TAB_CHANGE_EVENT, { detail: { groupId, value: nextValue } }),
+    );
+  };
 
   return (
     <Unstyled.Tabs
@@ -100,10 +138,7 @@ export function Tabs({
         className,
       )}
       value={value}
-      onValueChange={(v: string) => {
-        if (items && !items.some((item) => escapeValue(item) === v)) return;
-        setValue(v);
-      }}
+      onValueChange={updateValue}
       {...props}
     >
       {items && (
