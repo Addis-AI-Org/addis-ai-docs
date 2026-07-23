@@ -283,12 +283,50 @@ test("pricing data is build-time only and is not published as JSON", async () =>
   assert.doesNotMatch(component, /fetch\(|ADDIS_PRICING_URL|api\/public\/pricing/);
 });
 
-test("public assets cannot reintroduce browser API keys or stale voices", async () => {
+test("public assets cannot store browser API keys or reintroduce stale voices", async () => {
   const files = await readTextTree(path.join(workspaceRoot, "public"), [".html", ".js", ".json", ".txt", ".xml"]);
   const content = (await Promise.all(files.map((file) => readFile(file, "utf8")))).join("\n");
   assert.doesNotMatch(content, /am-hiwot/);
   assert.doesNotMatch(content, /apiKey=YOUR_API_KEY|dangerouslyAllowBrowser\s*:\s*true/i);
   assert.doesNotMatch(content, /localStorage[\s\S]{0,160}(api.?key|ADDIS_API_KEY)/i);
+});
+
+test("Translation parameters follow the first request example", async () => {
+  const content = await readFile(path.join(docsRoot, "capabilities", "translation.mdx"), "utf8");
+  const exampleEnd = content.indexOf("</Tabs>");
+  const parameters = content.indexOf("## Available parameters");
+  const responseHandling = content.indexOf("## Response handling");
+
+  assert.ok(exampleEnd >= 0);
+  assert.ok(parameters > exampleEnd);
+  assert.ok(parameters < responseHandling);
+  for (const parameter of ["`text`", "`from`", "`to`", "`source`", "`target`", "`source_language`", "`target_language`"]) {
+    assert.match(content.slice(parameters, responseHandling), new RegExp(parameter.replaceAll("`", "\\`")));
+  }
+  for (const language of ["Amharic (`am`)", "Afan Oromo (`om`)", "English (`en`)"]) {
+    assert.match(content.slice(parameters, responseHandling), new RegExp(language.replace(/[()]/g, "\\$&")));
+  }
+});
+
+test("Voice 2 exposes every current playable voice ID without replacing live discovery", async () => {
+  const catalog = await readFile(path.join(workspaceRoot, "data", "voice-catalog.ts"), "utf8");
+  const component = await readFile(path.join(workspaceRoot, "components", "voice-catalog.tsx"), "utf8");
+  const guide = await readFile(path.join(docsRoot, "capabilities", "text-to-speech.mdx"), "utf8");
+  const ids = [...catalog.matchAll(/\n\s+id: '([^']+)'/g)].map((match) => match[1]);
+  const samples = [...catalog.matchAll(/sample: `\$\{CDN_BASE\}\/([^`]+)`/g)].map((match) => match[1]);
+
+  assert.equal(ids.length, 27);
+  assert.equal(new Set(ids).size, 27);
+  assert.equal(samples.length, 27);
+  assert.equal(new Set(samples).size, 27);
+  assert.ok(ids.includes("am-hamen"));
+  assert.doesNotMatch(catalog, /am-hiwot|am-loza/);
+  assert.match(component, /<audio/);
+  assert.match(component, /preload="none"/);
+  assert.match(component, /Search voices/);
+  assert.match(guide, /<VoiceCatalog \/>/);
+  assert.match(guide, /voices\.list\(\)/);
+  assert.match(guide, /includeUnavailable/);
 });
 
 test("every Python documentation block compiles and the mocked SDK flow executes", async () => {
@@ -342,20 +380,24 @@ test("canonical capability routes are pages and only renamed routes redirect", a
   }
 });
 
-test("interactive audio tools are restored without permanent browser credentials", async () => {
+test("interactive audio tools match the Realtime API-key contract without storing credentials", async () => {
   const legacy = await readFile(path.join(docsRoot, "capabilities", "text-to-speech-legacy.mdx"), "utf8");
   assert.match(legacy, /<Base64Player \/>/);
 
   const realtime = await readFile(path.join(docsRoot, "capabilities", "realtime.mdx"), "utf8");
   assert.match(realtime, /<RealtimeVoiceDemo \/>/);
   assert.match(realtime, /\/realtime-demo\.html/);
+  assert.match(realtime, /ws\?apiKey=/);
+  assert.match(realtime, /Direct browser authentication is for testing/);
 
   const demoFiles = [
     await readFile(path.join(workspaceRoot, "components", "realtime-voice-demo.tsx"), "utf8"),
     await readFile(path.join(workspaceRoot, "public", "realtime-demo.html"), "utf8"),
   ].join("\n");
-  assert.match(demoFiles, /short-lived user JWT/i);
+  assert.match(demoFiles, /Addis API key/i);
+  assert.match(demoFiles, /searchParams\.set\(['"]apiKey['"]/);
   assert.match(demoFiles, /setupComplete/);
   assert.match(demoFiles, /interrupted/);
-  assert.doesNotMatch(demoFiles, /apiKey|ADDIS_API_KEY|sk_/);
+  assert.doesNotMatch(demoFiles, /\bJWT\b|searchParams\.set\(['"]jwt['"]/i);
+  assert.doesNotMatch(demoFiles, /localStorage|sessionStorage|sk_[A-Za-z0-9_-]{12,}/);
 });

@@ -6,11 +6,15 @@ description: Current event lifecycle for the Beta Realtime Audio relay.
 <StatusBadge status="beta">Beta</StatusBadge>
 
 
-Connect to `wss://relay.addisassistant.com/ws` with a short-lived user JWT in the `jwt` query parameter. The current Realtime relay does not authenticate browser sessions with a long-lived Addis API key.
+Connect to `wss://relay.addisassistant.com/ws` with an Addis API key in the case-sensitive `apiKey` query parameter:
 
 ```text
-wss://relay.addisassistant.com/ws?jwt=<short-lived-jwt>
+wss://relay.addisassistant.com/ws?apiKey=<addis-api-key>
 ```
+
+The relay also accepts a Supabase user JWT for the signed-in Addis developer portal. That first-party portal session is not the public developer authentication flow. Third-party server integrations should use their Addis API key.
+
+Browser WebSocket clients cannot set the `x-api-key` header. Direct browser use therefore exposes the key to the browser runtime and WebSocket upgrade URL; use it only for development testing. Production browser and mobile applications should connect through a WebSocket proxy that keeps the Addis key server-side.
 
 Send mono 16-bit PCM audio at 16 kHz as base64-encoded JSON messages:
 
@@ -28,4 +32,4 @@ Model audio is returned as 24 kHz PCM in `serverContent.modelTurn.parts[0].inlin
 
 This Beta protocol can change. Keep authentication, audio conversion, event parsing, reconnection, and playback scheduling behind an application adapter.
 
-<LastVerified date="2026-07-17" />
+<LastVerified date="2026-07-23" />

@@ -55,9 +55,9 @@
         <h1 id="title">Addis AI Realtime Audio</h1>
         <p>Standalone microphone, PCM16, playback, interruption, and WebSocket event demo. Use localhost or HTTPS so the browser can request microphone access.</p>
 
-        <label for="jwt">Short-lived user JWT</label>
-        <input id="jwt" type="password" autocomplete="off" placeholder="Paste a short-lived JWT" />
-        <p class="hint">The token remains in this page's memory and is sent only to the Addis realtime relay.</p>
+        <label for="api-key">Addis API key</label>
+        <input id="api-key" type="password" autocomplete="off" placeholder="Paste your Addis API key" />
+        <p class="hint">Testing only. The key remains in this page's memory, is never stored, and is sent only to the Addis Realtime relay.</p>
 
         <div class="actions">
           <button id="start" class="primary" type="button">Start</button>
@@ -67,7 +67,7 @@
 
         <div class="status" role="status" aria-live="polite">
           <div id="dot" class="dot" aria-hidden="true"></div>
-          <div><strong id="status-title">Idle</strong><span id="status-detail">Paste a short-lived user JWT to start.</span></div>
+          <div><strong id="status-title">Idle</strong><span id="status-detail">Paste an Addis API key to start.</span></div>
         </div>
 
         <div class="log">
@@ -85,7 +85,7 @@
       const OUTPUT_RATE = 24000;
       const PROCESSOR_SIZE = 2048;
       const elements = {
-        jwt: document.querySelector("#jwt"),
+        apiKey: document.querySelector("#api-key"),
         start: document.querySelector("#start"),
         stop: document.querySelector("#stop"),
         clear: document.querySelector("#clear"),
@@ -222,26 +222,26 @@
         runtime.runId += 1;
         elements.start.disabled = false;
         elements.stop.disabled = true;
-        elements.jwt.disabled = false;
+        elements.apiKey.disabled = false;
         await cleanup();
         setStatus(unexpected ? "Disconnected" : "Stopped", unexpected ? "The realtime connection closed." : "Microphone and connection closed.", unexpected ? "error" : "warn");
       }
 
       async function start() {
-        const jwt = elements.jwt.value.trim();
-        if (!jwt) return setStatus("JWT required", "Paste a short-lived user JWT.", "error");
+        const apiKey = elements.apiKey.value.trim();
+        if (!apiKey) return setStatus("API key required", "Paste an Addis API key.", "error");
         const runId = runtime.runId + 1;
         runtime.runId = runId;
         elements.start.disabled = true;
         elements.stop.disabled = false;
-        elements.jwt.disabled = true;
+        elements.apiKey.disabled = true;
         setStatus("Connecting", "Requesting microphone permission.");
-        log("Starting a short-lived realtime session.");
+        log("Starting a Realtime API session.");
         try {
           await cleanup();
           await setupAudio(runId);
           const url = new URL(ENDPOINT);
-          url.searchParams.set("jwt", jwt);
+          url.searchParams.set("apiKey", apiKey);
           runtime.socket = new WebSocket(url);
           runtime.socket.onopen = () => {
             setStatus("Connected", "Waiting for setupComplete.");

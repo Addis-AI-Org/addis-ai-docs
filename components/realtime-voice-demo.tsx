@@ -99,12 +99,12 @@ function base64ToPcm16(value: string): Int16Array {
 export function RealtimeVoiceDemo() {
   const runtimeRef = useRef<Runtime>(createRuntime());
   const logViewRef = useRef<HTMLPreElement>(null);
-  const [jwt, setJwt] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [starting, setStarting] = useState(false);
   const [running, setRunning] = useState(false);
   const [status, setStatus] = useState({
     title: 'Idle',
-    detail: 'Paste a short-lived user JWT to start.',
+    detail: 'Paste an Addis API key to start.',
     tone: 'warn' as Tone,
   });
   const [logs, setLogs] = useState<string[]>([]);
@@ -235,9 +235,9 @@ export function RealtimeVoiceDemo() {
   };
 
   const start = async () => {
-    const token = jwt.trim();
-    if (!token) {
-      setStatus({ title: 'JWT required', detail: 'Paste a short-lived user JWT.', tone: 'error' });
+    const credential = apiKey.trim();
+    if (!credential) {
+      setStatus({ title: 'API key required', detail: 'Paste an Addis API key.', tone: 'error' });
       return;
     }
 
@@ -246,7 +246,7 @@ export function RealtimeVoiceDemo() {
     runtime.runId = runId;
     setStarting(true);
     setStatus({ title: 'Connecting', detail: 'Requesting microphone permission.', tone: 'warn' });
-    appendLog('Starting a short-lived realtime session.');
+    appendLog('Starting a Realtime API session.');
 
     try {
       await closeRuntime();
@@ -254,7 +254,7 @@ export function RealtimeVoiceDemo() {
       if (runId !== runtime.runId) throw new Error('SESSION_CANCELED');
 
       const url = new URL(REALTIME_ENDPOINT);
-      url.searchParams.set('jwt', token);
+      url.searchParams.set('apiKey', credential);
       const socket = new WebSocket(url);
       runtime.socket = socket;
 
@@ -361,22 +361,22 @@ export function RealtimeVoiceDemo() {
 
       <div className="space-y-3">
         <div>
-          <label htmlFor="realtime-jwt" className="mb-1.5 block text-sm font-medium">Short-lived user JWT</label>
+          <label htmlFor="realtime-api-key" className="mb-1.5 block text-sm font-medium">Addis API key</label>
           <input
-            id="realtime-jwt"
+            id="realtime-api-key"
             type="password"
             autoComplete="off"
-            value={jwt}
-            onChange={(event) => setJwt(event.target.value)}
-            placeholder="Paste a short-lived JWT"
+            value={apiKey}
+            onChange={(event) => setApiKey(event.target.value)}
+            placeholder="Paste your Addis API key"
             disabled={busy}
             className="h-10 w-full rounded-md border border-fd-border bg-fd-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-fd-ring disabled:opacity-60"
           />
-          <p className="mt-1 text-xs text-fd-muted-foreground">The token stays in page memory and is sent only to the Addis realtime relay.</p>
+          <p className="mt-1 text-xs text-fd-muted-foreground">Testing only. The key stays in page memory, is never stored, and is sent only to the Addis Realtime relay.</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => void start()} disabled={busy || !jwt.trim()} className="inline-flex h-9 items-center gap-2 rounded-md bg-fd-primary px-3 text-sm font-medium text-fd-primary-foreground disabled:opacity-50">
+          <button type="button" onClick={() => void start()} disabled={busy || !apiKey.trim()} className="inline-flex h-9 items-center gap-2 rounded-md bg-fd-primary px-3 text-sm font-medium text-fd-primary-foreground disabled:opacity-50">
             {starting ? <Loader2 className="size-4 animate-spin" /> : <Mic className="size-4" />}
             {starting ? 'Connecting…' : 'Start'}
           </button>

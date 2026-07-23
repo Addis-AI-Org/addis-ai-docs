@@ -47,6 +47,22 @@ curl https://api.addisassistant.com/api/v1/translate \
   </Tab>
 </Tabs>
 
+## Available parameters
+
+| Value | Node.js | Python | REST | Required |
+| --- | --- | --- | --- | --- |
+| Text to translate | `text` | `text` | `text` | Yes; must not be empty |
+| Source language | `from` | `source` | `source_language` | Yes; `am`, `om`, or `en` |
+| Target language | `to` | `target` | `target_language` | Yes; `am`, `om`, or `en` |
+
+Source and target must be different. The supported directions are:
+
+| From | To |
+| --- | --- |
+| Amharic (`am`) | Afan Oromo (`om`) or English (`en`) |
+| Afan Oromo (`om`) | Amharic (`am`) or English (`en`) |
+| English (`en`) | Amharic (`am`) or Afan Oromo (`om`) |
+
 ## Response handling
 
 The normalized SDK response contains translated text, source language, target language, optional quality, and usage metadata. Preserve the source text when reviewers need to compare or audit a translation.
@@ -73,4 +89,4 @@ Correct unsupported or identical language pairs and empty input before retrying.
 - Preserve the source for review and auditability.
 - Use qualified human review for legal, medical, financial, safety, or public-policy content.
 
-<LastVerified date="2026-07-22" />
+<LastVerified date="2026-07-23" />

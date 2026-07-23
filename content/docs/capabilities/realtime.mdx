@@ -11,10 +11,12 @@ import { RealtimeVoiceDemo } from '@/components/realtime-voice-demo';
 
 Realtime Audio is a stateful WebSocket capability for live conversations. It is separate from completed Voice 2 clips and does not currently have a dedicated method in the Node.js or Python SDKs.
 
+Public developer integrations authenticate with an Addis API key. The Addis developer portal also supports its own signed-in Supabase user JWT, but that is a first-party portal session—not a credential external developers need to create.
+
 ## Session flow
 
-1. Your authenticated backend issues or obtains a short-lived user JWT.
-2. The client connects to `wss://relay.addisassistant.com/ws?jwt=...`.
+1. Read `ADDIS_API_KEY` from a server environment variable or secret manager.
+2. Connect to `wss://relay.addisassistant.com/ws?apiKey=...`.
 3. Wait for `{ "setupComplete": true }` before sending audio.
 4. Capture mono PCM16 audio at 16 kHz.
 5. Send base64 PCM16 JSON envelopes.
@@ -22,7 +24,7 @@ Realtime Audio is a stateful WebSocket capability for live conversations. It is 
 7. Stop queued playback when an interruption event arrives.
 8. Record usage metadata and close the socket cleanly.
 
-Never put a permanent Addis API key in browser or mobile code.
+For a shipped browser or mobile product, proxy the WebSocket through infrastructure you control so the permanent Addis API key stays server-side. The direct browser demo on this page is intended for development testing.
 
 ## Connect from an application
 
@@ -33,9 +35,11 @@ Use a standard WebSocket client because the official SDKs do not yet wrap the Be
 ```ts
 import WebSocket from "ws";
 
-const jwt = await getShortLivedUserJwt();
+const apiKey = process.env.ADDIS_API_KEY;
+if (!apiKey) throw new Error("ADDIS_API_KEY is required");
+
 const socket = new WebSocket(
-  `wss://relay.addisassistant.com/ws?jwt=${encodeURIComponent(jwt)}`,
+  `wss://relay.addisassistant.com/ws?apiKey=${encodeURIComponent(apiKey)}`,
 );
 
 socket.on("message", (raw) => {
@@ -49,35 +53,34 @@ socket.on("message", (raw) => {
 ```python
 import asyncio
 import json
+import os
 import urllib.parse
 import websockets
 
-async def run(jwt: str):
-    url = "wss://relay.addisassistant.com/ws?jwt=" + urllib.parse.quote(jwt)
+async def run():
+    api_key = os.environ["ADDIS_API_KEY"]
+    url = "wss://relay.addisassistant.com/ws?apiKey=" + urllib.parse.quote(api_key)
     async with websockets.connect(url) as socket:
         async for raw in socket:
             event = json.loads(raw)
             if event.get("setupComplete"):
                 print("ready")
 
-asyncio.run(run(short_lived_jwt))
+asyncio.run(run())
 ```
   </Tab>
   <Tab>
 ```js
-const jwt = await fetch("/api/realtime-session", {
-  method: "POST",
-  credentials: "include",
-}).then((response) => response.json()).then((body) => body.jwt);
-
 const socket = new WebSocket(
-  `wss://relay.addisassistant.com/ws?jwt=${encodeURIComponent(jwt)}`,
+  `wss://relay.addisassistant.com/ws?apiKey=${encodeURIComponent(apiKey)}`,
 );
 ```
   </Tab>
 </Tabs>
 
-The browser example calls a developer-owned authenticated route. That route, not the browser bundle, holds permanent Addis credentials.
+<Callout type="warn" title="Direct browser authentication is for testing">
+The browser example and interactive demo send the API key in the WebSocket upgrade URL because browser WebSocket clients cannot set `x-api-key`. The demo keeps the key in memory and never stores it. Do not ship this pattern: place a WebSocket proxy you control between your application and the Addis relay.
+</Callout>
 
 ## Audio messages
 
@@ -114,7 +117,7 @@ If encoding or the socket cannot keep up with capture, apply a bounded queue and
 
 ## Interactive demo
 
-Create a short-lived user JWT through your authenticated backend, then paste it into the demo. The token remains in page memory and is not stored in local or session storage.
+Create or copy an Addis API key from [API Keys](https://addisassistant.com/apikeys), then paste it into the demo. The key remains in page memory, is not stored in local or session storage, and is sent only to the Addis Realtime relay. Use a restricted development key and revoke it after testing when appropriate.
 
 <RealtimeVoiceDemo />
 
@@ -122,7 +125,7 @@ Create a short-lived user JWT through your authenticated backend, then paste it 
 
 ## Troubleshooting
 
-- **Connection rejected:** refresh the short-lived JWT and confirm its audience and expiry.
+- **Connection rejected:** confirm the API key is active, copied completely, and belongs to an account with available balance.
 - **No setup event:** do not send audio yet; log the close code and server error.
 - **No transcription or response:** verify mono PCM16 at 16 kHz and the JSON envelope.
 - **Fast or slow playback:** model audio is 24 kHz; do not play it at the 16 kHz input rate.
@@ -131,13 +134,14 @@ Create a short-lived user JWT through your authenticated backend, then paste it 
 
 ## Best Practices
 
-- Keep permanent credentials on your backend and issue short-lived user sessions.
+- Keep permanent credentials on your backend for production browser and mobile applications.
+- Use a separate restricted key for direct development testing.
 - Ask for microphone permission only after a clear user action.
 - Wait for readiness before transmitting audio.
 - Use bounded audio queues and ordered playback.
 - Implement explicit mute, disconnect, interruption, and permission states.
 - Keep protocol parsing behind an adapter because Realtime is Beta.
 - Log session IDs, close codes, latency, and usage without recording sensitive audio by default.
-- Test with slow networks, revoked permission, expired JWTs, tab suspension, and rapid interruptions.
+- Test with slow networks, revoked keys, exhausted balance, tab suspension, and rapid interruptions.
 
-<LastVerified date="2026-07-22" />
+<LastVerified date="2026-07-23" />
