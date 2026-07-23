@@ -12,8 +12,8 @@ Migration steps:
 
 1. Replace the legacy audio route with the Voice 2 SDK resource.
 2. Map a catalog voice returned by `voices.list`; `am-hamen` is the canonical example.
-3. Replace character-based cost assumptions with **5 ETB per generated minute**.
+3. Update billing displays and approval flows to **5 ETB per generated minute**.
 4. Choose `mp3_44100`, `wav_44100`, or `pcm_16000`.
 5. Add an idempotency value and test clip history/download behavior.
 
-Historical character-priced clip records remain readable. Do not reinterpret them as minute-priced usage.
+The current Voice 2 estimate and usage responses report minute-based ETB billing.

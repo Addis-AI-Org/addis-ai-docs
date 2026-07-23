@@ -4,13 +4,13 @@ description: Choose an Addis AI capability and supported language.
 ---
 
 
-| Capability | Status | Languages | Select with |
-| --- | --- | --- | --- |
-| Chat and multimodal | GA | Amharic, Afan Oromo | `chat.completions.create` |
-| Addis Voice 2 | GA | Query the voice catalog | `voice.generate` |
-| Speech-to-text | GA | `am`, `om`, `en`, `ha`, `sw` | `speech.transcribe` |
-| Translation | GA | `am`, `om`, `en` | `translate.create` |
-| Realtime Audio | Beta | Amharic, Afan Oromo | WebSocket API |
+| Capability | Languages | Select with |
+| --- | --- | --- |
+| Chat and multimodal | Amharic, Afan Oromo | `chat.completions.create` |
+| Addis Voice 2 | Query the voice catalog | `voice.generate` |
+| Speech-to-text | `am`, `om`, `en`, `ha`, `sw` | `speech.transcribe` |
+| Translation | `am`, `om`, `en` | `translate.create` |
+| Realtime Audio — Beta | Amharic, Afan Oromo | WebSocket API |
 
 The platform selects the production chat model. Although compatibility payloads may contain `model`, applications should select the capability, language, and voice rather than depend on an internal model identifier.
 

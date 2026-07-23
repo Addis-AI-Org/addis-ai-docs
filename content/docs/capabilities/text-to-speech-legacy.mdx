@@ -6,10 +6,10 @@ icon: AudioWaveform
 
 import { Base64Player } from '@/components/base64-player';
 
-<StatusBadge status="deprecated">Legacy</StatusBadge>
+<StatusBadge status="deprecated">Deprecated</StatusBadge>
 
 
-Voice 1 is retained for existing integrations. New applications should use [Text to Speech — Voice 2](/docs/capabilities/text-to-speech), which provides a voice catalog, cost estimates, durable clips, and idempotent billing.
+Voice 1 is retained for existing integrations. New applications should use [Text to Speech](/docs/capabilities/text-to-speech), which provides a voice catalog, cost estimates, durable clips, and idempotent billing.
 
 <Endpoint method="POST" path="/api/v1/audio" />
 
@@ -148,7 +148,7 @@ The SDK normalizes the legacy encodings into audio-byte chunks. Raw REST clients
 | `/api/v1/audio` | `/api/v1/voice/generations` |
 | Base64 response | Durable clip plus signed download URL |
 | Legacy voice selection | Discoverable production voice catalog |
-| Character-oriented legacy behavior | Minute-based ETB billing |
+| Legacy billing behavior | 5 ETB per generated minute |
 | Legacy stream | Completed Voice 2 clip; no partial streaming |
 
 Migrate one use case at a time: select a Voice 2 catalog voice, compare output, add estimates and idempotency, then update storage to retain clip IDs.
@@ -164,4 +164,4 @@ Migrate one use case at a time: select a Voice 2 catalog voice, compare output, 
 - Cache reusable audio and avoid synthesizing unchanged text repeatedly.
 - Plan migration to Voice 2 rather than adding new Voice 1 dependencies.
 
-<LastVerified date="2026-07-22" />
+<LastVerified date="2026-07-23" />

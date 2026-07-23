@@ -10,7 +10,6 @@
     "--- Capabilities ---",
     "capabilities/text-generation",
     "capabilities/text-to-speech",
-    "capabilities/text-to-speech-legacy",
     "capabilities/speech-to-text",
     "capabilities/multimodal",
     "capabilities/realtime",

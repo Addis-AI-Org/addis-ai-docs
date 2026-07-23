@@ -42,7 +42,6 @@ test("navigation stays compact, familiar, and icon-led", async () => {
   assert.deepEqual(pageSlugs.filter((slug) => slug.startsWith("capabilities/")), [
     "capabilities/text-generation",
     "capabilities/text-to-speech",
-    "capabilities/text-to-speech-legacy",
     "capabilities/speech-to-text",
     "capabilities/multimodal",
     "capabilities/realtime",
@@ -50,12 +49,13 @@ test("navigation stays compact, familiar, and icon-led", async () => {
   ]);
   for (const slug of pageSlugs) {
     const content = await readFile(path.join(docsRoot, `${slug}.mdx`), "utf8");
-    if (slug !== "announcements") {
-      const match = content.match(/^---[\s\S]*\nicon: (\S+)/);
-      assert.ok(match, `${slug} is missing a sidebar icon`);
-      assert.ok(icons[match[1]], `${slug} uses unknown Lucide icon ${match[1]}`);
-    }
+    const match = content.match(/^---[\s\S]*\nicon: (\S+)/);
+    assert.ok(match, `${slug} is missing a sidebar icon`);
+    assert.ok(icons[match[1]], `${slug} uses unknown Lucide icon ${match[1]}`);
   }
+
+  assert.doesNotMatch(navigation, /capabilities\/text-to-speech-legacy/);
+  await assert.doesNotReject(readFile(path.join(docsRoot, "capabilities", "text-to-speech-legacy.mdx")));
 });
 
 test("canonical content uses am-hamen and keeps raw REST secondary", async () => {
@@ -90,10 +90,14 @@ test("announcements appear once, New badges are cyan, and SDK links are compact"
   assert.doesNotMatch(announcements, /<StatusBadge>New<\/StatusBadge>/);
 
   const layout = await readFile(path.join(workspaceRoot, "lib", "layout.shared.tsx"), "utf8");
-  for (const resource of ["API keys", "Node.js on npm", "Python on PyPI", "Node.js on GitHub", "Python on GitHub"]) {
+  for (const resource of ["API keys", "Node.js on npm", "Python on PyPI"]) {
     assert.match(layout, new RegExp(resource.replaceAll(".", "\\.")));
   }
-  assert.equal((layout.match(/text: 'SDK resources'/g) ?? []).length, 1);
+  assert.match(layout, /type: 'custom'[\s\S]{0,240}SDK resources/);
+  assert.doesNotMatch(layout, /type: 'menu'/);
+  assert.doesNotMatch(layout, /Node\.js on GitHub|Python on GitHub/);
+  assert.match(layout, /function NpmIcon/);
+  assert.match(layout, /function PythonIcon/);
 });
 
 test("HTTP capability guides use direct Node.js, Python, and cURL tabs", async () => {
@@ -112,6 +116,23 @@ test("every capability restores a visible Best Practices section", async () => {
     const content = await readFile(file, "utf8");
     assert.match(content, /^## Best Practices$/m, file);
   }
+});
+
+test("standard capabilities do not display redundant GA badges", async () => {
+  const docs = await readDocsTree();
+  const content = (await Promise.all(docs.map((file) => readFile(file, "utf8")))).join("\n");
+
+  assert.doesNotMatch(content, /Generally available|<StatusBadge(?: status="ga")?>/);
+  assert.match(content, /<StatusBadge status="beta">Beta<\/StatusBadge>/);
+  assert.match(content, /<StatusBadge status="deprecated">Deprecated<\/StatusBadge>/);
+});
+
+test("SDK installation stays focused on official packages", async () => {
+  const content = await readFile(path.join(docsRoot, "get-started", "sdks.mdx"), "utf8");
+
+  assert.match(content, /items=\{\['Node\.js', 'Python'\]\}/);
+  assert.doesNotMatch(content, /items=\{\['Node\.js', 'Python', 'cURL'\]\}/);
+  assert.doesNotMatch(content, /No package is required/);
 });
 
 test("introduction and quick start preserve the visual onboarding flow", async () => {
@@ -236,6 +257,23 @@ test("versioned pricing uses native minute-based Voice 2 billing", async () => {
       assert.ok(Object.hasOwn(model, field), `${model.id} is missing canonical field ${field}`);
     }
   }
+});
+
+test("Voice 2 documentation states minute billing without internal contract uncertainty", async () => {
+  const currentVoiceDocs = await Promise.all([
+    readFile(path.join(docsRoot, "capabilities", "text-to-speech.mdx"), "utf8"),
+    readFile(path.join(docsRoot, "get-started", "node-sdk.mdx"), "utf8"),
+    readFile(path.join(docsRoot, "platform", "pricing.mdx"), "utf8"),
+    readFile(path.join(docsRoot, "platform", "deprecations.mdx"), "utf8"),
+    readFile(path.join(docsRoot, "platform", "changelog.mdx"), "utf8"),
+  ]);
+  const content = currentVoiceDocs.join("\n");
+
+  assert.match(content, /5 ETB per generated minute/);
+  assert.doesNotMatch(
+    content,
+    /Published SDK billing|retired character|character-priced|character-based cost|minute-priced backend/i,
+  );
 });
 
 test("pricing data is build-time only and is not published as JSON", async () => {

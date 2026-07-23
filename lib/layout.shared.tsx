@@ -1,6 +1,28 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { Braces, ExternalLink, KeyRound, Package } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import Image from 'next/image';
+
+function NpmIcon() {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex h-3.5 w-5 items-center justify-center rounded-[2px] bg-[#cb3837] font-mono text-[7px] font-black leading-none tracking-tighter text-white"
+    >
+      npm
+    </span>
+  );
+}
+
+function PythonIcon() {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex size-4 items-center justify-center rounded bg-[#3776ab] font-mono text-[8px] font-bold leading-none text-white"
+    >
+      Py
+    </span>
+  );
+}
 
 /**
  * Shared layout configurations
@@ -35,41 +57,34 @@ export function baseOptions(): BaseLayoutProps {
     },
     links: [
       {
-        type: 'menu',
-        text: 'SDK resources',
-        icon: <Package className="size-4" />,
-        items: [
-          {
-            text: 'API keys',
-            url: 'https://addisassistant.com/apikeys',
-            external: true,
-            icon: <KeyRound className="size-4" />,
-          },
-          {
-            text: 'Node.js on npm',
-            url: 'https://www.npmjs.com/package/addisai',
-            external: true,
-            icon: <Package className="size-4" />,
-          },
-          {
-            text: 'Python on PyPI',
-            url: 'https://pypi.org/project/addisai/',
-            external: true,
-            icon: <Package className="size-4" />,
-          },
-          {
-            text: 'Node.js on GitHub',
-            url: 'https://github.com/Addis-AI-Org/addisai-js',
-            external: true,
-            icon: <Braces className="size-4" />,
-          },
-          {
-            text: 'Python on GitHub',
-            url: 'https://github.com/Addis-AI-Org/addisai-py',
-            external: true,
-            icon: <ExternalLink className="size-4" />,
-          },
-        ],
+        type: 'custom',
+        on: 'menu',
+        children: (
+          <p className="px-2 pb-1 pt-3 text-xs font-semibold text-fd-foreground">
+            SDK resources
+          </p>
+        ),
+      },
+      {
+        text: 'API keys',
+        url: 'https://addisassistant.com/apikeys',
+        external: true,
+        on: 'menu',
+        icon: <KeyRound className="size-4" />,
+      },
+      {
+        text: 'Node.js on npm',
+        url: 'https://www.npmjs.com/package/addisai',
+        external: true,
+        on: 'menu',
+        icon: <NpmIcon />,
+      },
+      {
+        text: 'Python on PyPI',
+        url: 'https://pypi.org/project/addisai/',
+        external: true,
+        on: 'menu',
+        icon: <PythonIcon />,
       },
     ],
   };
