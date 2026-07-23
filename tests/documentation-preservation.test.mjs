@@ -93,6 +93,7 @@ test('documents Voice 2 while retaining the full hidden legacy workflow', () => 
   const voice2 = read('content/docs/capabilities/text-to-speech.mdx');
   const legacy = read('content/docs/capabilities/text-to-speech-legacy.mdx');
   const catalog = read('data/voice-catalog.ts');
+  const catalogComponent = read('components/voice-catalog.tsx');
 
   for (const marker of [
     'am-hamen',
@@ -123,6 +124,10 @@ test('documents Voice 2 while retaining the full hidden legacy workflow', () => 
 
   assert.equal((catalog.match(/\bid: '(?:am|om)-/g) ?? []).length, 28);
   assert.match(catalog, /id: 'am-loza'/);
+  assert.match(catalogComponent, /INITIAL_VISIBLE_VOICES = 6/);
+  assert.match(catalogComponent, /voices\.slice\(0, INITIAL_VISIBLE_VOICES\)/);
+  assert.match(catalogComponent, /aria-expanded=\{isExpanded\}/);
+  assert.match(catalogComponent, /Show fewer voices/);
 });
 
 test('keeps SDK examples primary without removing cURL interoperability', () => {

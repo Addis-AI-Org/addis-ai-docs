@@ -1,6 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { ChevronDown, Search } from 'lucide-react';
 import { useState } from 'react';
 
 import { voiceCatalog } from '@/data/voice-catalog';
@@ -12,9 +12,12 @@ const languageOptions: Array<{ id: Language; label: string }> = [
   { id: 'om', label: 'Afan Oromo' },
 ];
 
+const INITIAL_VISIBLE_VOICES = 6;
+
 export function VoiceCatalog() {
   const [language, setLanguage] = useState<Language>('am');
   const [query, setQuery] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
   const normalizedQuery = query.trim().toLowerCase();
   const voices = voiceCatalog.filter((voice) => {
     if (voice.language !== language) return false;
@@ -28,6 +31,19 @@ export function VoiceCatalog() {
       voice.gender,
     ].some((value) => value.toLowerCase().includes(normalizedQuery));
   });
+  const canExpand = voices.length > INITIAL_VISIBLE_VOICES;
+  const visibleVoices = isExpanded ? voices : voices.slice(0, INITIAL_VISIBLE_VOICES);
+  const languageLabel = language === 'am' ? 'Amharic' : 'Afan Oromo';
+
+  const selectLanguage = (nextLanguage: Language) => {
+    setLanguage(nextLanguage);
+    setIsExpanded(false);
+  };
+
+  const updateQuery = (nextQuery: string) => {
+    setQuery(nextQuery);
+    setIsExpanded(false);
+  };
 
   return (
     <section
@@ -64,7 +80,7 @@ export function VoiceCatalog() {
                     key={option.id}
                     type="button"
                     aria-pressed={selected}
-                    onClick={() => setLanguage(option.id)}
+                    onClick={() => selectLanguage(option.id)}
                     className={
                       selected
                         ? 'rounded-md bg-fd-primary px-3 py-2 text-sm font-medium text-fd-primary-foreground'
@@ -94,7 +110,7 @@ export function VoiceCatalog() {
                 id="voice-catalog-search"
                 type="search"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => updateQuery(event.target.value)}
                 placeholder="Name, ID, style, or gender"
                 className="h-10 w-full rounded-md border border-fd-border bg-fd-background pl-9 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
               />
@@ -105,47 +121,69 @@ export function VoiceCatalog() {
 
       <div className="p-4 sm:p-5">
         <p className="mb-3 text-xs text-fd-muted-foreground" aria-live="polite">
-          Showing {voices.length} {language === 'am' ? 'Amharic' : 'Afan Oromo'} voice{voices.length === 1 ? '' : 's'}
+          Showing {visibleVoices.length} of {voices.length} {languageLabel} voice{voices.length === 1 ? '' : 's'}
         </p>
 
         {voices.length > 0 ? (
-          <ul className="grid gap-3 lg:grid-cols-2">
-            {voices.map((voice) => (
-              <li
-                key={voice.id}
-                className="rounded-lg border border-fd-border bg-fd-background p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h4 className="font-semibold">{voice.name}</h4>
-                    <p className="mt-0.5 text-sm text-fd-muted-foreground">
-                      {voice.descriptor}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full border border-fd-border px-2 py-0.5 text-xs capitalize text-fd-muted-foreground">
-                    {voice.gender}
-                  </span>
-                </div>
-
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                  <code className="rounded bg-fd-secondary px-2 py-1 font-mono text-fd-foreground">
-                    {voice.id}
-                  </code>
-                  <span className="text-fd-muted-foreground">{voice.style}</span>
-                </div>
-
-                <audio
-                  className="mt-3 h-9 w-full"
-                  controls
-                  preload="none"
-                  src={voice.sample}
-                  aria-label={`Preview ${voice.name}, voice ID ${voice.id}`}
+          <>
+            <ul id="voice-catalog-results" className="grid gap-3 lg:grid-cols-2">
+              {visibleVoices.map((voice) => (
+                <li
+                  key={voice.id}
+                  className="rounded-lg border border-fd-border bg-fd-background p-4"
                 >
-                  Your browser does not support audio playback.
-                </audio>
-              </li>
-            ))}
-          </ul>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h4 className="font-semibold">{voice.name}</h4>
+                      <p className="mt-0.5 text-sm text-fd-muted-foreground">
+                        {voice.descriptor}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full border border-fd-border px-2 py-0.5 text-xs capitalize text-fd-muted-foreground">
+                      {voice.gender}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    <code className="rounded bg-fd-secondary px-2 py-1 font-mono text-fd-foreground">
+                      {voice.id}
+                    </code>
+                    <span className="text-fd-muted-foreground">{voice.style}</span>
+                  </div>
+
+                  <audio
+                    className="mt-3 h-9 w-full"
+                    controls
+                    preload="none"
+                    src={voice.sample}
+                    aria-label={`Preview ${voice.name}, voice ID ${voice.id}`}
+                  >
+                    Your browser does not support audio playback.
+                  </audio>
+                </li>
+              ))}
+            </ul>
+
+            {canExpand ? (
+              <div className="mt-4 border-t border-fd-border pt-4">
+                <button
+                  type="button"
+                  aria-controls="voice-catalog-results"
+                  aria-expanded={isExpanded}
+                  onClick={() => setIsExpanded((expanded) => !expanded)}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-fd-border bg-fd-background px-4 py-2.5 text-sm font-semibold text-fd-foreground transition-colors hover:border-fd-primary/40 hover:bg-fd-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring"
+                >
+                  {isExpanded
+                    ? 'Show fewer voices'
+                    : `Show all ${voices.length} ${languageLabel} voices`}
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={`size-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              </div>
+            ) : null}
+          </>
         ) : (
           <div className="rounded-lg border border-dashed border-fd-border p-6 text-center text-sm text-fd-muted-foreground">
             No voices match this search.
