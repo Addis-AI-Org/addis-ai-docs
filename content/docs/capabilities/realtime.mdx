@@ -29,12 +29,6 @@ For browser and mobile clients, pass your API key as a query parameter:
 wss://relay.addisassistant.com/ws?apiKey=YOUR_API_KEY
 ```
 
-You can also use a short-lived JWT token in environments that issue user sessions:
-
-```text
-wss://relay.addisassistant.com/ws?jwt=YOUR_JWT
-```
-
 ---
 
 ## Industry Use Cases
@@ -420,7 +414,7 @@ Sent if a critical failure occurs.
 ### Connection Troubleshooting
 - If the socket closes with `1006`, verify:
   - You used the correct endpoint.
-  - Auth query is valid (`apiKey` or `jwt`).
+  - The `apiKey` query value is valid.
   - Client audio is sent as JSON (`data` + `mimeType`), not raw binary.
 
 ---

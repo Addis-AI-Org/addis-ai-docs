@@ -72,47 +72,50 @@ type: 'string'
 
 You should wrap your API calls in a `try/catch` block to handle exceptions gracefully.
 
-<Tabs items={['JavaScript', 'Python']}>
-  <Tab value="JavaScript">
-    ```javascript
+<Tabs items={['Node.js', 'Python']}>
+  <Tab value="Node.js">
+    ```ts
+    import AddisAI from "addisai";
+
+    const addis = new AddisAI();
+
     try {
-      const response = await fetch("https://api.addisassistant.com/api/v1/chat_generate", {
-        // ... options
+      const response = await addis.chat.completions.create({
+        messages: [{ role: "user", content: "ሰላም" }],
       });
-
-      if (!response.ok) {
-        const err = await response.json();
-        console.error(`API Error: ${err.error.code} - ${err.error.message}`);
-        
-        // Handle specific codes
-        if (response.status === 401) {
-            alert("Please check your API Key.");
-        }
-        return;
-      }
-
-      const data = await response.json();
-      console.log(data);
-
+      console.log(response.choices[0].message.content);
     } catch (error) {
-      console.error("Network Error:", error);
+      const status =
+        typeof error === "object" && error !== null && "status" in error
+          ? error.status
+          : undefined;
+
+      if (status === 429) {
+        // Retry with bounded exponential backoff and jitter.
+      } else {
+        throw error;
+      }
     }
     ```
   </Tab>
   <Tab value="Python">
     ```python
-    import requests
+    from addisai import AddisAI
 
-    response = requests.post("https://api.addisassistant.com/api/v1/chat_generate", json={...})
+    addis = AddisAI()
 
-    if response.status_code != 200:
-        error_data = response.json()
-        print(f"Error {response.status_code}: {error_data['error']['message']}")
-        
-        if response.status_code == 429:
-            print("Rate limit hit. Sleeping...")
-    else:
-        print(response.json())
+    try:
+        response = addis.chat.completions.create(
+            messages=[{"role": "user", "content": "ሰላም"}],
+        )
+        print(response["choices"][0]["message"]["content"])
+    except Exception as error:
+        status = getattr(error, "status", None)
+        if status == 429:
+            # Retry with bounded exponential backoff and jitter.
+            pass
+        else:
+            raise
     ```
   </Tab>
 </Tabs>

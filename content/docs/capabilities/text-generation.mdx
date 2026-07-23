@@ -27,87 +27,56 @@ You can use this endpoint for simple one-off tasks (like translation) or complex
 ### 1. Basic Request
 Send a prompt and a target language to get an immediate response.
 
-<Tabs items={['cURL', 'JavaScript', 'Python']}>
-    <Tab value="cURL">
-        ```bash
-        curl -X POST https://api.addisassistant.com/api/v1/chat_generate \
-        -H "Content-Type: application/json" \
-        -H "X-API-Key: sk_YOUR_KEY" \
-        -d '{
-            "prompt": "የአድዋ ጦርነት ታሪክ በአጭሩ",
-            "target_language": "am",
-            "generation_config": {
-            "temperature": 0.7
-            }
-        }'
-        ```
-    </Tab>
-  <Tab value="JavaScript">
-    ```javascript
-    // Full Example: Basic Text Generation
-    const API_KEY = "sk_YOUR_KEY";
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```ts
+    import AddisAI from "addisai";
 
-    async function generateText() {
-      try {
-        const response = await fetch("https://api.addisassistant.com/api/v1/chat_generate", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": API_KEY,
-          },
-          body: JSON.stringify({
-            prompt: "የአድዋ ጦርነት ታሪክ በአጭሩ", // "History of Adwa briefly"
-            target_language: "am",
-            generation_config: {
-              temperature: 0.7,
-              maxOutputTokens: 500
-            }
-          }),
-        });
+    const addis = new AddisAI();
+    const response = await addis.chat.completions.create({
+      messages: [{
+        role: "user",
+        content: "የአድዋ ጦርነት ታሪክ በአጭሩ",
+      }],
+      temperature: 0.7,
+      max_tokens: 500,
+    });
 
-        if (!response.ok) throw new Error(`Error: ${response.status}`);
-
-        const data = await response.json();
-        console.log("Response:", data.response_text);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    generateText();
+    console.log(response.choices[0].message.content);
     ```
   </Tab>
   <Tab value="Python">
     ```python
-    import requests
+    from addisai import AddisAI
 
-    def generate_text():
-        url = "https://api.addisassistant.com/api/v1/chat_generate"
-        headers = {"X-API-Key": "sk_YOUR_KEY"}
-        
-        payload = {
-            "prompt": "የአድዋ ጦርነት ታሪክ በአጭሩ",
-            "target_language": "am",
-            "generation_config": {
-                "temperature": 0.7,
-                "maxOutputTokens": 500
-            }
-        }
+    addis = AddisAI()
+    response = addis.chat.completions.create(
+        messages=[{
+            "role": "user",
+            "content": "የአድዋ ጦርነት ታሪክ በአጭሩ",
+        }],
+        temperature=0.7,
+        max_tokens=500,
+    )
 
-        try:
-            response = requests.post(url, headers=headers, json=payload)
-            response.raise_for_status() # Check for errors
-            
-            data = response.json()
-            print("Response:", data['response_text'])
-            
-        except requests.exceptions.RequestException as e:
-            print(f"Error: {e}")
-
-    generate_text()
+    print(response["choices"][0]["message"]["content"])
     ```
   </Tab>
-  
+  <Tab value="cURL">
+    ```bash
+    curl https://api.addisassistant.com/api/v1/chat_generate \\
+      -H "Content-Type: application/json" \\
+      -H "x-api-key: $ADDIS_API_KEY" \\
+      -d '{
+        "prompt": "የአድዋ ጦርነት ታሪክ በአጭሩ",
+        "target_language": "am",
+        "generation_config": {
+          "temperature": 0.7,
+          "maxOutputTokens": 500
+        }
+      }'
+    ```
+  </Tab>
 </Tabs>
 
 ### 2. Multi-Turn Chat (Context)
@@ -115,104 +84,311 @@ The API is **stateless**. This means the model does not "remember" what you said
 
 To build a chatbot that maintains context, you must append the conversation history to the `conversation_history` array in every new request.
 
-<Tabs items={['cURL', 'JavaScript', 'Python']}>
-  <Tab value="cURL">
-    ```bash
-    curl --location 'https://api.addisassistant.com/api/v1/chat_generate' \
-    --header 'X-API-Key: sk_YOUR_KEY' \
-    --header 'Content-Type: application/json' \
-    --data '{
-      "prompt": "በጣም ጥሩ። ለነዚህ ለጁኒየር ዴቨሎፐር ስራዎች በብዛት የሚፈለጉት የፕሮግራሚንግ ቋንቋዎች የትኞቹ ናቸው?",
-      "target_language": "am",
-      "conversation_history": [
-        {
-            "role": "user",
-            "content": "በሶፍትዌር ኢንጂነሪንግ ተመርቄያለሁ። አዲስ አበባ ውስጥ ለጀማሪዎች ምን አይነት የስራ እድሎች አሉ?"
-        },
-        {
-            "role": "assistant",
-            "content": "እንኳን ደስ አለህ! በአዲስ አበባ ለሶፍትዌር ኢንጂነሪንግ ተመራቂዎች እንደ ጁኒየር ዴቨሎፐር፣ የሶፍትዌር ጥራት ማረጋገጫ (QA) እና የ የቴክኒክ ድጋፍ ስፔሻሊስት ያሉ እድሎች አሉ።"
-        }
-      ],
-      "generation_config": {
-        "temperature": 0.7,
-        "stream": false,
-        "maxOutputTokens": 1200
-      }
-    }'
-    ```
-  </Tab>
-  <Tab value="JavaScript">
-    ```javascript
-    // Full Example: Chat with History
-    const API_KEY = "sk_YOUR_KEY";
+The SDK accepts the same turns as `messages` and maps them to the native conversation history for you.
 
-    async function chatWithHistory() {
-      // 1. Define the conversation history so far
-      const history = [
-        { role: "user", content: "ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?" },
-        { role: "assistant", content: "በአሁኑ ጊዜ 12 ክልሎች አሉ።" }
-      ];
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```ts
+    const messages = [
+      { role: "user" as const, content: "ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?" },
+      { role: "assistant" as const, content: "በአሁኑ ጊዜ 12 ክልሎች አሉ።" },
+      { role: "user" as const, content: "የሁለተኛው ክልል ስም ማን ነው?" },
+    ];
 
-      // 2. Send the NEW question along with the HISTORY
-      try {
-        const response = await fetch("https://api.addisassistant.com/api/v1/chat_generate", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "X-API-Key": API_KEY 
-          },
-          body: JSON.stringify({
-            prompt: "የሁለተኛው ክልል ስም ማን ነው?", // "What is the name of the second one?"
-            target_language: "am",
-            conversation_history: history // <--- Important: Pass history here
-          }),
-        });
-
-        const data = await response.json();
-        console.log("Answer:", data.response_text);
-        
-      } catch (error) {
-        console.error("Chat Failed:", error);
-      }
-    }
-
-    chatWithHistory();
+    const response = await addis.chat.completions.create({ messages });
+    console.log(response.choices[0].message.content);
     ```
   </Tab>
   <Tab value="Python">
     ```python
-    import requests
+    messages = [
+        {"role": "user", "content": "ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?"},
+        {"role": "assistant", "content": "በአሁኑ ጊዜ 12 ክልሎች አሉ።"},
+        {"role": "user", "content": "የሁለተኛው ክልል ስም ማን ነው?"},
+    ]
 
-    def chat_with_history():
-        # 1. Define the conversation history so far
-        history = [
-            {"role": "user", "content": "ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?"},
-            {"role": "assistant", "content": "በአሁኑ ጊዜ 12 ክልሎች አሉ።"}
+    response = addis.chat.completions.create(messages=messages)
+    print(response["choices"][0]["message"]["content"])
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    curl https://api.addisassistant.com/api/v1/chat_generate \\
+      -H "Content-Type: application/json" \\
+      -H "x-api-key: $ADDIS_API_KEY" \\
+      -d '{
+        "prompt": "የሁለተኛው ክልል ስም ማን ነው?",
+        "target_language": "am",
+        "conversation_history": [
+          {"role":"user","content":"ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?"},
+          {"role":"assistant","content":"በአሁኑ ጊዜ 12 ክልሎች አሉ።"}
         ]
+      }'
+    ```
+  </Tab>
+</Tabs>
 
-        # 2. Send the NEW question along with the HISTORY
-        payload = {
-            "prompt": "የሁለተኛው ክልል ስም ማን ነው?",
-            "target_language": "am",
-            "conversation_history": history
-        }
-        
-        try:
-            response = requests.post(
-                "https://api.addisassistant.com/api/v1/chat_generate", 
-                headers={"X-API-Key": "sk_KEY"}, 
-                json=payload
-            )
-            response.raise_for_status()
-            
-            data = response.json()
-            print("Answer:", data['response_text'])
-            
-        except Exception as e:
-            print(f"Chat Failed: {e}")
+---
 
-    chat_with_history()
+### 3. System Instructions and Personas
+
+Use a **persona** for the assistant's identity and a **system instruction** for behavior, constraints, language, or output format. Conversation turns remain in `messages`.
+
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```ts
+    const response = await addis.chat.completions.create({
+      persona: "You are a patient Ethiopian language tutor.",
+      system: "Answer in Amharic, then include one short English gloss.",
+      messages: [{ role: "user", content: "Explain the word እንኳን." }],
+    });
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    response = addis.chat.completions.create(
+        persona="You are a patient Ethiopian language tutor.",
+        system="Answer in Amharic, then include one short English gloss.",
+        messages=[{"role": "user", "content": "Explain the word እንኳን."}],
+    )
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    curl https://api.addisassistant.com/api/v1/chat_generate \\
+      -H "Content-Type: application/json" \\
+      -H "x-api-key: $ADDIS_API_KEY" \\
+      -d '{
+        "persona":"You are a patient Ethiopian language tutor.",
+        "system":"Answer in Amharic, then include one short English gloss.",
+        "prompt":"Explain the word እንኳን.",
+        "target_language":"am"
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+### 4. Function Calling
+
+Function calling lets the model request an action that your application owns. The model never executes the function itself. Validate arguments, authorize the current user, run the function with a timeout, return the result, and cap the number of tool rounds.
+
+#### Let the SDK run the tool loop
+
+`runTools` and `run_tools` send the tool definitions, execute the matching local function, return its result to the model, and stop when the model produces a final answer.
+
+<Tabs items={['Node.js', 'Python']}>
+  <Tab value="Node.js">
+    ```ts
+    const final = await addis.chat.runTools({
+      messages: [{ role: "user", content: "Check order 123 and summarize it." }],
+      tools: [{
+        type: "function",
+        function: {
+          name: "get_order_status",
+          description: "Fetch an order by ID.",
+          parameters: {
+            type: "object",
+            properties: { order_id: { type: "string" } },
+            required: ["order_id"],
+            additionalProperties: false,
+          },
+          function: async ({ order_id }) => {
+            const input = orderIdSchema.parse(order_id);
+            await authorize(currentUser, "read_order", input);
+            return getOrderWithTimeout(input, 5_000);
+          },
+        },
+      }],
+      maxToolRoundtrips: 5,
+    });
+
+    console.log(final.choices[0].message.content);
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    def get_order_status(args):
+        order_id = validate_order_id(args["order_id"])
+        authorize(current_user, "read_order", order_id)
+        return get_order_with_timeout(order_id, timeout_seconds=5)
+
+    final = addis.chat.run_tools(
+        messages=[{
+            "role": "user",
+            "content": "Check order 123 and summarize it.",
+        }],
+        tools=[{
+            "type": "function",
+            "function": {
+                "name": "get_order_status",
+                "description": "Fetch an order by ID.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"order_id": {"type": "string"}},
+                    "required": ["order_id"],
+                    "additionalProperties": False,
+                },
+                "callable": get_order_status,
+            },
+        }],
+        max_tool_roundtrips=5,
+    )
+
+    print(final["choices"][0]["message"]["content"])
+    ```
+  </Tab>
+</Tabs>
+
+#### Or orchestrate each round yourself
+
+Use the manual flow when an action needs an approval screen, a durable job, or application-specific retry logic.
+
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```ts
+    const messages = [
+      { role: "user" as const, content: "Check order 123." },
+    ];
+    const tools = [{
+      type: "function" as const,
+      function: {
+        name: "get_order_status",
+        parameters: {
+          type: "object",
+          properties: { order_id: { type: "string" } },
+          required: ["order_id"],
+          additionalProperties: false,
+        },
+      },
+    }];
+
+    const first = await addis.chat.completions.create({
+      messages,
+      tools,
+      tool_choice: "auto",
+    });
+
+    const call = first.choices[0].message.tool_calls?.[0];
+    if (!call) throw new Error("The model did not request a tool.");
+
+    const args = orderArgsSchema.parse(JSON.parse(call.function.arguments));
+    await authorize(currentUser, call.function.name, args);
+    const result = await getOrderWithTimeout(args.order_id, 5_000);
+
+    const final = await addis.chat.completions.create({
+      tools,
+      messages: [
+        ...messages,
+        first.choices[0].message,
+        {
+          role: "tool",
+          tool_call_id: call.id,
+          name: call.function.name,
+          content: JSON.stringify(result),
+        },
+      ],
+    });
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    import json
+
+    messages = [{"role": "user", "content": "Check order 123."}]
+    tools = [{
+        "type": "function",
+        "function": {
+            "name": "get_order_status",
+            "parameters": {
+                "type": "object",
+                "properties": {"order_id": {"type": "string"}},
+                "required": ["order_id"],
+                "additionalProperties": False,
+            },
+        },
+    }]
+
+    first = addis.chat.completions.create(
+        messages=messages,
+        tools=tools,
+        tool_choice="auto",
+    )
+    call = first["choices"][0]["message"]["tool_calls"][0]
+    args = validate_order_args(json.loads(call["function"]["arguments"]))
+    authorize(current_user, call["function"]["name"], args)
+    result = get_order_with_timeout(args["order_id"], timeout_seconds=5)
+
+    final = addis.chat.completions.create(
+        tools=tools,
+        messages=[
+            *messages,
+            first["choices"][0]["message"],
+            {
+                "role": "tool",
+                "tool_call_id": call["id"],
+                "name": call["function"]["name"],
+                "content": json.dumps(result),
+            },
+        ],
+    )
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "Content-Type: application/json" \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -d '{
+        "prompt": "Check order 123.",
+        "target_language": "am",
+        "tools": [{
+          "type": "function",
+          "function": {
+            "name": "get_order_status",
+            "parameters": {
+              "type": "object",
+              "properties": {"order_id": {"type": "string"}},
+              "required": ["order_id"],
+              "additionalProperties": false
+            }
+          }
+        }],
+        "tool_choice": "auto"
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+<Callout type="warn" title="Treat tool calls as untrusted input">
+Require approval for consequential actions, use idempotency for side effects, reject unknown functions and fields, set timeouts, cap tool rounds, and never expose secrets in tool results. Tool calling is currently non-streaming.
+</Callout>
+
+### 5. Streaming and Attachments
+
+Set `stream: true` for incremental text. Use the SDK file helpers for images, documents, and audio; see [Multimodal](/docs/capabilities/multimodal) for the original upload, OCR, history, and schema guidance. Streaming cannot be combined with tools, attachments, or audio input.
+
+<Tabs items={['Node.js', 'Python']}>
+  <Tab value="Node.js">
+    ```ts
+    const stream = await addis.chat.completions.create({
+      messages: [{ role: "user", content: "Tell me a short story." }],
+      stream: true,
+    });
+
+    for await (const chunk of stream) {
+      process.stdout.write(chunk.choices[0].delta.content ?? "");
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    stream = addis.chat.completions.create(
+        messages=[{"role": "user", "content": "Tell me a short story."}],
+        stream=True,
+    )
+
+    for chunk in stream:
+        print(chunk["choices"][0]["delta"].get("content", ""), end="")
     ```
   </Tab>
 </Tabs>

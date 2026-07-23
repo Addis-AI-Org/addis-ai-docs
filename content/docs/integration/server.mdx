@@ -74,34 +74,27 @@ Use this for chatbots, translation, or simple text generation where waiting 2-3 
   
   <Tab value="Node.js (Express)">
     ```javascript
-    const express = require('express');
-    const fetch = require('node-fetch'); // Native in Node 18+
-    require('dotenv').config();
+    import AddisAI from "addisai";
+    import express from "express";
 
     const app = express();
     app.use(express.json());
+    const addis = new AddisAI();
 
     app.post('/api/chat', async (req, res) => {
       const { message } = req.body;
 
       try {
-        const response = await fetch('https://api.addisassistant.com/api/v1/chat_generate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': process.env.ADDIS_AI_KEY
-          },
-          body: JSON.stringify({
-            model: "Addis-፩-አሌፍ",
-            prompt: message,
-            target_language: "am",
-            generation_config: { temperature: 0.7 }
-          })
+        const response = await addis.chat.completions.create({
+          messages: [{ role: "user", content: message }],
+          language: "am",
+          temperature: 0.7,
         });
 
-        const data = await response.json();
-        res.status(response.status).json(data);
-
+        res.json({
+          response_text: response.choices[0].message.content,
+          usage: response.usage,
+        });
       } catch (error) {
         res.status(500).json({ error: "Internal Server Error" });
       }
@@ -113,30 +106,27 @@ Use this for chatbots, translation, or simple text generation where waiting 2-3 
 
   <Tab value="Python (FastAPI)">
     ```python
-    import os
-    import httpx
-    from fastapi import FastAPI, HTTPException
+    from addisai import AddisAI
+    from fastapi import FastAPI
     from pydantic import BaseModel
 
     app = FastAPI()
-    ADDIS_KEY = os.getenv("ADDIS_AI_KEY")
+    addis = AddisAI()
 
     class ChatRequest(BaseModel):
         message: str
 
     @app.post("/api/chat")
-    async def chat_handler(req: ChatRequest):
-        url = "https://api.addisassistant.com/api/v1/chat_generate"
-        payload = {
-            "model": "Addis-፩-አሌፍ",
-            "prompt": req.message,
-            "target_language": "am"
+    def chat_handler(req: ChatRequest):
+        response = addis.chat.completions.create(
+            messages=[{"role": "user", "content": req.message}],
+            language="am",
+            temperature=0.7,
+        )
+        return {
+            "response_text": response["choices"][0]["message"]["content"],
+            "usage": response.get("usage"),
         }
-        headers = {"X-API-Key": ADDIS_KEY}
-
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(url, json=payload, headers=headers)
-            return resp.json()
     ```
   </Tab>
 
@@ -218,26 +208,19 @@ When using `stream: true`, the API sends data in chunks. Your server must pipe t
       const { message } = req.body;
 
       try {
-        const response = await fetch('https://api.addisassistant.com/api/v1/chat_generate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': process.env.ADDIS_AI_KEY
-          },
-          body: JSON.stringify({
-            prompt: message,
-            target_language: "am",
-            generation_config: { stream: true } // Enable streaming
-          })
+        const stream = await addis.chat.completions.create({
+          messages: [{ role: "user", content: message }],
+          language: "am",
+          stream: true,
         });
 
-        // Set headers for streaming
         res.setHeader('Content-Type', 'application/x-ndjson');
         res.setHeader('Transfer-Encoding', 'chunked');
 
-        // Pipe the AI stream directly to the client response
-        response.body.pipe(res);
-
+        for await (const event of stream) {
+          res.write(JSON.stringify(event) + "\n");
+        }
+        res.end();
       } catch (error) {
         res.status(500).end();
       }
@@ -246,25 +229,25 @@ When using `stream: true`, the API sends data in chunks. Your server must pipe t
   </Tab>
   <Tab value="Python (FastAPI)">
     ```python
+    import json
     from fastapi.responses import StreamingResponse
 
     @app.post("/api/chat/stream")
-    async def chat_stream(req: ChatRequest):
-        url = "https://api.addisassistant.com/api/v1/chat_generate"
-        payload = {
-            "prompt": req.message,
-            "target_language": "am",
-            "generation_config": {"stream": True}
-        }
-        headers = {"X-API-Key": ADDIS_KEY}
+    def chat_stream(req: ChatRequest):
+        stream = addis.chat.completions.create(
+            messages=[{"role": "user", "content": req.message}],
+            language="am",
+            stream=True,
+        )
 
-        async def iter_stream():
-            async with httpx.AsyncClient() as client:
-                async with client.stream("POST", url, json=payload, headers=headers) as r:
-                    async for chunk in r.aiter_bytes():
-                        yield chunk
+        def iter_stream():
+            for event in stream:
+                yield json.dumps(event) + "\n"
 
-        return StreamingResponse(iter_stream(), media_type="application/x-ndjson")
+        return StreamingResponse(
+            iter_stream(),
+            media_type="application/x-ndjson",
+        )
     ```
   </Tab>
 </Tabs>
@@ -275,40 +258,33 @@ When using the **Vision** features (images) with the chat endpoint, your server 
 **Node.js Example (using `multer`):**
 
 ```javascript
-const multer = require('multer');
-const FormData = require('form-data');
+import AddisAI from "addisai";
+import multer from "multer";
+
 const upload = multer(); // Memory storage
+const addis = new AddisAI();
 
 // Route: /api/upload
 app.post('/api/upload', upload.single('image'), async (req, res) => {
   try {
-    const formData = new FormData();
-    
-    // 1. Append the file buffer from the request
-    formData.append('image', req.file.buffer, {
-      filename: req.file.originalname,
-      contentType: req.file.mimetype
+    if (!req.file) return res.status(400).json({ error: "Image required" });
+
+    const image = new File(
+      [req.file.buffer],
+      req.file.originalname,
+      { type: req.file.mimetype },
+    );
+
+    const response = await addis.chat.completions.create({
+      messages: [{ role: "user", content: "Describe this image" }],
+      language: "am",
+      attachments: [{ file: image }],
     });
 
-    // 2. Append the JSON metadata
-    formData.append('request_data', JSON.stringify({
-      prompt: "Describe this image",
-      target_language: "am"
-    }));
-
-    // 3. Send to Addis AI Chat Endpoint
-    const response = await fetch("https://api.addisassistant.com/api/v1/chat_generate", {
-      method: "POST",
-      headers: {
-        "X-API-Key": process.env.ADDIS_AI_KEY,
-        ...formData.getHeaders() // Important: Sets boundary headers
-      },
-      body: formData
+    res.json({
+      response_text: response.choices[0].message.content,
+      uploaded_attachments: response.uploaded_attachments,
     });
-
-    const data = await response.json();
-    res.json(data);
-
   } catch (error) {
     res.status(500).json({ error: "Upload failed" });
   }
