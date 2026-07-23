@@ -277,6 +277,19 @@ test('uses one reversible visual system across custom documentation surfaces', (
   assert.doesNotMatch(customSurfaces, /bg-gradient/);
 });
 
+test('animates the voice pipeline as sequential nodes and connections', () => {
+  const voiceLoop = read('components/voice-loop-flow.tsx');
+
+  assert.match(voiceLoop, /activationStep: 0/);
+  assert.match(voiceLoop, /activationStep: 8/);
+  assert.match(voiceLoop, /transition-\[left,opacity\] duration-700/);
+  assert.match(voiceLoop, /isCurrent \? "opacity-100" : "opacity-0"/);
+  assert.match(voiceLoop, /overflow-x-auto/);
+  assert.match(voiceLoop, /aria-live="polite"/);
+  assert.match(voiceLoop, /prefers-reduced-motion: reduce/);
+  assert.match(voiceLoop, /Live request path/);
+});
+
 test('uses only the production Voice 2 example and API-key realtime auth', () => {
   const searchable = [
     ...walk('content'),
