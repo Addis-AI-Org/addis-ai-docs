@@ -52,8 +52,28 @@ test('keeps the approved SDK resources permanently visible above the tree', () =
   assert.match(layout, /API keys/);
   assert.match(layout, /Node\.js on npm/);
   assert.match(layout, /Python on PyPI/);
-  assert.doesNotMatch(layout, /GitHub/);
+  assert.doesNotMatch(layout, /Node\.js on GitHub|Python on GitHub/);
   assert.doesNotMatch(layout, /collapsible/i);
+});
+
+test('shows a restrained accessible row of Addis AI community links', () => {
+  const layout = read('lib/layout.shared.tsx');
+
+  for (const url of [
+    'https://addisassistant.com',
+    'https://discord.gg/8cF6d9CkTM',
+    'https://www.linkedin.com/company/addisai/?',
+    'https://github.com/Addis-AI-Org',
+    'https://huggingface.co/addisai',
+  ]) {
+    assert.match(layout, new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+
+  assert.match(layout, /aria-label="Addis AI community links"/);
+  assert.match(layout, /aria-label=\{`\$\{label\} \(opens in a new tab\)`\}/);
+  assert.match(layout, /target="_blank"/);
+  assert.match(layout, /rel="noopener noreferrer"/);
+  assert.match(layout, /text-fd-muted-foreground\/70/);
 });
 
 test('preserves original onboarding screenshots and page structures', () => {
