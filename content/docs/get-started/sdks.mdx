@@ -1,0 +1,81 @@
+---
+title: SDKs
+description: Install and configure the official Addis AI Node.js and Python SDKs.
+icon: Package
+---
+
+import { NewBadge } from '@/components/docs';
+
+<div className="not-prose addis-offset-shell addis-panel my-8 p-5 pr-20">
+  <div className="absolute right-4 top-4">
+    <NewBadge />
+  </div>
+  <p className="m-0 text-sm leading-6 text-fd-muted-foreground">
+    The official <code className="rounded bg-fd-muted px-1.5 py-0.5 text-fd-foreground">addisai</code> SDKs are the recommended way to call Addis AI from Node.js and Python backends.
+  </p>
+</div>
+
+## Install
+
+<Tabs items={['Node.js', 'Python']}>
+  <Tab value="Node.js">
+    ```bash
+    npm install addisai
+    ```
+
+    [View on npm](https://www.npmjs.com/package/addisai)
+  </Tab>
+  <Tab value="Python">
+    ```bash
+    pip install addisai
+    ```
+
+    [View on PyPI](https://pypi.org/project/addisai/)
+  </Tab>
+</Tabs>
+
+## Create a client
+
+Set your key in the server environment:
+
+```bash
+export ADDIS_API_KEY="your_api_key"
+```
+
+<Tabs items={['Node.js', 'Python']}>
+  <Tab value="Node.js">
+    ```ts
+    import AddisAI from "addisai";
+
+    const addis = new AddisAI();
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from addisai import AddisAI
+
+    addis = AddisAI()
+    ```
+  </Tab>
+</Tabs>
+
+The SDKs read `ADDIS_API_KEY` by default. Keep this key on a trusted server—never in browser JavaScript, a mobile binary, or a public environment variable.
+
+## Choose an integration guide
+
+The original integration guides remain the source of truth for application architecture:
+
+<Cards>
+  <Card href="/docs/integration/web" icon={<Globe />} title="Web applications">
+    Keep the API key behind a server-side proxy.
+  </Card>
+  <Card href="/docs/integration/mobile" icon={<Smartphone />} title="Mobile applications">
+    Route Flutter, React Native, and Android clients through your backend.
+  </Card>
+  <Card href="/docs/integration/server" icon={<Server />} title="Server-side integration">
+    Build secure Node.js, Python, Go, or PHP services.
+  </Card>
+  <Card href="/docs/integration/voice-interface" icon={<Mic />} title="Voice interfaces">
+    Combine speech-to-text, text generation, and Addis Voices 2.
+  </Card>
+</Cards>

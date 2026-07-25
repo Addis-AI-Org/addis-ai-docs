@@ -1,138 +1,241 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Smartphone, Server, Lock } from "lucide-react";
-import { cn } from "../lib/cn";// Ensure you have a utils file, or remove cn and use template literals
+import Image from "next/image";
+import { useEffect, useState, type ReactNode } from "react";
+import { Lock, Server, Smartphone } from "lucide-react";
 
+import { cn } from "../lib/cn";
+
+const statusMessages = [
+  "Waiting for a client request...",
+  "1. Client sends the payload to your backend...",
+  "2. Your backend validates the request...",
+  "3. Your backend adds the API key and forwards the request...",
+  "4. Addis AI processes the authenticated request...",
+  "Request path complete — the response returns through your backend.",
+];
+
+function ArchitectureNode({
+  activationStep,
+  annotation,
+  children,
+  label,
+  showLock = false,
+  step,
+}: {
+  activationStep: number;
+  annotation?: string;
+  children: ReactNode;
+  label: string;
+  showLock?: boolean;
+  step: number;
+}) {
+  const isReached = step >= activationStep;
+  const isCurrent = step === activationStep;
+
+  return (
+    <div className="flex min-w-0 flex-col items-center">
+      <div className="flex h-7 items-start justify-center">
+        {annotation ? (
+          <span
+            className={cn(
+              "whitespace-nowrap border bg-fd-background px-2 py-1 font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] transition-[transform,border-color,color,opacity] duration-500",
+              isReached
+                ? "translate-y-0 border-fd-primary/40 text-fd-primary opacity-100"
+                : "translate-y-1 border-fd-border text-fd-muted-foreground opacity-0",
+            )}
+          >
+            {annotation}
+          </span>
+        ) : null}
+      </div>
+
+      <div
+        aria-current={isCurrent ? "step" : undefined}
+        className={cn(
+          "relative flex size-16 shrink-0 items-center justify-center border bg-fd-background text-fd-muted-foreground transition-[transform,border-color,background-color,color,opacity,box-shadow] duration-500 ease-out",
+          isReached
+            ? "border-fd-primary/70 text-fd-primary opacity-100"
+            : "border-fd-border opacity-45",
+          isCurrent &&
+            "scale-105 border-fd-primary bg-fd-primary/10 shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-fd-primary)_10%,transparent)]",
+        )}
+      >
+        <div
+          className={cn(
+            "transition-transform duration-500 ease-out",
+            isCurrent && "scale-110",
+          )}
+        >
+          {children}
+        </div>
+
+        {showLock ? (
+          <span
+            className={cn(
+              "absolute -right-2 -top-2 flex size-6 items-center justify-center border border-fd-border bg-fd-background transition-[border-color,color,opacity] duration-500",
+              isReached
+                ? "border-fd-primary/40 text-fd-primary opacity-100"
+                : "text-fd-muted-foreground opacity-45",
+            )}
+          >
+            <Lock aria-hidden="true" className="size-3" />
+          </span>
+        ) : null}
+
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute -bottom-1 -left-1 size-2 border border-fd-background bg-fd-border transition-colors duration-500",
+            isReached && "bg-fd-primary",
+          )}
+        />
+      </div>
+
+      <span
+        className={cn(
+          "mt-3 min-h-8 text-center text-xs font-semibold leading-4 transition-colors duration-500",
+          isReached ? "text-fd-foreground" : "text-fd-muted-foreground",
+        )}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function ConnectionLine({
+  activationStep,
+  label,
+  step,
+}: {
+  activationStep: number;
+  label: string;
+  step: number;
+}) {
+  const isReached = step >= activationStep;
+  const isCurrent = step === activationStep;
+
+  return (
+    <div className="relative mt-7 flex h-16 min-w-0 items-center px-3">
+      <div className="absolute inset-x-3 top-1/2 h-px -translate-y-1/2 overflow-visible bg-fd-border">
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute inset-0 origin-left bg-fd-primary transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            isReached ? "scale-x-100" : "scale-x-0",
+          )}
+        />
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 border border-fd-background bg-fd-primary shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-fd-primary)_12%,transparent)] transition-[left,opacity] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            isReached ? "left-full" : "left-0",
+            isCurrent ? "opacity-100" : "opacity-0",
+          )}
+        />
+      </div>
+
+      <span
+        className={cn(
+          "relative mx-auto whitespace-nowrap border bg-fd-background px-2.5 py-1 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] transition-[transform,border-color,color,opacity] duration-500",
+          isReached
+            ? "translate-y-0 border-fd-primary/40 text-fd-primary opacity-100"
+            : "translate-y-1 border-fd-border text-fd-muted-foreground opacity-0",
+        )}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
 
 export function ArchitectureFlow() {
   const [step, setStep] = useState(0);
 
-  // Cycle through the animation steps
   useEffect(() => {
-    const timer = setInterval(() => {
-      setStep((prev) => (prev + 1) % 5); // 5 steps total before reset
-    }, 1500); // Change step every 1.5 seconds
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setStep(statusMessages.length - 1);
+      return;
+    }
 
-    return () => clearInterval(timer);
+    const timer = window.setInterval(() => {
+      setStep((current) => (current + 1) % statusMessages.length);
+    }, 1150);
+
+    return () => window.clearInterval(timer);
   }, []);
 
-  // Common class for the node container to ensure perfect symmetry
-  const nodeBaseClass = "w-16 h-16 rounded-2xl border-2 flex items-center justify-center transition-all duration-500 shadow-lg z-10 bg-fd-background";
-  
-  // Active state style (Blue border, Blue shadow)
-  const activeNodeClass = "border-blue-500 shadow-blue-500/20 scale-110";
-
-  const addisactiveNodeClass = "border-blue-500 shadow-blue-500/20 scale-110 bg-blue-500 border-blue-600";
-  
-  // Inactive state style
-  const inactiveNodeClass = "border-fd-border text-fd-muted-foreground opacity-50 grayscale";
-
   return (
-    <div className="w-full my-8 p-8 border border-fd-border rounded-xl bg-fd-card/50 flex flex-col items-center justify-center overflow-hidden">
-      
-      <div className="flex flex-row items-center justify-between w-full max-w-3xl gap-2 md:gap-4 relative">
-        
-        {/* ================= NODE 1: CLIENT ================= */}
-        <div className="flex flex-col items-center gap-3 relative">
-          <div className={cn(nodeBaseClass, step >= 0 ? activeNodeClass : inactiveNodeClass)}>
-            <Smartphone className={cn("w-8 h-8", step >= 0 ? "text-blue-500" : "text-fd-muted-foreground")} />
-          </div>
-          <div className={cn("text-xs font-bold text-center transition-opacity", step >= 0 ? "opacity-100" : "opacity-50")}>
-            Client App
-          </div>
-        </div>
+    <div className="not-prose addis-offset-shell addis-panel my-10 w-full overflow-hidden">
+      <div className="flex items-center justify-between border-b border-fd-border px-5 py-3">
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fd-primary">
+          Secure request path
+        </span>
+        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-fd-muted-foreground">
+          {step === statusMessages.length - 1
+            ? "Complete"
+            : `Phase ${String(step + 1).padStart(2, "0")} / 05`}
+        </span>
+      </div>
 
-        {/* ================= CONNECTION 1 ================= */}
-        <div className="flex-1 relative mx-2 h-10 flex items-center justify-center">
-          {/* The Line Background */}
-          <div className="absolute inset-x-0 h-1 bg-fd-border rounded-full overflow-hidden">
-             {/* The Animated Bar */}
-             <div className={cn(
-              "absolute inset-0 bg-blue-400 transition-transform duration-1000 ease-in-out origin-left",
-              step >= 1 ? "scale-x-100" : "scale-x-0"
-            )} />
-          </div>
+      <div className="w-full overflow-x-auto">
+        <div className="mx-auto min-w-[42rem] px-8 py-9">
+          <div className="grid grid-cols-[6rem_minmax(8rem,1fr)_6rem_minmax(8rem,1fr)_6rem] items-start">
+            <ArchitectureNode activationStep={0} label="Client app" step={step}>
+              <Smartphone aria-hidden="true" className="size-8" />
+            </ArchitectureNode>
 
-          {/* The Pop-up Text (Now floating above, not clipped) */}
-          <div className={cn(
-            "absolute bg-fd-background border border-blue-200 dark:border-blue-900 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 transform",
-            step >= 1 ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-2 scale-95"
-          )}>
-            Sends Data
-          </div>
-        </div>
-
-        {/* ================= NODE 2: SERVER ================= */}
-        <div className="flex flex-col items-center gap-3 relative">
-          <div className={cn(nodeBaseClass, step >= 2 ? activeNodeClass : inactiveNodeClass, "relative")}>
-            {/* Badge pinned to the backend node to avoid overflow/clipping */}
-            <div className={cn(
-              "absolute left-1/2 top-0 z-30 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-out",
-              step >= 2 ? "opacity-100 scale-100" : "opacity-0 scale-95"
-            )}>
-              <span className="whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-blue-500 border border-blue-500/40 bg-fd-background/80 backdrop-blur-md shadow-sm">
-                Secure Zone
-              </span>
-            </div>
-
-            {/* Lock Icon Overlay */}
-            <div className="absolute -right-2 -top-2 bg-fd-background rounded-full p-1 border border-fd-border shadow-sm z-20">
-               <Lock className={cn("w-3 h-3", step >= 2 ? "text-blue-600" : "text-fd-muted-foreground")} />
-            </div>
-            <Server className={cn("w-8 h-8", step >= 2 ? "text-blue-500" : "text-fd-muted-foreground")} />
-          </div>
-          <div className={cn("text-xs font-bold text-center transition-opacity", step >= 2 ? "opacity-100" : "opacity-50")}>
-            Your Backend
-          </div>
-        </div>
-
-        {/* ================= CONNECTION 2 ================= */}
-        <div className="flex-1 relative mx-2 h-10 flex items-center justify-center">
-          <div className="absolute inset-x-0 h-1 bg-fd-border rounded-full overflow-hidden">
-             <div className={cn(
-              "absolute inset-0 bg-blue-500 transition-transform duration-1000 ease-in-out origin-left",
-              step >= 3 ? "scale-x-100" : "scale-x-0"
-            )} />
-          </div>
-
-          <div className={cn(
-            "absolute bg-fd-background border border-blue-200 dark:border-blue-900 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 transform",
-            step >= 3 ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-2 scale-95"
-          )}>
-            + Adds API Key
-          </div>
-        </div>
-
-        {/* ================= NODE 3: ADDIS AI ================= */}
-        <div className="flex flex-col items-center gap-3 relative">
-          <div className={cn(nodeBaseClass, step >= 4 ? addisactiveNodeClass : inactiveNodeClass)}>
-             {/* Logo Image - Perfectly centered and sized */}
-             <img 
-              src="/images/addis-logo.png" 
-              alt="Addis AI" 
-              className={cn(
-                "w-8 h-8 object-contain transition-all duration-500", 
-                step >= 4 ? "opacity-100 filter-none" : "opacity-40 grayscale"
-              )}
+            <ConnectionLine
+              activationStep={1}
+              label="Sends data"
+              step={step}
             />
-          </div>
-          <div className={cn("text-xs font-bold text-center transition-opacity", step >= 4 ? "opacity-100" : "opacity-50")}>
-            Addis AI
+
+            <ArchitectureNode
+              activationStep={2}
+              annotation="Secure zone"
+              label="Your backend"
+              showLock
+              step={step}
+            >
+              <Server aria-hidden="true" className="size-8" />
+            </ArchitectureNode>
+
+            <ConnectionLine
+              activationStep={3}
+              label="+ API key"
+              step={step}
+            />
+
+            <ArchitectureNode activationStep={4} label="Addis AI" step={step}>
+              <Image
+                alt="Addis AI"
+                className={cn(
+                  "size-8 object-contain transition-[filter,opacity] duration-500",
+                  step >= 4 ? "opacity-100" : "grayscale opacity-45",
+                )}
+                height={32}
+                src="/images/addis-logo.png"
+                width={32}
+              />
+            </ArchitectureNode>
           </div>
         </div>
-
       </div>
 
-      {/* --- BOTTOM STATUS TEXT --- */}
-      <div className="mt-10 h-6 text-sm text-fd-muted-foreground font-medium transition-all duration-300 animate-in fade-in slide-in-from-bottom-2">
-        {step === 0 && "Waiting for user input..."}
-        {step === 1 && "1. Client sends payload to your server..."}
-        {step === 2 && "2. Server validates request..."}
-        {step === 3 && "3. Server injects Secret Key & forwards..."}
-        {step >= 4 && "4. Addis AI processes & returns data!"}
+      <div
+        aria-live="polite"
+        className="flex min-h-14 items-center gap-3 border-t border-fd-border px-5 py-3"
+      >
+        <span
+          aria-hidden="true"
+          className="size-2 shrink-0 bg-fd-primary shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-fd-primary)_10%,transparent)]"
+        />
+        <span className="text-sm font-medium text-fd-muted-foreground">
+          {statusMessages[step]}
+        </span>
       </div>
-
     </div>
   );
 }

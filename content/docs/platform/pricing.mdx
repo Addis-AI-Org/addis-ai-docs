@@ -1,0 +1,50 @@
+---
+title: Pricing
+description: Native Ethiopian birr billing units for Addis AI capabilities.
+icon: CircleDollarSign
+---
+
+Addis AI bills natively in Ethiopian birr (ETB). Any USD or EUR amount shown in account tools is an indicative conversion and can change with the exchange rate.
+
+## Current Pricing
+
+| Capability | Billing unit | Price |
+| :--- | :--- | :--- |
+| **Addis Voices 2** | Generated audio | **5 ETB / minute** |
+| **Text Generation & Translation (Input)** | Input tokens | **0.3 ETB / 1,000 tokens** |
+| **Text Generation & Translation (Output)** | Output tokens | **0.8 ETB / 1,000 tokens** |
+| **Speech to Text** | Transcribed output | **3.5 ETB / 1,000 characters** |
+| **Realtime Audio (Input)** | Input tokens | **1 ETB / 1,000 tokens** |
+| **Realtime Audio (Output)** | Output tokens | **4 ETB / 1,000 tokens** |
+
+<Callout type="info" title="Addis Voices 2 estimates">
+Use `voice.estimate` before generation when a user must approve spend. The estimate reports the expected duration, billable duration, cost, balance, currency, and whether generation can proceed.
+</Callout>
+
+## Billing Guidance
+
+<div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-2 mt-8">
+  <div className="p-4 border border-fd-border rounded-lg bg-fd-card">
+    <h3 className="font-bold flex items-center gap-2 mb-2 text-fd-foreground">
+      <Coins className="w-4 h-4 text-blue-500" />
+      Track usage
+    </h3>
+    <div className="text-sm text-fd-muted-foreground">
+      Store returned usage metadata with your internal request ID when allocating cost by customer, workspace, or feature.
+    </div>
+  </div>
+
+  <div className="p-4 border border-fd-border rounded-lg bg-fd-card">
+    <h3 className="font-bold flex items-center gap-2 mb-2 text-fd-foreground">
+      <RefreshCw className="w-4 h-4 text-orange-500" />
+      Retry safely
+    </h3>
+    <div className="text-sm text-fd-muted-foreground">
+      Reuse the same Addis Voices 2 client request ID only when retrying the same logical generation, so an uncertain response does not create duplicate billed clips.
+    </div>
+  </div>
+</div>
+
+The developer platform remains authoritative for account balance, credits, and any account-specific pricing.
+
+<LastVerified date="2026-07-23" />

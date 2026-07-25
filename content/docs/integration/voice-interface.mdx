@@ -29,66 +29,51 @@ A typical voice interaction follows a request-response cycle known as the "Voice
 To minimize latency and manage secrets, this pipeline should run on your server. The client sends one audio file, and the server returns the audio response (and text transcript).
 
 <Tabs items={['Node.js (Orchestrator)', 'Python (Pipeline)']}>
-  
   <Tab value="Node.js (Orchestrator)">
     This Express.js route handles the entire pipeline in one request.
 
-    ```javascript
-    const express = require('express');
-    const multer = require('multer');
-    const FormData = require('form-data');
-    const fetch = require('node-fetch');
-    
+    ```ts
+    import AddisAI from "addisai";
+    import express from "express";
+    import multer from "multer";
+
     const app = express();
     const upload = multer(); // Memory storage
-    const API_KEY = process.env.ADDIS_AI_KEY;
+    const addis = new AddisAI();
 
-    app.post('/api/voice-chat', upload.single('audio'), async (req, res) => {
+    app.post("/api/voice-chat", upload.single("audio"), async (req, res) => {
       try {
-        // --- STEP 1: SPEECH TO TEXT ---
-        const sttForm = new FormData();
-        sttForm.append('audio', req.file.buffer, { filename: 'input.wav', contentType: req.file.mimetype });
-        sttForm.append('request_data', JSON.stringify({ language_code: 'am' }));
+        if (!req.file) return res.status(400).json({ error: "Audio is required" });
 
-        const sttRes = await fetch("https://api.addisassistant.com/api/v2/stt", {
-          method: "POST",
-          headers: { "x-api-key": API_KEY, ...sttForm.getHeaders() },
-          body: sttForm
+        // 1. Transcribe
+        const audio = new File(
+          [req.file.buffer],
+          req.file.originalname || "input.wav",
+          { type: req.file.mimetype },
+        );
+        const transcript = await addis.speech.transcribe({ audio, language: "am" });
+
+        // 2. Reason
+        const completion = await addis.chat.completions.create({
+          system: "Answer naturally and concisely in Amharic.",
+          messages: [{ role: "user", content: transcript.text }],
         });
-        const sttData = await sttRes.json();
-        const userText = sttData.data.transcription;
+        const answer = completion.choices[0].message.content;
 
-        // --- STEP 2: TEXT GENERATION (LLM) ---
-        const chatRes = await fetch("https://api.addisassistant.com/api/v1/chat_generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-          body: JSON.stringify({
-            model: "Addis-፩-አሌፍ",
-            prompt: userText,
-            target_language: "am"
-          })
+        // 3. Speak with Addis Voices 2
+        const clip = await addis.voice.generate({
+          text: answer,
+          voiceId: "am-hamen",
+          language: "am",
+          outputFormat: "mp3_44100",
+          clientRequestId: crypto.randomUUID(),
         });
-        const chatData = await chatRes.json();
-        const aiText = chatData.response_text;
 
-        // --- STEP 3: TEXT TO SPEECH (TTS) ---
-        const ttsRes = await fetch("https://api.addisassistant.com/api/v1/audio", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-API-Key": API_KEY },
-          body: JSON.stringify({
-            text: aiText,
-            language: "am"
-          })
-        });
-        const ttsData = await ttsRes.json();
-
-        // Return everything to the frontend
         res.json({
-          user_transcript: userText,
-          ai_text: aiText,
-          audio_base64: ttsData.audio
+          user_transcript: transcript.text,
+          ai_text: answer,
+          audio_url: clip.audioUrl,
         });
-
       } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Voice pipeline failed" });
@@ -99,40 +84,37 @@ To minimize latency and manage secrets, this pipeline should run on your server.
 
   <Tab value="Python (Pipeline)">
     ```python
-    import requests
-    import json
+    from uuid import uuid4
+    from addisai import AddisAI
 
-    API_KEY = "sk_YOUR_KEY"
-    BASE_URL = "https://api.addisassistant.com"
+    addis = AddisAI()
 
-    def run_voice_pipeline(audio_file_path):
-        # 1. Transcribe (STT)
-        files = [('audio', ('input.wav', open(audio_file_path, 'rb'), 'audio/wav'))]
-        stt_payload = {'request_data': json.dumps({"language_code": "am"})}
-        
-        stt_res = requests.post(f"{BASE_URL}/api/v2/stt", headers={"x-api-key": API_KEY}, files=files, data=stt_payload)
-        user_text = stt_res.json()['data']['transcription']
-        print(f"User said: {user_text}")
+    def run_voice_pipeline(audio_file_path: str):
+        # 1. Transcribe
+        with open(audio_file_path, "rb") as audio:
+            transcript = addis.speech.transcribe(audio=audio, language="am")
 
-        # 2. Chat (LLM)
-        chat_payload = {
-            "model": "Addis-፩-አሌፍ",
-            "prompt": user_text,
-            "target_language": "am"
+        # 2. Reason
+        completion = addis.chat.completions.create(
+            system="Answer naturally and concisely in Amharic.",
+            messages=[{"role": "user", "content": transcript["text"]}],
+        )
+        answer = completion["choices"][0]["message"]["content"]
+
+        # 3. Speak with Addis Voices 2
+        clip = addis.voice.generate(
+            text=answer,
+            voice_id="am-hamen",
+            language="am",
+            output_format="mp3_44100",
+            client_request_id=str(uuid4()),
+        )
+
+        return {
+            "user_transcript": transcript["text"],
+            "ai_text": answer,
+            "audio_url": clip.audio_url,
         }
-        chat_res = requests.post(f"{BASE_URL}/api/v1/chat_generate", headers={"X-API-Key": API_KEY}, json=chat_payload)
-        ai_text = chat_res.json()['response_text']
-        print(f"AI replied: {ai_text}")
-
-        # 3. Speak (TTS)
-        tts_payload = {
-            "text": ai_text,
-            "language": "am"
-        }
-        tts_res = requests.post(f"{BASE_URL}/api/v1/audio", headers={"X-API-Key": API_KEY}, json=tts_payload)
-        audio_base64 = tts_res.json()['audio']
-        
-        return audio_base64
     ```
   </Tab>
 </Tabs>
@@ -166,10 +148,10 @@ On the client side (React, Flutter, etc.), your job is to record audio, send it 
   
   <Step>
     ### Play Response
-    Decode the Base64 audio string and play it immediately.
+    Play the completed Addis Voices 2 clip URL returned by your backend.
     
     ```javascript
-    const audio = new Audio("data:audio/wav;base64," + data.audio_base64);
+    const audio = new Audio(data.audio_url);
     audio.play();
     ```
   </Step>
@@ -181,7 +163,7 @@ On the client side (React, Flutter, etc.), your job is to record audio, send it 
 
 The "Request-Response" model adds up latency (STT time + LLM time + TTS time). To build a truly conversational experience, you should consider these optimizations.
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+<div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-2 mt-8">
 
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
@@ -190,7 +172,7 @@ The "Request-Response" model adds up latency (STT time + LLM time + TTS time). T
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
       <div>
-        **Don't wait for full text.** In advanced setups, stream the text from the LLM and start generating TTS audio for the first sentence while the rest of the text is still generating.
+        **Segment deliberately.** For long responses, split complete sentences into separate Addis Voices 2 clips and queue them in order. Addis Voices 2 returns completed clips; it does not stream one generation.
       </div>
     </div>
   </div>
@@ -226,7 +208,7 @@ The "Request-Response" model adds up latency (STT time + LLM time + TTS time). T
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
       <div>
-        Remember to store the `user_text` and `ai_text` in your database or session. You will need to pass this array to the `conversation_history` parameter in the next turn to keep the conversation going.
+        Store the relevant `user_text` and `ai_text` turns in your session, then send them back as `messages` on the next chat request. Trim or summarize older turns instead of growing the history indefinitely.
       </div>
     </div>
   </div>

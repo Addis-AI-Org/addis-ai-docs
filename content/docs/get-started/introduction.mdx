@@ -1,63 +1,68 @@
 ---
 title: Introduction
-description: The comprehensive guide to the Addis AI developer platform.
 icon: House
 ---
 
 import { Cpu, Rocket, Book, Terminal, PlayCircle, Zap, Globe, MessageSquare, Mic, Image as ImageIcon, Sparkles, LayoutTemplate } from 'lucide-react';
+import { NewBadge } from '@/components/docs';
 
-{/* 
-  HERO SECTION
-  Interactive, Engaging, and Error-Free.
-*/}
-<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600/10 via-dark-blue-700/10 to-transparent p-10 border border-fd-border my-6">
-  <div className="relative z-10 p-4 md:p-8 flex flex-col items-start">
-    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 text-xs font-medium mb-6 border border-blue-500/20">
-      <Sparkles className="w-3 h-3" />
-      <span>v2 Models Live</span>
-    </div>
-    
-    <h1 className="text-4xl md:text-5xl font-bold tracking-tight leading-none mb-6 text-fd-foreground not-prose">
-      The Engine for <br />
-      <span className="text-fd-primary">African Intelligence.</span>
-    </h1>
-    
-    <div className="text-lg text-fd-muted-foreground leading-relaxed max-w-3xl">
-      Addis AI provides the raw, unified infrastructure (**LLMs**, **Vision**, and **Audio**) designed to process African languages as primary data. By using a native tokenization architecture, we eliminate the translation layer overhead that causes standard APIs to struggle with Ge'ez logic and local accents.
+<div className="not-prose addis-offset-shell my-10">
+  <div className="relative border border-fd-border bg-fd-background">
+    <div className="flex items-stretch justify-between border-b border-fd-border">
+      <div className="flex items-center gap-2 px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fd-primary">
+        <Sparkles className="size-3.5" aria-hidden="true" />
+        <span>v2 Models Live</span>
+      </div>
+      <div className="hidden items-center border-l border-fd-border px-5 font-mono text-[10px] uppercase tracking-[0.16em] text-fd-muted-foreground sm:flex">
+        Addis AI / Developer platform
+      </div>
     </div>
 
-    <div className="flex flex-wrap gap-4 mt-8">
-      <a 
-        href="https://platform.addisassistant.com/playground" 
-        target="_blank" 
-        className="inline-flex h-9 items-center justify-center rounded-md bg-fd-primary px-4 text-sm font-medium text-fd-primary-foreground shadow-sm transition-all hover:bg-fd-primary/90 hover:scale-[1.02]"
+    <div className="p-6 sm:p-9 md:p-12">
+      <div className="mb-7 h-px w-10 bg-fd-primary" aria-hidden="true" />
+      <h1 className="m-0 max-w-3xl text-4xl font-bold leading-[0.98] tracking-tight text-fd-foreground md:text-5xl">
+        The Engine for <br />
+        <span className="text-fd-primary">African Intelligence.</span>
+      </h1>
+
+      <div className="mt-8 max-w-3xl text-base leading-7 text-fd-muted-foreground md:text-lg md:leading-8">
+        Addis AI provides the raw, unified infrastructure (**LLMs**, **Vision**, and **Audio**) designed to process African languages as primary data. By using a native tokenization architecture, we eliminate the translation layer overhead that causes standard APIs to struggle with Ge'ez logic and local accents.
+      </div>
+    </div>
+
+    <div className="flex flex-col border-t border-fd-border sm:flex-row">
+      <a
+        href="https://addisassistant.com/playground"
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex min-h-12 items-center justify-center bg-fd-primary px-5 text-sm font-semibold text-fd-primary-foreground transition-colors hover:bg-fd-primary/90 sm:min-w-48"
       >
-        <PlayCircle className="w-4 h-4 mr-2" />
+        <PlayCircle className="mr-2 size-4" />
         Open Playground
       </a>
-      
-      <a 
-        href="/docs/get-started/quickstart" 
-        className="inline-flex h-9 items-center justify-center rounded-md border border-fd-border bg-fd-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground"
+
+      <a
+        href="/docs/get-started/quickstart"
+        className="inline-flex min-h-12 items-center justify-center border-t border-fd-border bg-fd-background px-5 text-sm font-semibold text-fd-foreground transition-colors hover:bg-fd-accent sm:min-w-44 sm:border-l sm:border-t-0"
       >
-        <Terminal className="w-4 h-4 mr-2" />
+        <Terminal className="mr-2 size-4" />
         Start Coding
       </a>
+
+      <div className="hidden flex-1 items-center justify-end border-l border-fd-border px-5 font-mono text-[10px] uppercase tracking-[0.16em] text-fd-muted-foreground md:flex">
+        LLM · Vision · Audio
+      </div>
     </div>
   </div>
-
-   {/* Background Decoration */}
-  <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
-  <div className="absolute bottom-0 right-10 h-40 w-40 rounded-full bg-blue-500/20 blur-3xl" />
 </div>
 
 ## Why Addis AI?
 
-Building AI for Africa is different. Generic models from Silicon Valley treat our languages as an edge case. We treat them as the core product.
+Building AI for Africa requires language-specific training. Many general-purpose models have limited exposure to the morphology, scripts, and cultural context of African languages. Addis AI treats those languages as the core product.
 
 We solve the **three hardest problems** in African NLP:
 
-1.  **Morphology:** Amharic verbs fuse subject, object, and tense into single words. Our models parse this correctly where GPT-4 often hallucinates.
+1.  **Morphology:** Amharic verbs fuse subject, object, and tense into single words. This complex structure requires language-specific training. Our models parse it correctly, while major general-purpose AI models can misinterpret or hallucinate the underlying meaning.
 2.  **Culture:** Our models understand African history, regional geography, and contemporary legal and regulatory contexts.
 3.  **Voice:** We don't just do text. We built the most natural sounding TTS engines for Amharic and Afan Oromo.
 
@@ -75,9 +80,12 @@ Our flagship Large Language Model. It is optimized for instruction following, re
 
 ### 2. አሌፍ-Audio (Voice)
 A suite of high-fidelity audio models.
+*   <span className="inline-flex flex-wrap items-center gap-2"><strong>Addis Voices 2</strong><NewBadge /></span>: The latest generation of Addis AI's Text-to-Speech technology, with multiple production-ready Amharic and Afaan Oromo voices designed for natural, expressive delivery. Use the catalog, previews, cost estimates, and durable clips to build conversational AI, narration, customer support, announcements, and other voice-first applications. [Explore the complete Text-to-Speech guide](/docs/capabilities/text-to-speech).
 *   **`አሌፍ-Audio-AM`:** Amharic Text-to-Speech with natural intonation.
 *   **`አሌፍ-Audio-OM`:** Afan Oromo Text-to-Speech.
 *   **`addis-whisper`:** Speech-to-Text transcription that handles dialect variations.
+
+The previous Voice 1 Text-to-Speech API remains available only for existing applications and is documented in the [Legacy Text-to-Speech guide](/docs/capabilities/text-to-speech-legacy).
 
 ### 3. Realtime Audio
 Powered by **`አሌፍ-1.2-realtime-audio`**.
@@ -94,11 +102,18 @@ We have structured the docs to get you into production fast.
 *   **[Playground Guide](/docs/get-started/playground-guide):** Learn how to prompt the models visually.
 *   **[Quick Start](/docs/get-started/quickstart):** Get your API Key, choose a model, and make your first request (Auth & Code included).
 
-### ⚡ Capabilities & API
+### ⚡ Capabilities
 Deep dives into the specific endpoints and parameters.
 *   **[Text Generation](/docs/capabilities/text-generation):** Context management, parameters, and JSON schemas.
-*   **[Voice Intelligence](/docs/capabilities/text-to-speech):** Handling audio binaries and `multipart` uploads.
+*   **[Text-to-Speech](/docs/capabilities/text-to-speech):** Discovering voices, estimating cost, and generating Addis Voices 2 clips.
 *   **[Vision](/docs/capabilities/vision):** OCR and Image analysis.
+
+### 🧩 Integration
+Patterns for connecting Addis AI securely to your application.
+*   **[Web Applications](/docs/integration/web):** Keep API keys on your backend and expose only the routes your web client needs.
+*   **[Mobile Applications](/docs/integration/mobile):** Use a backend proxy for mobile requests and audio delivery.
+*   **[Server-side Integration](/docs/integration/server):** Structure production Node.js and Python services.
+*   **[Voice Interface](/docs/integration/voice-interface):** Orchestrate speech, text generation, and voice playback.
 
 ### ⚙️ Platform
 *   **[Rate Limits](/docs/platform/limits):** Understanding tiers and quotas.

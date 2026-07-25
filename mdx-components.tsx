@@ -1,6 +1,15 @@
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import * as FilesComponents from "fumadocs-ui/components/files";
 import * as TabsComponents from "fumadocs-ui/components/tabs";
+import {
+  AnnouncementFeed,
+  AnnouncementHero,
+  AnnouncementItem,
+  AnnouncementLink,
+  LastVerified,
+  NewBadge,
+  StatusBadge,
+} from '@/components/docs';
 import type { MDXComponents } from "mdx/types";
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
 import * as icons from "lucide-react";
@@ -10,6 +19,13 @@ export function getMDXComponents(components?: MDXComponents) {
     ...(icons as unknown as MDXComponents),
     ...defaultMdxComponents,
     ...TabsComponents,
+    LastVerified,
+    NewBadge,
+    StatusBadge,
+    AnnouncementFeed,
+    AnnouncementHero,
+    AnnouncementItem,
+    AnnouncementLink,
     ...FilesComponents,
     Accordion,
     Accordions,

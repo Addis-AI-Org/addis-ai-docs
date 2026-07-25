@@ -1,113 +1,209 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Mic, FileText, Bot, AudioLines, Volume2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  AudioLines,
+  Bot,
+  FileText,
+  Mic,
+  Volume2,
+  type LucideIcon,
+} from "lucide-react";
+
 import { cn } from "../lib/cn";
+
+type Stage = {
+  label: string;
+  activationStep: number;
+  icon: LucideIcon;
+};
+
+const stages: Stage[] = [
+  { label: "User speaks", activationStep: 0, icon: Mic },
+  { label: "Transcribe", activationStep: 2, icon: FileText },
+  { label: "Reasoning", activationStep: 4, icon: Bot },
+  { label: "Synthesize", activationStep: 6, icon: AudioLines },
+  { label: "Play", activationStep: 8, icon: Volume2 },
+];
+
+const connections = [
+  { label: "Audio", activationStep: 1 },
+  { label: "Text", activationStep: 3 },
+  { label: "Text", activationStep: 5 },
+  { label: "Audio", activationStep: 7 },
+];
+
+const statusMessages = [
+  "Listening for user input...",
+  "1. Sending audio to speech-to-text...",
+  "2. Transcription ready.",
+  "3. Forwarding the transcript to the language model...",
+  "4. Generating the response...",
+  "5. Sending the response to speech synthesis...",
+  "6. Generating speech with Addis Voices 2...",
+  "7. Delivering the completed audio...",
+  "8. Playing the voice response.",
+  "Voice loop complete — ready for the next request.",
+];
+
+function StageNode({
+  stage,
+  step,
+}: {
+  stage: Stage;
+  step: number;
+}) {
+  const Icon = stage.icon;
+  const isReached = step >= stage.activationStep;
+  const isCurrent = step === stage.activationStep;
+
+  return (
+    <div className="flex min-w-0 flex-col items-center">
+      <div
+        className={cn(
+          "relative flex size-14 shrink-0 items-center justify-center border bg-fd-background text-fd-muted-foreground transition-[transform,border-color,background-color,color,opacity,box-shadow] duration-500 ease-out",
+          isReached
+            ? "border-fd-primary/70 text-fd-primary opacity-100"
+            : "border-fd-border opacity-45",
+          isCurrent &&
+            "scale-105 border-fd-primary bg-fd-primary/10 shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-fd-primary)_10%,transparent)]",
+        )}
+        aria-current={isCurrent ? "step" : undefined}
+      >
+        <Icon
+          aria-hidden="true"
+          className={cn(
+            "size-6 transition-transform duration-500 ease-out",
+            isCurrent && "scale-110",
+          )}
+        />
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute -right-1 -top-1 size-2 border border-fd-background bg-fd-border transition-colors duration-500",
+            isReached && "bg-fd-primary",
+          )}
+        />
+      </div>
+
+      <span
+        className={cn(
+          "mt-3 min-h-8 text-center text-[11px] font-semibold leading-4 transition-colors duration-500 sm:text-xs",
+          isReached ? "text-fd-foreground" : "text-fd-muted-foreground",
+        )}
+      >
+        {stage.label}
+      </span>
+    </div>
+  );
+}
+
+function ConnectionLine({
+  activationStep,
+  label,
+  step,
+}: {
+  activationStep: number;
+  label: string;
+  step: number;
+}) {
+  const isReached = step >= activationStep;
+  const isCurrent = step === activationStep;
+
+  return (
+    <div className="relative flex h-14 min-w-0 items-center px-2">
+      <div className="absolute inset-x-2 top-1/2 h-px -translate-y-1/2 overflow-visible bg-fd-border">
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute inset-0 origin-left bg-fd-primary transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            isReached ? "scale-x-100" : "scale-x-0",
+          )}
+        />
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 border border-fd-background bg-fd-primary shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-fd-primary)_12%,transparent)] transition-[left,opacity] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            isReached ? "left-full" : "left-0",
+            isCurrent ? "opacity-100" : "opacity-0",
+          )}
+        />
+      </div>
+
+      <span
+        className={cn(
+          "relative mx-auto whitespace-nowrap border bg-fd-background px-2 py-1 font-mono text-[9px] font-semibold uppercase tracking-[0.14em] transition-[transform,border-color,color,opacity] duration-500",
+          isReached
+            ? "translate-y-0 border-fd-primary/40 text-fd-primary opacity-100"
+            : "translate-y-1 border-fd-border text-fd-muted-foreground opacity-0",
+        )}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
 
 export function VoiceLoopFlow() {
   const [step, setStep] = useState(0);
 
-  // Cycle through 5 steps (0 to 5, then reset)
   useEffect(() => {
-    const timer = setInterval(() => {
-      setStep((prev) => (prev + 1) % 6); 
-    }, 1500); 
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setStep(statusMessages.length - 1);
+      return;
+    }
 
-    return () => clearInterval(timer);
+    const timer = window.setInterval(() => {
+      setStep((current) => (current + 1) % statusMessages.length);
+    }, 1150);
+
+    return () => window.clearInterval(timer);
   }, []);
 
-  // Styles
-  const nodeBaseClass = "w-12 h-12 md:w-14 md:h-14 rounded-xl border-2 flex items-center justify-center transition-all duration-500 shadow-lg z-10 bg-fd-background shrink-0";
-  const activeNodeClass = "border-blue-500 shadow-blue-500/20 scale-110";
-  const inactiveNodeClass = "border-fd-border text-fd-muted-foreground opacity-50 grayscale";
-  const labelClass = "text-[10px] md:text-xs font-bold text-center mt-2 transition-opacity absolute top-full w-24";
-  
-  // Connection Line Logic
-  const ConnectionLine = ({ active, label }: { active: boolean, label: string }) => (
-    <div className="flex-1 relative mx-1 md:mx-2 h-10 flex items-center justify-center min-w-[20px]">
-      <div className="absolute inset-x-0 h-1 bg-fd-border rounded-full overflow-hidden">
-         <div className={cn(
-          "absolute inset-0 bg-blue-500 transition-transform duration-1000 ease-in-out origin-left",
-          active ? "scale-x-100" : "scale-x-0"
-        )} />
-      </div>
-      <div className={cn(
-        "absolute -top-3 bg-fd-background border border-blue-200 dark:border-blue-900 text-blue-600 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-sm transition-all duration-300 transform",
-        active ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-2 scale-95"
-      )}>
-        {label}
-      </div>
-    </div>
-  );
-
   return (
-    <div className="w-full my-8 p-6 md:p-8 border border-fd-border rounded-xl bg-fd-card/50 flex flex-col items-center justify-center overflow-hidden">
-      
-      {/* Wrapper for horizontal scrolling on very small mobile screens if needed */}
-      <div className="flex flex-row items-center justify-between w-full max-w-4xl relative">
-        
-        {/* NODE 1: USER */}
-        <div className="flex flex-col items-center relative group">
-          <div className={cn(nodeBaseClass, step >= 0 ? activeNodeClass : inactiveNodeClass)}>
-            <Mic className={cn("w-6 h-6", step >= 0 ? "text-blue-500" : "text-fd-muted-foreground")} />
-          </div>
-          <div className={cn(labelClass, step >= 0 ? "opacity-100" : "opacity-50")}>User Speaks</div>
-        </div>
-
-        <ConnectionLine active={step >= 1} label="Audio" />
-
-        {/* NODE 2: STT */}
-        <div className="flex flex-col items-center relative group">
-          <div className={cn(nodeBaseClass, step >= 1 ? activeNodeClass : inactiveNodeClass)}>
-            <FileText className={cn("w-6 h-6", step >= 1 ? "text-blue-500" : "text-fd-muted-foreground")} />
-          </div>
-          <div className={cn(labelClass, step >= 1 ? "opacity-100" : "opacity-50")}>Transcribe</div>
-        </div>
-
-        <ConnectionLine active={step >= 2} label="Text" />
-
-        {/* NODE 3: LLM */}
-        <div className="flex flex-col items-center relative group">
-          <div className={cn(nodeBaseClass, step >= 2 ? activeNodeClass : inactiveNodeClass)}>
-            <Bot className={cn("w-6 h-6", step >= 2 ? "text-blue-500" : "text-fd-muted-foreground")} />
-          </div>
-          <div className={cn(labelClass, step >= 2 ? "opacity-100" : "opacity-50")}>Reasoning</div>
-        </div>
-
-        <ConnectionLine active={step >= 3} label="Text" />
-
-        {/* NODE 4: TTS */}
-        <div className="flex flex-col items-center relative group">
-          <div className={cn(nodeBaseClass, step >= 3 ? activeNodeClass : inactiveNodeClass)}>
-            <AudioLines className={cn("w-6 h-6", step >= 3 ? "text-blue-500" : "text-fd-muted-foreground")} />
-          </div>
-          <div className={cn(labelClass, step >= 3 ? "opacity-100" : "opacity-50")}>Synthesize</div>
-        </div>
-
-        <ConnectionLine active={step >= 4} label="Audio" />
-
-        {/* NODE 5: PLAY */}
-        <div className="flex flex-col items-center relative group">
-          <div className={cn(nodeBaseClass, step >= 4 ? activeNodeClass : inactiveNodeClass)}>
-            <Volume2 className={cn("w-6 h-6", step >= 4 ? "text-blue-500" : "text-fd-muted-foreground")} />
-          </div>
-          <div className={cn(labelClass, step >= 4 ? "opacity-100" : "opacity-50")}>Play</div>
-        </div>
-
+    <div className="not-prose addis-offset-shell addis-panel my-10 w-full overflow-hidden">
+      <div className="flex items-center justify-between border-b border-fd-border px-5 py-3">
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fd-primary">
+          Live request path
+        </span>
+        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-fd-muted-foreground">
+          {step === statusMessages.length - 1
+            ? "Complete"
+            : `Phase ${String(step + 1).padStart(2, "0")} / 09`}
+        </span>
       </div>
 
-      {/* spacer for labels */}
-      <div className="h-8 w-full" />
-
-      {/* STATUS TEXT */}
-      <div className="mt-6 h-6 text-sm text-fd-muted-foreground font-medium transition-all duration-300 text-center">
-        {step === 0 && "Waiting for input..."}
-        {step === 1 && "1. Sending audio to STT..."}
-        {step === 2 && "2. LLM generates answer..."}
-        {step === 3 && "3. Generating speech (TTS)..."}
-        {step >= 4 && "4. Playing response!"}
+      <div className="w-full overflow-x-auto">
+        <div className="mx-auto min-w-[48rem] px-7 py-9">
+          <div className="grid grid-cols-[5rem_minmax(4.5rem,1fr)_5rem_minmax(4.5rem,1fr)_5rem_minmax(4.5rem,1fr)_5rem_minmax(4.5rem,1fr)_5rem] items-start">
+            {stages.map((stage, index) => (
+              <div className="contents" key={stage.label}>
+                <StageNode stage={stage} step={step} />
+                {connections[index] ? (
+                  <ConnectionLine
+                    activationStep={connections[index].activationStep}
+                    label={connections[index].label}
+                    step={step}
+                  />
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
+      <div
+        aria-live="polite"
+        className="flex min-h-14 items-center gap-3 border-t border-fd-border px-5 py-3"
+      >
+        <span
+          aria-hidden="true"
+          className="size-2 shrink-0 bg-fd-primary shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-fd-primary)_10%,transparent)]"
+        />
+        <span className="text-sm font-medium text-fd-muted-foreground">
+          {statusMessages[step]}
+        </span>
+      </div>
     </div>
   );
 }

@@ -60,9 +60,9 @@ export function Base64Player() {
   };
 
   return (
-    <div className="rounded-xl border border-fd-border bg-fd-card p-6 shadow-sm my-6 not-prose">
+    <div className="addis-offset-shell addis-panel p-6 my-10 not-prose">
       <div className="flex items-center gap-2 mb-4">
-        <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+        <div className="p-2 border border-fd-primary/30 bg-fd-primary/10 text-fd-primary">
           <FileAudio className="w-5 h-5" />
         </div>
         <h3 className="font-bold text-lg">Base64 Audio Player</h3>
@@ -78,7 +78,7 @@ export function Base64Player() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Paste Base64 string here (e.g. UklGRiQgAABXQVZF...)"
-              className="w-full h-32 p-3 rounded-md border border-fd-border bg-fd-background font-mono text-xs focus:ring-2 focus:ring-blue-500/20 outline-none resize-none"
+              className="w-full h-32 p-3 border border-fd-border bg-fd-background font-mono text-xs focus:ring-1 focus:ring-fd-primary outline-none resize-none"
             />
             {error && (
               <div className="text-xs text-red-500 flex items-center gap-1.5">
@@ -88,27 +88,27 @@ export function Base64Player() {
             <button
               onClick={handleConvert}
               disabled={!input}
-              className="flex items-center justify-center gap-2 w-full py-2 bg-fd-primary text-fd-primary-foreground rounded-md text-sm font-medium hover:bg-fd-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex items-center justify-center gap-2 w-full py-2 bg-fd-primary text-fd-primary-foreground text-sm font-medium hover:bg-fd-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Play className="w-4 h-4" /> Convert & Play
             </button>
           </>
         ) : (
           <div className="animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex flex-col items-center justify-center p-6 bg-fd-secondary/30 rounded-lg border border-fd-border border-dashed">
+            <div className="flex flex-col items-center justify-center p-6 bg-fd-secondary/30 border border-fd-border border-dashed">
               <audio ref={audioRef} controls src={audioSrc} className="w-full mb-4" />
               
               <div className="flex gap-3 w-full">
                 <a 
                   href={audioSrc} 
                   download="addis-audio.wav"
-                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-fd-secondary hover:bg-fd-secondary/80 rounded-md text-sm font-medium transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-fd-secondary hover:bg-fd-secondary/80 text-sm font-medium transition-colors"
                 >
                   <Download className="w-4 h-4" /> Download WAV
                 </a>
                 <button 
                   onClick={clear}
-                  className="px-4 py-2 hover:bg-red-500/10 text-red-500 rounded-md transition-colors"
+                  className="px-4 py-2 border border-fd-border hover:bg-red-500/10 text-red-500 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

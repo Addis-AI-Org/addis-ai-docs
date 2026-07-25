@@ -422,9 +422,9 @@ export function RealtimeVoiceDemo() {
   const busy = isStarting || isRunning;
 
   return (
-    <div className="not-prose my-8 rounded-xl border border-fd-border bg-fd-card p-5 shadow-sm">
+    <div className="not-prose addis-offset-shell addis-panel my-10 p-5">
       <div className="mb-4 flex items-center gap-2">
-        <div className="rounded-md border border-fd-border bg-fd-secondary/30 p-2 text-fd-foreground">
+        <div className="border border-fd-border bg-fd-secondary/30 p-2 text-fd-foreground">
           <Radio className="h-4 w-4" />
         </div>
         <div>
@@ -444,11 +444,11 @@ export function RealtimeVoiceDemo() {
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="sk_..."
-            className="h-10 w-full rounded-md border border-fd-border bg-fd-background px-3 text-sm outline-none ring-offset-background placeholder:text-fd-muted-foreground focus-visible:ring-2 focus-visible:ring-fd-ring"
+            className="h-10 w-full border border-fd-border bg-fd-background px-3 text-sm outline-none ring-offset-background placeholder:text-fd-muted-foreground focus-visible:ring-1 focus-visible:ring-fd-primary"
           />
         </div>
 
-        <div className="rounded-md border border-fd-border bg-fd-secondary/20 p-3 text-xs text-fd-muted-foreground">
+        <div className="border border-fd-border bg-fd-secondary/20 p-3 text-xs text-fd-muted-foreground">
           <div className="mb-1 font-medium text-fd-foreground">Endpoint</div>
           <code className="text-[11px]">wss://relay.addisassistant.com/ws?apiKey=YOUR_API_KEY</code>
         </div>
@@ -458,7 +458,7 @@ export function RealtimeVoiceDemo() {
             type="button"
             onClick={() => void startRealtime()}
             disabled={busy}
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-fd-primary px-3 text-sm font-medium text-fd-primary-foreground transition-colors hover:bg-fd-primary/90 disabled:opacity-50"
+            className="inline-flex h-9 items-center justify-center gap-1.5 bg-fd-primary px-3 text-sm font-medium text-fd-primary-foreground transition-colors hover:bg-fd-primary/90 disabled:opacity-50"
           >
             {isStarting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
             {isStarting ? "Connecting..." : "Start"}
@@ -468,7 +468,7 @@ export function RealtimeVoiceDemo() {
             type="button"
             onClick={() => void stopRealtime("Stopped", "Session stopped by user.", true)}
             disabled={!busy}
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-red-500 px-3 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+            className="inline-flex h-9 items-center justify-center gap-1.5 bg-red-500 px-3 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
           >
             <Square className="h-4 w-4" />
             Stop
@@ -477,14 +477,14 @@ export function RealtimeVoiceDemo() {
           <button
             type="button"
             onClick={() => setLogs([])}
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-fd-border bg-fd-background px-3 text-sm font-medium text-fd-foreground transition-colors hover:bg-fd-accent"
+            className="inline-flex h-9 items-center justify-center gap-1.5 border border-fd-border bg-fd-background px-3 text-sm font-medium text-fd-foreground transition-colors hover:bg-fd-accent"
           >
             <Trash2 className="h-4 w-4" />
             Clear Logs
           </button>
         </div>
 
-        <div className="rounded-md border border-fd-border bg-fd-background px-3 py-2">
+        <div className="border border-fd-border bg-fd-background px-3 py-2">
           <div className="flex items-start gap-2">
             <span
               className={[
@@ -499,7 +499,7 @@ export function RealtimeVoiceDemo() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-md border border-fd-border bg-fd-background">
+        <div className="overflow-hidden border border-fd-border bg-fd-background">
           <div className="border-b border-fd-border bg-fd-secondary/30 px-3 py-2 text-xs font-medium uppercase tracking-wide text-fd-muted-foreground">
             Events / Logs
           </div>

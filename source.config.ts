@@ -27,6 +27,7 @@ export const docs = defineDocs({
     schema: frontmatterSchema.extend({
       preview: z.string().optional(),
       index: z.boolean().default(false),
+      isNew: z.boolean().default(false),
       /**
        * API routes only
        */

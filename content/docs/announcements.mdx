@@ -1,0 +1,50 @@
+---
+title: Announcements
+description: New Addis AI platform, SDK, and documentation releases.
+icon: Megaphone
+---
+
+
+<AnnouncementHero date="2026-07-23">
+  This release brings Addis Voices 2, official Node.js and Python SDKs, richer chat
+  controls, and an SDK-first documentation experience.
+</AnnouncementHero>
+
+<AnnouncementFeed>
+  <AnnouncementItem label="Voice" title="Addis Voices 2 is available" isNew>
+    Addis Voices 2 introduces a production voice catalog, previews, cost estimates,
+    durable generated clips, idempotent requests, and minute-based billing at **5
+    ETB per generated minute**. Use `am-hamen` for the minimal Amharic example,
+    then query the catalog before saving a voice for production.
+
+    <AnnouncementLink href="/docs/capabilities/text-to-speech">
+      Build with Addis Voices 2
+    </AnnouncementLink>
+  </AnnouncementItem>
+
+  <AnnouncementItem label="SDKs" title="Official Node.js and Python SDKs" isNew>
+    The official `addisai` packages are now the recommended way to integrate Addis
+    AI. The documentation leads with Node.js and Python examples, while raw REST
+    remains available for unsupported runtimes and interoperability.
+
+    - [Install the official SDKs](/docs/get-started/sdks)
+    - [View the package on npm](https://www.npmjs.com/package/addisai)
+    - [View the package on PyPI](https://pypi.org/project/addisai/)
+  </AnnouncementItem>
+
+  <AnnouncementItem label="Chat" title="New chat controls" isNew>
+    Chat requests now document system instructions, personas, and structured
+    function calls. System instructions control behavior, personas define
+    identity, and messages preserve conversation state.
+
+    - [System instructions and personas](/docs/capabilities/text-generation#system-instructions-and-personas)
+    - [Function calling](/docs/capabilities/text-generation#function-calling)
+  </AnnouncementItem>
+
+  <AnnouncementItem label="Docs" title="SDK-first documentation">
+    The documentation has been updated in place around official SDK examples,
+    production guidance, and complete capability best practices.
+  </AnnouncementItem>
+</AnnouncementFeed>
+
+<LastVerified date="2026-07-23" />

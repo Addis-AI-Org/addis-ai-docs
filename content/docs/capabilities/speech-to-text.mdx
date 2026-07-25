@@ -11,80 +11,46 @@ import { AudioWaveform, Mic, FileAudio, AlertTriangle } from 'lucide-react';
 
 Our Speech-to-Text (STT) technology is powered by specialized models trained to accurately recognize African languages. Unlike generic transcription services, our models are optimized for the specific phonemes, accents, and dialects of **Amharic** and **Afan Oromo**.
 
-## Endpoint
-
-<div className="flex items-center gap-2 border border-fd-border p-3 rounded-lg bg-fd-muted/50 font-mono text-sm my-4">
-  <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-bold">POST</span>
-  <span className="text-fd-foreground">https://api.addisassistant.com/api/v2/stt</span>
-</div>
-
----
-
 ## Usage Guide
 
-This endpoint requires a **`multipart/form-data`** request. You must send the audio file binary along with a JSON string containing the configuration.
+Speech-to-text uploads use **`multipart/form-data`**. The SDK handles the transport format when you pass an audio file and language.
 
 ### Transcribe a File
 Upload an audio file to get the text transcription.
 
-<Tabs items={['cURL', 'JavaScript', 'Python']}>
-  <Tab value="cURL">
-   Note: 'request_data' must be a stringified JSON object
-    ```bash
-    curl --location 'https://api.addisassistant.com/api/v2/stt' \
-      --header 'x-api-key: sk_YOUR_KEY' \
-      --form 'audio=@"/path/to/voice_note.wav"' \
-      --form 'request_data="{ \"language_code\": \"am\" }"'
-    ```
-  </Tab>
-  <Tab value="JavaScript">
-    ```javascript
-    const formData = new FormData();
-    
-    // 1. Append the file
-    // Assuming 'fileInput' is an HTML <input type="file">
-    formData.append("audio", fileInput.files[0]); 
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```ts
+    import AddisAI, { fileFromPath } from "addisai";
 
-    // 2. Append metadata as a stringified JSON
-    formData.append("request_data", JSON.stringify({ 
-      language_code: "am" 
-    }));
-
-    const response = await fetch("https://api.addisassistant.com/api/v2/stt", {
-      method: "POST",
-      headers: {
-        "x-api-key": "sk_YOUR_KEY"
-        // Do NOT set Content-Type header manually for FormData
-        // The browser sets it automatically with the boundary
-      },
-      body: formData
+    const addis = new AddisAI();
+    const result = await addis.speech.transcribe({
+      audio: await fileFromPath("audio.wav"),
+      language: "am",
     });
 
-    const data = await response.json();
-    console.log("Transcription:", data.data.transcription);
+    console.log(result.text);
+    console.log(result.confidence);
     ```
   </Tab>
   <Tab value="Python">
     ```python
-    import requests
-    import json
+    from addisai import AddisAI
 
-    url = "https://api.addisassistant.com/api/v2/stt"
-    headers = {"x-api-key": "sk_YOUR_KEY"}
+    addis = AddisAI()
+    with open("audio.wav", "rb") as audio:
+        result = addis.speech.transcribe(audio=audio, language="am")
 
-    # 1. Prepare Metadata
-    payload = {
-        'request_data': json.dumps({ "language_code": "am" })
-    }
-    
-    # 2. Open File
-    files = [
-        ('audio', ('voice.wav', open('/path/to/voice.wav', 'rb'), 'audio/wav'))
-    ]
-
-    response = requests.post(url, headers=headers, data=payload, files=files)
-    
-    print(response.json()['data']['transcription'])
+    print(result["text"])
+    print(result.get("confidence"))
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    curl --location 'https://api.addisassistant.com/api/v2/stt' \\
+      --header 'x-api-key: $ADDIS_API_KEY' \\
+      --form 'audio=@"audio.wav"' \\
+      --form 'request_data="{ \"language_code\": \"am\" }"'
     ```
   </Tab>
 </Tabs>
@@ -157,7 +123,7 @@ We support standard audio containers. For the fastest processing, we recommend *
 ## Best Practices
 
 To ensure high accuracy (WER < 10%), follow these recording guidelines.
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+<div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-2 mt-10">
 {/* Audio Quality Card */}
 <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
 <div className="flex items-center gap-2.5 mb-4">
