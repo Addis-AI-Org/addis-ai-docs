@@ -61,7 +61,6 @@ test('shows accessible brand links in the sidebar footer', () => {
   const docsLayout = read('app/docs/layout.tsx');
 
   for (const url of [
-    'https://addisassistant.com',
     'https://discord.gg/8cF6d9CkTM',
     'https://www.linkedin.com/company/addisai/?',
     'https://github.com/Addis-AI-Org',
@@ -74,10 +73,12 @@ test('shows accessible brand links in the sidebar footer', () => {
   assert.match(layout, /aria-label="Addis AI community links"/);
   assert.match(layout, /target="_blank"/);
   assert.match(layout, /rel="noopener noreferrer"/);
-  assert.match(layout, /text-\[#5865F2\]/);
-  assert.match(layout, /text-\[#0A66C2\]/);
-  assert.match(layout, /text-\[#FFD21E\]/);
-  assert.match(layout, /M1\.44 11\.51/);
+  assert.match(layout, /className="order-first flex items-center justify-end/);
+  assert.match(layout, /fill="none"/);
+  assert.match(layout, /stroke="currentColor"/);
+  assert.doesNotMatch(layout, /Addis AI website/);
+  assert.doesNotMatch(layout, /text-\[#(?:5865F2|0A66C2|FFD21E)\]/);
+  assert.match(layout, /url: 'https:\/\/addisassistant\.com'/);
 });
 
 test('preserves original onboarding screenshots and page structures', () => {
