@@ -66,49 +66,42 @@ function HuggingFaceIcon() {
 
 const communityLinks = [
   {
+    type: 'icon' as const,
+    text: 'Discord',
     label: 'Discord',
     url: 'https://discord.gg/8cF6d9CkTM',
     icon: <DiscordIcon />,
+    external: true,
+    on: 'menu' as const,
   },
   {
+    type: 'icon' as const,
+    text: 'LinkedIn',
     label: 'LinkedIn',
     url: 'https://www.linkedin.com/company/addisai/?',
     icon: <Linkedin aria-hidden="true" className="size-4" />,
+    external: true,
+    on: 'menu' as const,
   },
   {
+    type: 'icon' as const,
+    text: 'GitHub',
     label: 'GitHub',
     url: 'https://github.com/Addis-AI-Org',
     icon: <Github aria-hidden="true" className="size-4" />,
+    external: true,
+    on: 'menu' as const,
   },
   {
+    type: 'icon' as const,
+    text: 'Hugging Face',
     label: 'Hugging Face',
     url: 'https://huggingface.co/addisai',
     icon: <HuggingFaceIcon />,
+    external: true,
+    on: 'menu' as const,
   },
 ];
-
-export function CommunityLinks() {
-  return (
-    <nav
-      aria-label="Addis AI community links"
-      className="order-first flex items-center justify-end gap-0.5 pb-2"
-    >
-      {communityLinks.map(({ icon, label, url }) => (
-        <a
-          aria-label={`${label} (opens in a new tab)`}
-          className="inline-flex size-8 items-center justify-center rounded-md text-fd-muted-foreground transition-colors duration-150 hover:bg-fd-accent/60 hover:text-fd-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-primary/40"
-          href={url}
-          key={label}
-          rel="noopener noreferrer"
-          target="_blank"
-          title={label}
-        >
-          {icon}
-        </a>
-      ))}
-    </nav>
-  );
-}
 
 /**
  * Shared layout configurations
@@ -172,6 +165,7 @@ export function baseOptions(): BaseLayoutProps {
         on: 'menu',
         icon: <PythonIcon />,
       },
+      ...communityLinks,
     ],
   };
 }

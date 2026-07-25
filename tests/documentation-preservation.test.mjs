@@ -56,7 +56,7 @@ test('keeps the approved SDK resources permanently visible above the tree', () =
   assert.doesNotMatch(layout, /collapsible/i);
 });
 
-test('shows accessible brand links in the sidebar footer', () => {
+test('shows responsive social links beside the sidebar theme switcher', () => {
   const layout = read('lib/layout.shared.tsx');
   const docsLayout = read('app/docs/layout.tsx');
 
@@ -69,11 +69,11 @@ test('shows accessible brand links in the sidebar footer', () => {
     assert.match(layout, new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
-  assert.match(docsLayout, /sidebar=\{\{ footer: <CommunityLinks \/> \}\}/);
-  assert.match(layout, /aria-label="Addis AI community links"/);
-  assert.match(layout, /target="_blank"/);
-  assert.match(layout, /rel="noopener noreferrer"/);
-  assert.match(layout, /className="order-first flex items-center justify-end/);
+  assert.doesNotMatch(docsLayout, /sidebar=\{\{ footer:/);
+  assert.match(layout, /type: 'icon' as const/g);
+  assert.match(layout, /external: true/g);
+  assert.match(layout, /on: 'menu' as const/g);
+  assert.match(layout, /\.\.\.communityLinks/);
   assert.match(layout, /fill="none"/);
   assert.match(layout, /stroke="currentColor"/);
   assert.doesNotMatch(layout, /Addis AI website/);
