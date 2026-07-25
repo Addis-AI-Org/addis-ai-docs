@@ -56,8 +56,9 @@ test('keeps the approved SDK resources permanently visible above the tree', () =
   assert.doesNotMatch(layout, /collapsible/i);
 });
 
-test('shows a restrained accessible row of Addis AI community links', () => {
+test('shows accessible brand links in the sidebar footer', () => {
   const layout = read('lib/layout.shared.tsx');
+  const docsLayout = read('app/docs/layout.tsx');
 
   for (const url of [
     'https://addisassistant.com',
@@ -69,11 +70,14 @@ test('shows a restrained accessible row of Addis AI community links', () => {
     assert.match(layout, new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 
+  assert.match(docsLayout, /sidebar=\{\{ footer: <CommunityLinks \/> \}\}/);
   assert.match(layout, /aria-label="Addis AI community links"/);
-  assert.match(layout, /aria-label=\{`\$\{label\} \(opens in a new tab\)`\}/);
   assert.match(layout, /target="_blank"/);
   assert.match(layout, /rel="noopener noreferrer"/);
-  assert.match(layout, /text-fd-muted-foreground\/70/);
+  assert.match(layout, /text-\[#5865F2\]/);
+  assert.match(layout, /text-\[#0A66C2\]/);
+  assert.match(layout, /text-\[#FFD21E\]/);
+  assert.match(layout, /M1\.44 11\.51/);
 });
 
 test('preserves original onboarding screenshots and page structures', () => {
