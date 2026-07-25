@@ -76,6 +76,7 @@ test('shows responsive social links beside the sidebar theme switcher', () => {
   assert.match(layout, /\.\.\.communityLinks/);
   assert.match(layout, /fill="none"/);
   assert.match(layout, /stroke="currentColor"/);
+  assert.match(layout, /viewBox="4\.5 2\.5 15 15"/);
   assert.doesNotMatch(layout, /Addis AI website/);
   assert.doesNotMatch(layout, /text-\[#(?:5865F2|0A66C2|FFD21E)\]/);
   assert.match(layout, /url: 'https:\/\/addisassistant\.com'/);

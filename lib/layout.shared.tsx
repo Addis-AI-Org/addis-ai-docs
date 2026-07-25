@@ -32,13 +32,13 @@ function DiscordIcon() {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      strokeWidth="1.7"
-      viewBox="0 0 24 24"
+      strokeWidth="1.3"
+      viewBox="4.5 2.5 15 15"
     >
       <path d="M7.6 6.3A15 15 0 0 1 12 5.6a15 15 0 0 1 4.4.7c1.45 2.05 2.34 4.38 2.55 6.85a13.8 13.8 0 0 1-3.75 2.15l-.95-1.25" />
       <path d="M16.55 13.05A9.7 9.7 0 0 1 12 14.1a9.7 9.7 0 0 1-4.55-1.05" />
       <path d="m9.75 14.05-.95 1.25a13.8 13.8 0 0 1-3.75-2.15A14.3 14.3 0 0 1 7.6 6.3" />
-      <path d="M8.55 9.25h.01M15.44 9.25h.01" strokeWidth="2.5" />
+      <path d="M8.55 9.25h.01M15.44 9.25h.01" strokeWidth="2" />
     </svg>
   );
 }
