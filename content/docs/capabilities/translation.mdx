@@ -1,6 +1,6 @@
 ---
 title: Translation
-description: High-accuracy neural machine translation for African languages.
+description: Translate text between Amharic, Afaan Oromo, and English.
 icon: Languages
 ---
 
@@ -10,9 +10,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { Globe, RefreshCw, BookA, ShieldCheck } from 'lucide-react';
 
 
-The **Translation API** leverages our specialized, fine-tuned models designed to master the linguistic complexity of **Amharic (am), Afan Oromo (om)**, and **English (en)**.
-
-Our engine is rigorously trained on real-world conversational data and culturally accurate datasets. This ensures exceptional grammatical precision and deep cultural relevance, delivering translations that feel natural and authentic across these three key languages.
+The Translation API supports bidirectional translation between Amharic (`am`), Afaan Oromo (`om`), and English (`en`). All six source-to-target language combinations are available through the REST API and official SDKs.
 ## Use Cases
 
 <div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-3 mb-10">
@@ -21,7 +19,7 @@ Our engine is rigorously trained on real-world conversational data and culturall
       <Globe className="w-4 h-4 text-blue-500" /> Public Service
     </div>
     <div className="text-xs text-fd-muted-foreground">
-      Automatically translate government forms, announcements, and news between Amharic and Afan Oromo to reach wider audiences.
+      Automatically translate government forms, announcements, and news between Amharic and Afaan Oromo to reach wider audiences.
     </div>
   </div>
   
@@ -102,7 +100,7 @@ Translate text between any of the supported languages (`am`, `om`, `en`).
 | Source language | `from` | `source` | `source_language` | Yes: `am`, `om`, or `en` |
 | Target language | `to` | `target` | `target_language` | Yes: `am`, `om`, or `en` |
 
-Source and target must be different. Translation is supported in both directions between Amharic, Afan Oromo, and English.
+Source and target must be different. Translation is supported in both directions between Amharic, Afaan Oromo, and English.
 
 ---
 
@@ -199,12 +197,12 @@ Ensure the highest quality translations with these guidelines.
 </div>
 <div className="space-y-3 text-sm text-fd-muted-foreground">
 <div>
-<strong className="text-fd-foreground">Triangular Support:</strong> We support full bidirectional translation between all three languages:
+<strong className="text-fd-foreground">Supported language pairs</strong>
 </div>
-<div className="flex gap-2">
-<code className="bg-fd-secondary px-2 py-1 rounded text-xs">Amharic (am)</code>
-<code className="bg-fd-secondary px-2 py-1 rounded text-xs">Oromo (om)</code>
-<code className="bg-fd-secondary px-2 py-1 rounded text-xs">English (en)</code>
+<div className="flex flex-wrap gap-2">
+<code className="bg-fd-secondary px-2 py-1 rounded text-xs">Amharic ↔ Afaan Oromo</code>
+<code className="bg-fd-secondary px-2 py-1 rounded text-xs">Amharic ↔ English</code>
+<code className="bg-fd-secondary px-2 py-1 rounded text-xs">Afaan Oromo ↔ English</code>
 </div>
 </div>
 </div>

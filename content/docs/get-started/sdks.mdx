@@ -61,6 +61,26 @@ export ADDIS_API_KEY="your_api_key"
 
 The SDKs read `ADDIS_API_KEY` by default. Keep this key on a trusted server—never in browser JavaScript, a mobile binary, or a public environment variable.
 
+## SDK capability matrix
+
+| Capability | Node.js and Python interface |
+| --- | --- |
+| Chat and text generation | `addis.chat.completions.create` |
+| Multi-turn chat | `addis.chat.completions.create` with `messages` |
+| Function calling | `addis.chat.completions.create` and SDK tool runners |
+| Speech-to-text | `addis.speech.transcribe` |
+| Translation | `addis.translate.create` |
+| Image and document reasoning | `addis.chat.completions.create` with `attachments` |
+| Audio reasoning | `addis.chat.completions.create` with audio input |
+| List voices | `addis.voices.list` |
+| Preview a voice | `addis.voices.preview` |
+| Estimate voice cost | `addis.voice.estimate` |
+| Generate a voice clip | `addis.voice.generate` |
+| Check voice usage | `addis.voice.usage` |
+| List and manage clips | `addis.voice.clips` |
+
+Realtime voice uses a separate WebSocket integration. Addis Voices 2 and the unified SDK generate completed audio clips and do not replace the Realtime API.
+
 ## Choose an integration guide
 
 The original integration guides remain the source of truth for application architecture:

@@ -140,7 +140,7 @@ export function baseOptions(): BaseLayoutProps {
         on: 'menu',
         children: (
           <p className="px-2 pb-1 pt-3 text-xs font-semibold text-fd-foreground">
-            SDK resources
+            Useful Links
           </p>
         ),
       },

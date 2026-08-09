@@ -1,5 +1,5 @@
 {
-  "title": "Addis AI docs",
+  "title": "Addis AI Documentation | APIs & SDKs for African Languages",
   "root": true,
   "pages": [
     "announcements",
@@ -26,6 +26,7 @@
     "--- Platform ---",
     "platform/pricing",
     "platform/errors",
+    "platform/status",
     "platform/faq"
   ]
 }

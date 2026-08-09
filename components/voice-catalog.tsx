@@ -9,7 +9,7 @@ type Language = 'am' | 'om';
 
 const languageOptions: Array<{ id: Language; label: string }> = [
   { id: 'am', label: 'Amharic' },
-  { id: 'om', label: 'Afan Oromo' },
+  { id: 'om', label: 'Afaan Oromo' },
 ];
 
 const INITIAL_VISIBLE_VOICES = 6;
@@ -33,7 +33,7 @@ export function VoiceCatalog() {
   });
   const canExpand = voices.length > INITIAL_VISIBLE_VOICES;
   const visibleVoices = isExpanded ? voices : voices.slice(0, INITIAL_VISIBLE_VOICES);
-  const languageLabel = language === 'am' ? 'Amharic' : 'Afan Oromo';
+  const languageLabel = language === 'am' ? 'Amharic' : 'Afaan Oromo';
 
   const selectLanguage = (nextLanguage: Language) => {
     setLanguage(nextLanguage);

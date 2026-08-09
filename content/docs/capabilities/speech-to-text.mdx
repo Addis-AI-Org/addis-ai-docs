@@ -1,6 +1,6 @@
 ---
-title: Speech to Text (Transcription)
-description: Transcribe audio into text for Amharic and Afan Oromo.
+title: Speech-to-Text
+description: Transcribe Amharic and Afaan Oromo audio into text.
 icon: Mic
 ---
 
@@ -9,7 +9,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 import { Callout } from 'fumadocs-ui/components/callout';
 import { AudioWaveform, Mic, FileAudio, AlertTriangle } from 'lucide-react';
 
-Our Speech-to-Text (STT) technology is powered by specialized models trained to accurately recognize African languages. Unlike generic transcription services, our models are optimized for the specific phonemes, accents, and dialects of **Amharic** and **Afan Oromo**.
+Our Speech-to-Text (STT) technology is powered by specialized models trained to accurately recognize African languages. Unlike generic transcription services, our models are optimized for the specific phonemes, accents, and dialects of **Amharic** and **Afaan Oromo**.
 
 ## Usage Guide
 
@@ -83,7 +83,7 @@ These parameters go inside the `request_data` JSON string.
 <TypeTable
   type={{
     'language_code': {
-      description: 'The spoken language. "am" (Amharic) or "om" (Afan Oromo).',
+      description: 'The spoken language. "am" (Amharic) or "om" (Afaan Oromo).',
       type: 'string',
       required: true
     }

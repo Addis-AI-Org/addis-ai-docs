@@ -1,6 +1,6 @@
 ---
 title: Text Generation
-description: Chat, summarization, and RAG optimized for African languages.
+description: Chat, summarization, RAG, structured output, and function calling for African languages.
 icon: MessageSquareText
 ---
 
@@ -9,12 +9,12 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 import { Callout } from 'fumadocs-ui/components/callout';
 import { NewBadge } from '@/components/docs';
 
-The Text Generation API is powered by **`Addis-፩-አሌፍ`**, our flagship Large Language Model. 
+The Text Generation API is powered by **`Addis-፩-አሌፍ`**, our flagship large language model.
 
-Our model is trained on extensive native datasets to master not only the complex **morphology** (word structure) and **syntax** but also the deep **cultural context ** of Africa. It is **culturally nuanced**, understanding the specific way we live, interact, and communicate ensuring every response feels natural, respectful, and authentic to our reality.
+Use it when your application needs chat, summarization, extraction, classification, RAG, structured output, function calling, or multi-turn conversation in African-language workflows.
 ## Usage Guide
 
-You can use text generation for simple one-off tasks (like translation) or complex multi-turn conversations.
+Use Text Generation for chat, summarization, extraction, classification, RAG, structured output, and multi-turn conversations. Use the dedicated Translation API for direct language-to-language translation.
 
 ### 1. Basic Request
 Send a prompt and a target language to get an immediate response.
@@ -402,7 +402,7 @@ These parameters go in the root of your JSON body.
       required: true
     },
     'target_language': {
-      description: 'Output language code. Use "am" for Amharic or "om" for Afan Oromo.',
+      description: 'Output language code. Use "am" for Amharic or "om" for Afaan Oromo.',
       type: 'string',
       required: true
     },
@@ -494,7 +494,7 @@ type: 'string'
 }}
 />
 <Callout type="info" title="Token Counting">
-Note that for Amharic, token counts may be higher than English due to the Ge'ez script encoding. Typically **1 word ≈ 1.5 to 1.8 tokens**.
+Token counts vary by language, script, punctuation, and input structure. For Amharic, one word typically uses around 1.5 to 1.8 tokens. For the exact count, use usage_metadata returned in the REST API response or the corresponding usage value returned by the official SDK.
 </Callout>
 
 ---
@@ -515,7 +515,7 @@ Follow these architectural patterns to ensure production readiness.
     <div className="space-y-3 text-sm text-fd-muted-foreground">
       <div className="grid grid-cols-[85px_1fr] items-start gap-2">
         <code className="text-xs bg-fd-secondary px-1.5 py-0.5 rounded text-fd-foreground text-center border border-fd-border">0.1 - 0.3</code>
-        <span>**Factual.** Extraction, translation, and historical data.</span>
+        <span>**Factual.** Extraction, classification, and historical data.</span>
       </div>
       <div className="grid grid-cols-[85px_1fr] items-start gap-2">
         <code className="text-xs bg-fd-secondary px-1.5 py-0.5 rounded text-fd-foreground text-center border border-fd-border">0.7 - 0.9</code>
@@ -547,12 +547,12 @@ Follow these architectural patterns to ensure production readiness.
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Economy</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
-      <div className="flex items-center justify-between p-2 rounded bg-fd-secondary/40 border border-fd-border/50">
-        <span className="text-xs font-medium">Density Factor</span>
-        <code className="text-xs text-fd-foreground">1 Word ≈ 1.8 Tokens</code>
+      <div className="flex items-center justify-between gap-3 p-2 rounded bg-fd-secondary/40 border border-fd-border/50">
+        <span className="text-xs font-medium">Exact count</span>
+        <code className="text-xs text-fd-foreground">usage_metadata</code>
       </div>
       <div>
-        Amharic is token-dense. Keep system prompts concise to reduce latency and costs.
+        Token counts vary by language, script, punctuation, and input structure. For Amharic, one word typically uses around 1.5 to 1.8 tokens. For the exact count, use usage_metadata returned in the REST API response or the corresponding usage value returned by the official SDK.
       </div>
     </div>
   </div>

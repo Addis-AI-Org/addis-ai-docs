@@ -10,13 +10,20 @@ import { getMDXComponents } from "@/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { NewBadge } from "@/components/docs";
+import {
+  DEFAULT_METADATA_DESCRIPTION,
+  DOCUMENTATION_SITE_NAME,
+  formatDocumentationTitle,
+} from "@/lib/metadata";
+
+const introductionUrl = "/docs/get-started/introduction";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
     // 2. ADD THIS BLOCK:
   // If the user visits "/docs" (no slug), send them to Introduction
   if (!params.slug) {
-    redirect('/docs/get-started/introduction');
+    redirect(introductionUrl);
   }
   const page = source.getPage(params.slug);
   if (!page) notFound();
@@ -32,12 +39,10 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
       }}
       full={page.data.full}
     >
-      <DocsTitle>
-        <span className="inline-flex flex-wrap items-center gap-2">
-          {page.data.title}
-          {page.data.isNew ? <NewBadge /> : null}
-        </span>
-      </DocsTitle>
+      <div className="flex flex-wrap items-center gap-2">
+        <DocsTitle>{page.data.title}</DocsTitle>
+        {page.data.isNew ? <NewBadge /> : null}
+      </div>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
         <MDX
@@ -61,12 +66,24 @@ export async function generateMetadata(
   const params = await props.params;
   const page = source.getPage(params.slug);
   if (!page) notFound();
+  const image = getPageImage(page).url;
+  const description = page.data.description ?? DEFAULT_METADATA_DESCRIPTION;
+  const title = formatDocumentationTitle(page.data.title);
 
   return {
     title: page.data.title,
-    description: page.data.description,
+    description,
     openGraph: {
-      images: getPageImage(page).url,
+      title,
+      description,
+      siteName: DOCUMENTATION_SITE_NAME,
+      images: image,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image,
     },
   };
 }

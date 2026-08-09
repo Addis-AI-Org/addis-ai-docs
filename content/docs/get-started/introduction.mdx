@@ -11,7 +11,9 @@ import { NewBadge } from '@/components/docs';
     <div className="flex items-stretch justify-between border-b border-fd-border">
       <div className="flex items-center gap-2 px-5 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fd-primary">
         <Sparkles className="size-3.5" aria-hidden="true" />
-        <span>v2 Models Live</span>
+        <a href="https://docs.addisassistant.com/docs/capabilities/text-to-speech" className="transition-colors hover:text-fd-primary/80">
+          Addis Voices 2 · 28 production voices
+        </a>
       </div>
       <div className="hidden items-center border-l border-fd-border px-5 font-mono text-[10px] uppercase tracking-[0.16em] text-fd-muted-foreground sm:flex">
         Addis AI / Developer platform
@@ -21,12 +23,12 @@ import { NewBadge } from '@/components/docs';
     <div className="p-6 sm:p-9 md:p-12">
       <div className="mb-7 h-px w-10 bg-fd-primary" aria-hidden="true" />
       <h1 className="m-0 max-w-3xl text-4xl font-bold leading-[0.98] tracking-tight text-fd-foreground md:text-5xl">
-        The Engine for <br />
-        <span className="text-fd-primary">African Intelligence.</span>
+        Voice-first AI infrastructure, <br />
+        <span className="text-fd-primary">for African languages.</span>
       </h1>
 
       <div className="mt-8 max-w-3xl text-base leading-7 text-fd-muted-foreground md:text-lg md:leading-8">
-        Addis AI provides the raw, unified infrastructure (**LLMs**, **Vision**, and **Audio**) designed to process African languages as primary data. By using a native tokenization architecture, we eliminate the translation layer overhead that causes standard APIs to struggle with Ge'ez logic and local accents.
+        Addis AI gives developers a unified infrastructure layer for text generation, speech recognition, natural voices, translation, multimodal reasoning, and realtime voice, built to process African languages as first-class inputs. Our native tokenization architecture and language-specific models preserve morphology, Ge’ez-script logic, cultural context, code-switching, and local accents across text and speech, so teams can build directly for the languages their users actually speak.
       </div>
     </div>
 
@@ -60,29 +62,29 @@ import { NewBadge } from '@/components/docs';
 
 Building AI for Africa requires language-specific training. Many general-purpose models have limited exposure to the morphology, scripts, and cultural context of African languages. Addis AI treats those languages as the core product.
 
-We solve the **three hardest problems** in African NLP:
+### Why language-specific infrastructure matters
 
 1.  **Morphology:** Amharic verbs fuse subject, object, and tense into single words. This complex structure requires language-specific training. Our models parse it correctly, while major general-purpose AI models can misinterpret or hallucinate the underlying meaning.
 2.  **Culture:** Our models understand African history, regional geography, and contemporary legal and regulatory contexts.
-3.  **Voice:** We don't just do text. We built the most natural sounding TTS engines for Amharic and Afan Oromo.
+3.  **Voice:** We don't just do text. We built the most natural sounding TTS engines for Amharic and Afaan Oromo.
 
 ---
 
 ## The Core Engines
 
-The platform is powered by three specialized model families. You will select these using the `model` parameter in your API calls.
+Choose the capability your product needs, then follow the corresponding guide to start building.
 
 ### 1. Addis-፩-አሌፍ (NLP)
 Our flagship Large Language Model. It is optimized for instruction following, reasoning, and content generation.
 *   **Best for:** Chatbots, RAG (Document Search), and Summarization.
-*   **Languages:** Amharic and Afan Oromo are fully supported, and the model also understands English instructions.
+*   **Languages:** Amharic and Afaan Oromo are fully supported, and the model also understands English instructions.
 *   **Context Window:** 128k tokens.
 
 ### 2. አሌፍ-Audio (Voice)
 A suite of high-fidelity audio models.
 *   <span className="inline-flex flex-wrap items-center gap-2"><strong>Addis Voices 2</strong><NewBadge /></span>: The latest generation of Addis AI's Text-to-Speech technology, with multiple production-ready Amharic and Afaan Oromo voices designed for natural, expressive delivery. Use the catalog, previews, cost estimates, and durable clips to build conversational AI, narration, customer support, announcements, and other voice-first applications. [Explore the complete Text-to-Speech guide](/docs/capabilities/text-to-speech).
 *   **`አሌፍ-Audio-AM`:** Amharic Text-to-Speech with natural intonation.
-*   **`አሌፍ-Audio-OM`:** Afan Oromo Text-to-Speech.
+*   **`አሌፍ-Audio-OM`:** Afaan Oromo Text-to-Speech.
 *   **`addis-whisper`:** Speech-to-Text transcription that handles dialect variations.
 
 The previous Voice 1 Text-to-Speech API remains available only for existing applications and is documented in the [Legacy Text-to-Speech guide](/docs/capabilities/text-to-speech-legacy).
@@ -99,14 +101,17 @@ Powered by **`አሌፍ-1.2-realtime-audio`**.
 We have structured the docs to get you into production fast.
 
 ### 🚀 Get Started
-*   **[Playground Guide](/docs/get-started/playground-guide):** Learn how to prompt the models visually.
+*   **[Playground Guide](https://docs.addisassistant.com/docs/get-started/quickstart):** Learn how to prompt the models visually.
 *   **[Quick Start](/docs/get-started/quickstart):** Get your API Key, choose a model, and make your first request (Auth & Code included).
 
 ### ⚡ Capabilities
 Deep dives into the specific endpoints and parameters.
-*   **[Text Generation](/docs/capabilities/text-generation):** Context management, parameters, and JSON schemas.
-*   **[Text-to-Speech](/docs/capabilities/text-to-speech):** Discovering voices, estimating cost, and generating Addis Voices 2 clips.
-*   **[Vision](/docs/capabilities/vision):** OCR and Image analysis.
+*   **[Text Generation](https://docs.addisassistant.com/docs/capabilities/text-generation):** Build chat, summarization, RAG, structured-output, and function-calling applications.
+*   **[Text-to-Speech](https://docs.addisassistant.com/docs/capabilities/text-to-speech):** Discover, preview, estimate, and generate completed audio clips with Addis Voices 2.
+*   **[Speech-to-Text](https://docs.addisassistant.com/docs/capabilities/speech-to-text):** Transcribe Amharic and Afaan Oromo audio into text.
+*   **[Translation](https://docs.addisassistant.com/docs/capabilities/translation):** Translate between Amharic, Afaan Oromo, and English in every direction.
+*   **[Multimodal](https://docs.addisassistant.com/docs/capabilities/multimodal):** Reason over images, audio recordings, and documents through the chat API.
+*   **[Realtime API](https://docs.addisassistant.com/docs/capabilities/realtime):** Build low-latency, interruption-capable voice conversations through WebSockets.
 
 ### 🧩 Integration
 Patterns for connecting Addis AI securely to your application.
@@ -127,7 +132,7 @@ We are building this together.
 
 <Cards>
   <Card href="https://t.me/addisassistantai" icon={<MessageSquare />} title="Join our Telegram Community">
-    Join 500+ developers building with Addis AI.
+    Join 1,500+ developers building with Addis AI.
   </Card>
   <Card href="mailto:support@addisassistant.com" icon={<Zap />} title="Enterprise Support">
     Need higher rate limits or custom fine-tuning? Contact us.

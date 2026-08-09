@@ -42,18 +42,53 @@ test('keeps the original documentation tree and adds only approved primary pages
   assert.match(meta, /"announcements"/);
   assert.match(meta, /"get-started\/sdks"/);
   assert.match(meta, /"platform\/pricing"/);
+  assert.match(meta, /"platform\/errors",\s*"platform\/status",\s*"platform\/faq"/);
+  assert.doesNotMatch(meta, /get-started\/models/);
   assert.doesNotMatch(meta, /text-to-speech-legacy/);
 });
 
-test('keeps the approved SDK resources permanently visible above the tree', () => {
+test('removes the broken Models template page without redirecting old URLs', () => {
+  const docsPage = read('app/docs/[[...slug]]/page.tsx');
+  const files = walk('content/docs')
+    .filter((file) => /\.(mdx?|tsx?|json)$/.test(file))
+    .map((file) => read(file.slice(root.length + 1)))
+    .join('\n');
+
+  assert.equal(existsSync(join(root, 'content/docs/get-started/models.mdx')), false);
+  assert.doesNotMatch(docsPage, /get-started\/models/);
+  assert.match(docsPage, /if \(!page\) notFound\(\)/);
+  assert.doesNotMatch(files, /\/docs\/get-started\/models/);
+  assert.doesNotMatch(files, /Displaying Shiki highlighted code blocks/);
+});
+
+test('keeps the approved Useful Links permanently visible above the tree', () => {
   const layout = read('lib/layout.shared.tsx');
 
-  assert.match(layout, /SDK resources/);
+  assert.match(layout, /Useful Links/);
   assert.match(layout, /API keys/);
   assert.match(layout, /Node\.js on npm/);
   assert.match(layout, /Python on PyPI/);
+  assert.doesNotMatch(layout, /SDK resources/);
   assert.doesNotMatch(layout, /Node\.js on GitHub|Python on GitHub/);
   assert.doesNotMatch(layout, /collapsible/i);
+});
+
+test('uses Addis AI documentation metadata for page titles and link previews', () => {
+  const appLayout = read('app/layout.tsx');
+  const docsPage = read('app/docs/[[...slug]]/page.tsx');
+  const sharedMetadata = read('lib/metadata.ts');
+  const meta = read('content/docs/meta.json');
+
+  assert.match(sharedMetadata, /Addis AI Documentation \| APIs & SDKs for African Languages/);
+  assert.match(
+    sharedMetadata,
+    /Build with Addis AI APIs and official Node\.js and Python SDKs for text generation, speech-to-text, Addis Voices 2, translation, multimodal reasoning, and realtime voice in Amharic and Afaan Oromo\./,
+  );
+  assert.match(appLayout, /template: `%s \| \$\{DOCUMENTATION_SITE_NAME\}`/);
+  assert.match(appLayout, /openGraph:/);
+  assert.match(appLayout, /twitter:/);
+  assert.match(docsPage, /formatDocumentationTitle\(page\.data\.title\)/);
+  assert.match(meta, /Addis AI Documentation \| APIs & SDKs for African Languages/);
 });
 
 test('shows responsive social links beside the sidebar theme switcher', () => {
@@ -98,7 +133,8 @@ test('preserves original onboarding screenshots and page structures', () => {
   assert.match(quickstart, /https:\/\/addisassistant\.com\/playground/);
   assert.match(quickstart, /Open the Addis AI Playground/);
   assert.match(quickstart, /https:\/\/addisassistant\.com\/apikeys/);
-  assert.match(quickstart, /Voice Labs/);
+  assert.match(quickstart, /The \*\*Voice Lab\*\* experience/);
+  assert.doesNotMatch(quickstart, /Voice Labs/);
   assert.match(quickstart, /Current Addis AI Playground showing model, language, output, temperature, and token controls/);
   assert.match(quickstart, /Addis AI API Keys page with the Create API Key button/);
   assert.match(quickstart, /Create API Key dialog with the key-name field/);
@@ -178,13 +214,31 @@ test('applies the second-round Introduction and chat-control refinements', () =>
   const textGeneration = read('content/docs/capabilities/text-generation.mdx');
 
   assert.doesNotMatch(introduction, /GPT-4|Silicon Valley/);
+  assert.doesNotMatch(introduction, /v2 Models Live/);
+  assert.doesNotMatch(introduction, /We solve the \*\*three hardest problems\*\* in African NLP/);
+  assert.doesNotMatch(introduction, /Join 500\+ developers building with Addis AI/);
   assert.match(introduction, /major general-purpose AI models can misinterpret or hallucinate/);
+  assert.match(introduction, /Addis Voices 2 · 28 production voices/);
+  assert.match(introduction, /https:\/\/docs\.addisassistant\.com\/docs\/capabilities\/text-to-speech/);
+  assert.match(introduction, /Voice-first AI infrastructure,/);
+  assert.match(introduction, /for African languages\./);
+  assert.match(introduction, /Addis AI gives developers a unified infrastructure layer for text generation, speech recognition, natural voices, translation, multimodal reasoning, and realtime voice/);
+  assert.match(introduction, /Why language-specific infrastructure matters/);
+  assert.match(introduction, /Choose the capability your product needs, then follow the corresponding guide to start building\./);
   assert.match(introduction, /Addis Voices 2/);
   assert.match(introduction, /<NewBadge \/>/);
   assert.match(introduction, /### 🚀 Get Started/);
   assert.match(introduction, /### ⚡ Capabilities/);
+  assert.match(introduction, /\[Playground Guide\]\(https:\/\/docs\.addisassistant\.com\/docs\/get-started\/quickstart\)/);
+  assert.match(introduction, /Build chat, summarization, RAG, structured-output, and function-calling applications/);
+  assert.match(introduction, /Discover, preview, estimate, and generate completed audio clips with Addis Voices 2/);
+  assert.match(introduction, /Transcribe Amharic and Afaan Oromo audio into text/);
+  assert.match(introduction, /Translate between Amharic, Afaan Oromo, and English in every direction/);
+  assert.match(introduction, /Reason over images, audio recordings, and documents through the chat API/);
+  assert.match(introduction, /Build low-latency, interruption-capable voice conversations through WebSockets/);
   assert.match(introduction, /### 🧩 Integration/);
   assert.match(introduction, /### ⚙️ Platform/);
+  assert.match(introduction, /Join 1,500\+ developers building with Addis AI/);
 
   for (const parameter of ["'persona'", "'system'"]) {
     assert.match(textGeneration, new RegExp(parameter));
@@ -220,6 +274,156 @@ test('keeps SDK examples primary without removing cURL interoperability', () => 
 
   const sdks = read('content/docs/get-started/sdks.mdx');
   assert.doesNotMatch(sdks, /cURL/);
+});
+
+test('completes Quick Start capability coverage across REST and Realtime', () => {
+  const quickstart = read('content/docs/get-started/quickstart.mdx');
+
+  assert.match(quickstart, /REST API requests use the following production base URL:/);
+  assert.match(quickstart, /https:\/\/api\.addisassistant\.com/);
+  assert.match(quickstart, /Realtime voice uses a separate WebSocket endpoint:/);
+  assert.match(quickstart, /wss:\/\/relay\.addisassistant\.com\/ws/);
+  assert.doesNotMatch(quickstart, /All API requests should be made to the production Base URL:/);
+
+  for (const row of [
+    '| Chat and Text Generation | `/api/v1/chat_generate` | `POST` |',
+    '| Text-to-Speech (Addis Voices 2) | `/api/v1/voice/generations` | `POST` |',
+    '| Speech-to-Text | `/api/v2/stt` | `POST` |',
+    '| Translation | `/api/v1/translate` | `POST` |',
+    '| Multimodal | `/api/v1/chat_generate` | `POST multipart/form-data` |',
+    '| Realtime Voice | `wss://relay.addisassistant.com/ws` | `WebSocket` |',
+  ]) {
+    assert.ok(quickstart.includes(row), `Quick Start is missing capability row: ${row}`);
+  }
+
+  assert.match(quickstart, /<Tabs items=\{\['Text Generation', 'Speech-to-Text', 'Translation', 'Multimodal'\]\}>/);
+  assert.match(quickstart, /addis\.translate\.create/);
+  assert.match(quickstart, /source_language/);
+  assert.match(quickstart, /attachments: \[\{ file: await fileFromPath\("market\.jpg", "image\/jpeg"\) \}\]/);
+  assert.match(quickstart, /attachment_0=@market\.jpg;type=image\/jpeg/);
+  assert.match(quickstart, /<Card href="\/docs\/capabilities\/realtime" icon=\{<Radio \/>\} title="Realtime API">/);
+});
+
+test('documents the unified SDK capability matrix', () => {
+  const sdks = read('content/docs/get-started/sdks.mdx');
+
+  assert.match(sdks, /## SDK capability matrix/);
+  for (const row of [
+    '| Chat and text generation | `addis.chat.completions.create` |',
+    '| Multi-turn chat | `addis.chat.completions.create` with `messages` |',
+    '| Function calling | `addis.chat.completions.create` and SDK tool runners |',
+    '| Speech-to-text | `addis.speech.transcribe` |',
+    '| Translation | `addis.translate.create` |',
+    '| Image and document reasoning | `addis.chat.completions.create` with `attachments` |',
+    '| Audio reasoning | `addis.chat.completions.create` with audio input |',
+    '| List voices | `addis.voices.list` |',
+    '| Preview a voice | `addis.voices.preview` |',
+    '| Estimate voice cost | `addis.voice.estimate` |',
+    '| Generate a voice clip | `addis.voice.generate` |',
+    '| Check voice usage | `addis.voice.usage` |',
+    '| List and manage clips | `addis.voice.clips` |',
+  ]) {
+    assert.ok(sdks.includes(row), `SDK page is missing matrix row: ${row}`);
+  }
+
+  assert.match(sdks, /Realtime voice uses a separate WebSocket integration\. Addis Voices 2 and the unified SDK generate completed audio clips and do not replace the Realtime API\./);
+});
+
+test('corrects capability page descriptions, terminology, and title badges', () => {
+  const docsPage = read('app/docs/[[...slug]]/page.tsx');
+  const textGeneration = read('content/docs/capabilities/text-generation.mdx');
+  const textToSpeech = read('content/docs/capabilities/text-to-speech.mdx');
+  const speechToText = read('content/docs/capabilities/speech-to-text.mdx');
+  const translation = read('content/docs/capabilities/translation.mdx');
+  const multimodal = read('content/docs/capabilities/multimodal.mdx');
+  const voiceInterface = read('content/docs/integration/voice-interface.mdx');
+  const errors = read('content/docs/platform/errors.mdx');
+  const voiceCatalog = read('components/voice-catalog.tsx');
+  const visibleDocs = [
+    ...walk('content/docs')
+      .filter((file) => /\.(mdx?|json)$/.test(file))
+      .map((file) => read(file.slice(root.length + 1))),
+    voiceCatalog,
+  ].join('\n');
+
+  assert.match(textGeneration, /^description: Chat, summarization, RAG, structured output, and function calling for African languages\.$/m);
+  assert.match(textGeneration, /Use Text Generation for chat, summarization, extraction, classification, RAG, structured output, and multi-turn conversations\. Use the dedicated Translation API for direct language-to-language translation\./);
+  assert.match(textGeneration, /Token counts vary by language, script, punctuation, and input structure\. For Amharic, one word typically uses around 1\.5 to 1\.8 tokens\. For the exact count, use usage_metadata returned in the REST API response or the corresponding usage value returned by the official SDK\./);
+  assert.doesNotMatch(textGeneration, /Typically \*\*1 word ≈ 1\.5 to 1\.8 tokens\*\*|1 Word ≈ 1\.8 Tokens|cultural context \*\*|simple one-off tasks \(like translation\)|Extraction, translation/);
+
+  assert.match(docsPage, /<DocsTitle>\{page\.data\.title\}<\/DocsTitle>/);
+  assert.match(docsPage, /page\.data\.isNew \? <NewBadge \/> : null/);
+  assert.match(textToSpeech, /^title: Text-to-Speech$/m);
+  assert.match(textToSpeech, /^isNew: true$/m);
+  assert.match(voiceCatalog, /label: 'Afaan Oromo'/);
+  assert.match(voiceCatalog, /'Afaan Oromo'/);
+
+  assert.match(speechToText, /^title: Speech-to-Text$/m);
+  assert.match(speechToText, /^description: Transcribe Amharic and Afaan Oromo audio into text\.$/m);
+  assert.match(translation, /^description: Translate text between Amharic, Afaan Oromo, and English\.$/m);
+  assert.match(translation, /The Translation API supports bidirectional translation between Amharic \(`am`\), Afaan Oromo \(`om`\), and English \(`en`\)\. All six source-to-target language combinations are available through the REST API and official SDKs\./);
+  assert.match(translation, /Supported language pairs/);
+  assert.match(translation, /Amharic ↔ Afaan Oromo/);
+  assert.match(translation, /Amharic ↔ English/);
+  assert.match(translation, /Afaan Oromo ↔ English/);
+  assert.doesNotMatch(visibleDocs, /Afan Oromo/);
+  assert.doesNotMatch(translation, /Triangular Support|High-accuracy neural machine translation/);
+
+  assert.match(multimodal, /^description: Reason over images, audio recordings, and documents through the unified chat API\.$/m);
+  assert.match(multimodal, /You can upload images, audio files, and documents/);
+  assert.match(multimodal, /Use the chat endpoint with an image or document attachment and an explicit extraction prompt for OCR and document-text extraction\./);
+  assert.doesNotMatch(multimodal, /finalizing a dedicated OCR endpoint|You can upload \*\*Images\*\* and \*\*Audio files\*\*/);
+  assert.match(voiceInterface, /For live, interruption-capable conversations, use the \*\*\[Realtime API\]\(\/docs\/capabilities\/realtime\)\*\* instead of the request-response STT → LLM → Addis Voices 2 pipeline\./);
+  assert.doesNotMatch(voiceInterface, /The Ultimate Solution|If latency is critical/);
+  assert.match(errors, /If the issue continues, check \[Addis AI Status\]\(https:\/\/status\.addisassistant\.com\)\. If all systems are operational, contact `support@addisassistant\.com` and include the endpoint, status code, request ID, and approximate request time\./);
+  assert.doesNotMatch(errors, /check our status page/);
+});
+
+test('publishes status documentation and legacy route redirects', () => {
+  const status = read('content/docs/platform/status.mdx');
+  const errors = read('content/docs/platform/errors.mdx');
+  const config = read('next.config.mjs');
+  const proxy = read('proxy.ts');
+
+  assert.match(status, /^title: Status$/m);
+  assert.match(status, /^description: Current availability, incidents, and uptime history for Addis AI services\.$/m);
+  for (const service of [
+    'REST API',
+    'Realtime API',
+    'Developer platform and API Keys',
+    'Playground',
+    'Voice Lab',
+  ]) {
+    assert.match(status, new RegExp(service.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  for (const label of [
+    'Operational',
+    'Degraded Performance',
+    'Partial Outage',
+    'Major Outage',
+    'Maintenance',
+  ]) {
+    assert.match(status, new RegExp(label));
+  }
+  assert.match(status, /## Current incidents/);
+  assert.match(status, /## Resolved incidents/);
+  assert.match(status, /## Recent uptime history/);
+  assert.match(errors, /https:\/\/status\.addisassistant\.com/);
+  assert.match(proxy, /status\.addisassistant\.com/);
+  assert.match(proxy, /\/docs\/platform\/status/);
+
+  for (const [source, destination] of [
+    ['/docs/get-started/quick-start', '/docs/get-started/quickstart'],
+    ['/docs/capabilities/realtime-api', '/docs/capabilities/realtime'],
+    ['/docs/integration-guides/web-applications', '/docs/integration/web'],
+    ['/docs/examples-and-tutorials/basic-chat', '/docs/capabilities/text-generation'],
+    ['/docs/technical-reference/error-codes', '/docs/platform/errors'],
+    ['/docs/faq', '/docs/platform/faq'],
+  ]) {
+    assert.match(config, new RegExp(`source: '${source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`));
+    assert.match(config, new RegExp(`destination: '${destination.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`));
+  }
+  assert.doesNotMatch(config, /get-started\/models/);
 });
 
 test('keeps raw endpoint panels only where the Realtime protocol requires one', () => {

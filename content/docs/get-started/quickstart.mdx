@@ -27,7 +27,7 @@ This guide will take you through the complete lifecycle: testing your ideas visu
         *   Set to **0.7** for creative writing (Stories, Poems).
     4.  **Set the response length and check usage:** Adjust the maximum completion tokens, send a text or audio prompt, and review the token count.
 
-    The **Voice Labs** experience is available from the **Voice Lab** navigation item when you want to discover and preview Addis Voices 2 separately from the Playground.
+    The **Voice Lab** experience is available from the **Voice Lab** navigation item when you want to discover and preview Addis Voices 2 separately from the Playground.
 
     Once you are happy with the result, you are ready to integrate.
   </Step>
@@ -60,10 +60,16 @@ This guide will take you through the complete lifecycle: testing your ideas visu
   <Step>
     ## Configure Endpoints
     
-    All API requests should be made to the production Base URL:
+    REST API requests use the following production base URL:
 
     ```bash
     https://api.addisassistant.com
+    ```
+
+    Realtime voice uses a separate WebSocket endpoint:
+
+    ```bash
+    wss://relay.addisassistant.com/ws
     ```
 
     Install the official SDK and store your key in `ADDIS_API_KEY`.
@@ -85,11 +91,14 @@ This guide will take you through the complete lifecycle: testing your ideas visu
 
     ### Available Capabilities
     
-    | Goal | Endpoint | Method |
-    | :--- | :--- | :--- |
-    | **Chat / Text** | `/api/v1/chat_generate` | `POST` |
-    | **Text-to-Speech (Addis Voices 2)** | `/api/v1/voice/generations` | `POST` |
-    | **Speech-to-Text** | `/api/v2/stt` | `POST` |
+    | Capability | Endpoint | Method |
+    | --- | --- | --- |
+    | Chat and Text Generation | `/api/v1/chat_generate` | `POST` |
+    | Text-to-Speech (Addis Voices 2) | `/api/v1/voice/generations` | `POST` |
+    | Speech-to-Text | `/api/v2/stt` | `POST` |
+    | Translation | `/api/v1/translate` | `POST` |
+    | Multimodal | `/api/v1/chat_generate` | `POST multipart/form-data` |
+    | Realtime Voice | `wss://relay.addisassistant.com/ws` | `WebSocket` |
 
   </Step>
 
@@ -98,7 +107,7 @@ This guide will take you through the complete lifecycle: testing your ideas visu
     
     Choose a capability below to make your first request.
 
-    <Tabs items={['Text Generation', 'Speech-to-Text']}>
+    <Tabs items={['Text Generation', 'Speech-to-Text', 'Translation', 'Multimodal']}>
       <Tab value="Text Generation">
         **Endpoint:** `/api/v1/chat_generate`
         
@@ -189,7 +198,106 @@ This guide will take you through the complete lifecycle: testing your ideas visu
           </Tab>
         </Tabs>
       </Tab>
+
+      <Tab value="Translation">
+        **Endpoint:** `/api/v1/translate`
+
+        Translate text between any of the supported languages (`am`, `om`, `en`).
+
+        <Tabs items={['Node.js', 'Python', 'cURL']}>
+          <Tab value="Node.js">
+            ```ts
+            import AddisAI from "addisai";
+
+            const addis = new AddisAI();
+            const result = await addis.translate.create({
+              text: "ገበሬው ማሳውን ዘወትር ይጎበኛል",
+              from: "am",
+              to: "om",
+            });
+
+            console.log(result.text);
+            ```
+          </Tab>
+          <Tab value="Python">
+            ```python
+            from addisai import AddisAI
+
+            addis = AddisAI()
+            result = addis.translate.create(
+                text="ገበሬው ማሳውን ዘወትር ይጎበኛል",
+                source="am",
+                target="om",
+            )
+
+            print(result["text"])
+            ```
+          </Tab>
+          <Tab value="cURL">
+            ```bash
+            curl --location 'https://api.addisassistant.com/api/v1/translate' \
+              --header 'Content-Type: application/json' \
+              --header 'x-api-key: $ADDIS_API_KEY' \
+              --data '{
+                "text": "ገበሬው ማሳውን ዘወትር ይጎበኛል",
+                "source_language": "am",
+                "target_language": "om"
+              }'
+            ```
+          </Tab>
+        </Tabs>
+      </Tab>
+
+      <Tab value="Multimodal">
+        **Endpoint:** `/api/v1/chat_generate`
+
+        Upload an image and ask questions about it. Ideal for explaining diagrams, identifying objects, or analyzing screenshots.
+
+        <Tabs items={['Node.js', 'Python', 'cURL']}>
+          <Tab value="Node.js">
+            ```ts
+            import AddisAI, { fileFromPath } from "addisai";
+
+            const addis = new AddisAI();
+            const response = await addis.chat.completions.create({
+              messages: [{ role: "user", content: "Describe this image in Amharic." }],
+              attachments: [{ file: await fileFromPath("market.jpg", "image/jpeg") }],
+            });
+
+            console.log(response.choices[0].message.content);
+            ```
+          </Tab>
+          <Tab value="Python">
+            ```python
+            from addisai import AddisAI
+
+            addis = AddisAI()
+            with open("market.jpg", "rb") as image:
+                response = addis.chat.completions.create(
+                    messages=[{"role": "user", "content": "Describe this image in Amharic."}],
+                    attachments=[image],
+                )
+
+            print(response["choices"][0]["message"]["content"])
+            ```
+          </Tab>
+          <Tab value="cURL">
+            ```bash
+            curl https://api.addisassistant.com/api/v1/chat_generate \
+              -H "x-api-key: $ADDIS_API_KEY" \
+              -F 'attachment_0=@market.jpg;type=image/jpeg' \
+              -F 'request_data={"prompt":"Describe this image in Amharic.","target_language":"am","attachment_field_names":["attachment_0"]}'
+            ```
+          </Tab>
+        </Tabs>
+      </Tab>
     </Tabs>
+
+    <Cards>
+      <Card href="/docs/capabilities/realtime" icon={<Radio />} title="Realtime API">
+        Build low-latency, interruption-capable voice conversations over WebSockets.
+      </Card>
+    </Cards>
 
     ### The Response
     
