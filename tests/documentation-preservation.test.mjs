@@ -25,6 +25,7 @@ test('keeps the original documentation tree and adds only approved primary pages
     'get-started/quickstart',
     'capabilities/text-generation',
     'capabilities/text-to-speech',
+    'capabilities/realtime-voice',
     'capabilities/speech-to-text',
     'capabilities/multimodal',
     'capabilities/realtime',
@@ -326,7 +327,8 @@ test('documents the unified SDK capability matrix', () => {
     assert.ok(sdks.includes(row), `SDK page is missing matrix row: ${row}`);
   }
 
-  assert.match(sdks, /Realtime voice uses a separate WebSocket integration\. Addis Voices 2 and the unified SDK generate completed audio clips and do not replace the Realtime API\./);
+  assert.match(sdks, /Addis Voices 2 supports completed clips and \[Real-time Voice Streaming\]/);
+  assert.match(sdks, /prepared for \*\*0\.3\.0\*\*, but that release is not published yet/);
 });
 
 test('corrects capability page descriptions, terminology, and title badges', () => {
