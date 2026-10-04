@@ -4,7 +4,7 @@ import test from 'node:test';
 import ts from 'typescript';
 const source = readFileSync(new URL('../lib/voice-stream-client.ts', import.meta.url), 'utf8');
 const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { authHeaders, validateSocketUrl, validateAudioUrl, readVoiceStream } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+const { authHeaders, availableVoices, selectVoice, validateSocketUrl, validateAudioUrl, readVoiceStream } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 const result = {id:'clip',audio_url:'https://cdn.addisassistant.com/audio/clips/clip.mp3?token=scoped',duration_seconds:1.008,usage:{credits_used:.084,credits_remaining:2,currency:'ETB',settled:true}};
 function framed(audio,metadata=result) {
  const bytes=new Uint8Array(audio.length+8+new TextEncoder().encode(JSON.stringify({data:metadata})).length);
@@ -36,4 +36,13 @@ test('legacy JSON replay downloads the paid clip without forwarding account cred
  const original=globalThis.fetch;let count=0;
  globalThis.fetch=async(url,init)=>{count++;assert.equal(url,result.audio_url);assert.equal(init.headers,undefined);assert.equal(init.credentials,'omit');return new Response(new Uint8Array([7,8]));};
  try{const chunks=[];const data=await readVoiceStream(Response.json({data:result}),bytes=>chunks.push(...bytes));assert.equal(data.idempotent_replay,true);assert.deepEqual(chunks,[7,8]);assert.equal(count,1);}finally{globalThis.fetch=original;}
+});
+
+test('all available choices remain selectable with per-language defaults and no unavailable fallback', () => {
+ const voices=[{id:'am-hamen',name:'Hamen',language:'am',is_default:true},{id:'am-simon',name:'Simon',language:'am'},{id:'am-old',name:'Old',language:'am',is_available:false},{id:'ti-senait',name:'Senait',language:'ti'},{id:'en-extra',name:'Extra',language:'en'}];
+ assert.deepEqual(availableVoices(voices).map(v=>v.id),['am-hamen','am-simon','ti-senait']);
+ assert.equal(selectVoice(voices,'am','am-simon'),'am-simon');
+ assert.equal(selectVoice(voices,'am','am-old'),'am-hamen');
+ assert.equal(selectVoice(voices,'ti'),'ti-senait');
+ assert.equal(selectVoice(voices,'om'),'');
 });

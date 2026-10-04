@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Download, Loader2, Play, RotateCcw, VolumeX } from 'lucide-react';
-import { VOICE_API, authHeaders, readJson, readVoiceStream, validateSocketUrl, validateAudioUrl, type AuthMode, type VoiceLanguage, type VoiceCompletion } from '@/lib/voice-stream-client';
+import { VOICE_API, authHeaders, readJson, readVoiceStream, validateSocketUrl, validateAudioUrl, availableVoices, selectVoice, type StreamingVoice, type VoiceLanguage, type VoiceCompletion } from '@/lib/voice-stream-client';
 
-type Voice = { id: string; name: string; language: VoiceLanguage; is_available?: boolean };
+import { streamingVoiceCatalog } from '@/data/streaming-voice-catalog';
 type Wallet = { balance: number; pricing: { price_per_minute: number; currency: string } };
 type Submission = { id: string; text: string; voice: string; language: VoiceLanguage; transport: 'websocket' | 'http'; maxAudio: number };
 type Runtime = { socket?: WebSocket; controller?: AbortController; context?: AudioContext; gain?: GainNode; next: number; decode: Promise<void>; muted: boolean; parts: Uint8Array[]; total: number; started: number; deadline?: ReturnType<typeof setTimeout>; heartbeat?: ReturnType<typeof setInterval>; finished: boolean };
@@ -19,10 +19,9 @@ const button = 'inline-flex items-center justify-center gap-2 rounded-md border 
 
 export function VoiceStreamingDemo() {
   const [credential, setCredential] = useState('');
-  const [auth, setAuth] = useState<AuthMode>('api-key');
   const [language, setLanguage] = useState<VoiceLanguage>('am');
   const [voice, setVoice] = useState<string>(examples.am.voice);
-  const [voices, setVoices] = useState<Voice[]>([]);
+  const [voices, setVoices] = useState<StreamingVoice[]>(streamingVoiceCatalog);
   const [text, setText] = useState<string>(examples.am.text);
   const [transport, setTransport] = useState<'websocket' | 'http'>('websocket');
   const [maxAudio, setMaxAudio] = useState(60);
@@ -49,14 +48,15 @@ export function VoiceStreamingDemo() {
     mounted.current = true;
     return () => { mounted.current = false; const rt = runtime.current; if (rt) { close(rt); void rt.context?.close().catch(() => {}); } if (clip.current) URL.revokeObjectURL(clip.current); };
   }, []);
-  const resetAccount = () => { setWallet(null); setVoices([]); setResult(null); request.current = null; };
+  const resetAccount = () => { setWallet(null); setResult(null); request.current = null; };
   const checkWallet = async () => {
     setChecking(true); setError('');
     try {
-      const headers = authHeaders(credential, auth);
+      const headers = authHeaders(credential);
       const account = await readJson<Wallet>(await fetch(`${VOICE_API}/voice/usage`, { headers, cache: 'no-store', credentials: 'omit' }));
-      const catalog = await readJson<Voice[]>(await fetch(`${VOICE_API}/voice/voices`, { headers, cache: 'no-store', credentials: 'omit' }));
-      setWallet(account); setVoices(catalog.filter(v => v.language in examples && v.is_available !== false));
+      const catalog = await readJson<StreamingVoice[]>(await fetch(`${VOICE_API}/voice/voices`, { headers, cache: 'no-store', credentials: 'omit' }));
+      const available = availableVoices(catalog);
+      setWallet(account); setVoices(available); setVoice(previous => selectVoice(available, language, previous));
       setStatus('Account checked. New generations charge your wallet; recovery uses the original request ID.');
     } catch (e) { setError(e instanceof Error ? e.message : 'Account check failed.'); }
     finally { setChecking(false); }
@@ -94,7 +94,7 @@ export function VoiceStreamingDemo() {
     if (busy) return;
     let rt: Runtime | undefined;
     try {
-      const headers = authHeaders(credential, auth);
+      const headers = authHeaders(credential);
       const submission = replay ? request.current : { id: `docs_${crypto.randomUUID().replaceAll('-', '')}`, text: text.trim(), voice, language, transport, maxAudio };
       if (!submission || !submission.text) throw new Error('Enter a sentence before starting.');
       request.current = submission;
@@ -161,18 +161,17 @@ export function VoiceStreamingDemo() {
         <div className="space-y-5 border-b border-fd-border p-5 sm:p-6 md:border-b-0 md:border-r">
           <fieldset disabled={busy || checking} className="space-y-3">
             <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Your account</legend>
-            <div className="grid grid-cols-2 gap-2">{(['api-key', 'jwt'] as const).map(mode => <button key={mode} type="button" aria-pressed={auth === mode} className={`${button} ${auth === mode ? 'border-fd-primary bg-fd-primary/10 text-fd-primary' : ''}`} onClick={() => { setAuth(mode); setCredential(''); resetAccount(); }}>{mode === 'api-key' ? 'API key' : 'Account JWT'}</button>)}</div>
-            <label htmlFor="voice-stream-credential" className="block text-sm font-medium">{auth === 'jwt' ? 'Account access token' : 'Developer API key'}</label>
-            <input id="voice-stream-credential" type="password" autoComplete="off" spellCheck={false} value={credential} onChange={e => { setCredential(e.target.value); resetAccount(); }} placeholder={auth === 'jwt' ? 'Paste your signed-in account token' : 'Paste your API key'} className={control} />
+            <label htmlFor="voice-stream-credential" className="block text-sm font-medium">Developer API key</label>
+            <input id="voice-stream-credential" type="password" autoComplete="off" spellCheck={false} value={credential} onChange={e => { setCredential(e.target.value); resetAccount(); }} placeholder="Paste your API key" className={control} />
             <p className="text-xs leading-5 text-fd-muted-foreground">Your credential stays in this page’s memory and is sent only to the Addis AI API. <a href="https://addisassistant.com/apikeys" className="underline">Get an API key</a>.</p>
             <button type="button" className={`${button} w-full`} disabled={!credential.trim()} onClick={checkWallet}>{checking && <Loader2 className="size-4 animate-spin" />}Check balance and rate</button>
             {wallet && <p className="text-sm tabular-nums">Balance <strong>{wallet.balance.toFixed(4)} ETB</strong><br /><span className="text-fd-muted-foreground">{wallet.pricing.price_per_minute} ETB / minute of generated audio</span></p>}
           </fieldset>
           <fieldset disabled={busy} className="space-y-3">
             <label htmlFor="voice-stream-language" className="block text-sm font-medium">Language</label>
-            <select id="voice-stream-language" className={control} value={language} onChange={e => { const lang = e.target.value as VoiceLanguage; setLanguage(lang); setVoice(examples[lang].voice); setText(examples[lang].text); }}>{Object.entries(examples).map(([code, entry]) => <option key={code} value={code}>{entry.name}</option>)}</select>
+            <select id="voice-stream-language" className={control} value={language} onChange={e => { const lang = e.target.value as VoiceLanguage; setLanguage(lang); setVoice(selectVoice(voices, lang)); setText(examples[lang].text); }}>{Object.entries(examples).map(([code, entry]) => <option key={code} value={code}>{entry.name}</option>)}</select>
             <label htmlFor="voice-stream-voice" className="block text-sm font-medium">Voice</label>
-            <select id="voice-stream-voice" className={control} value={voice} onChange={e => setVoice(e.target.value)}>{available.length ? available.map(v => <option key={v.id} value={v.id}>{v.name}</option>) : <option value={examples[language].voice}>{examples[language].voice.split('-')[1].replace(/^./, c => c.toUpperCase())}</option>}</select>
+            <select id="voice-stream-voice" className={control} disabled={!available.length} value={voice} onChange={e => setVoice(e.target.value)}>{available.length ? available.map(v => <option key={v.id} value={v.id}>{v.name}</option>) : <option value="">No available voices</option>}</select>
             <label htmlFor="voice-stream-transport" className="block text-sm font-medium">Transport</label>
             <select id="voice-stream-transport" className={control} value={transport} onChange={e => setTransport(e.target.value as 'websocket' | 'http')}><option value="websocket">Persistent WebSocket</option><option value="http">HTTP stream</option></select>
             {transport === 'websocket' && <><label htmlFor="voice-stream-ceiling" className="block text-sm font-medium">Maximum audio per turn</label><select id="voice-stream-ceiling" className={control} value={maxAudio} onChange={e => setMaxAudio(Number(e.target.value))}>{[30, 60, 120].map(s => <option key={s} value={s}>{s} seconds</option>)}</select><p className="text-xs leading-5 text-fd-muted-foreground">The upgraded gateway reserves this allowance before generation, charges actual duration, and releases unused credit. The current gateway may not expose this limit yet.</p></>}
@@ -182,7 +181,7 @@ export function VoiceStreamingDemo() {
           <label htmlFor="voice-stream-text" className="mb-3 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Your sentence</label>
           <textarea id="voice-stream-text" lang={language} rows={5} maxLength={1000} disabled={busy} className={`${control} text-base leading-8`} value={text} onChange={e => setText(e.target.value)} />
           <p className="mt-2 text-right text-xs tabular-nums text-fd-muted-foreground">{text.length} / 1,000 characters</p>
-          <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={busy || !credential.trim() || !text.trim() || checking} onClick={() => void run()} className={`${button} bg-fd-primary text-fd-primary-foreground`}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}Stream speech · bill my wallet</button><button type="button" disabled={!busy || muted} className={button} onClick={mute}><VolumeX className="size-4" />Mute playback</button></div>
+          <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={busy || !credential.trim() || !voice || !text.trim() || checking} onClick={() => void run()} className={`${button} bg-fd-primary text-fd-primary-foreground`}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}Stream speech · bill my wallet</button><button type="button" disabled={!busy || muted} className={button} onClick={mute}><VolumeX className="size-4" />Mute playback</button></div>
           <p role="status" className="mt-5 text-xs leading-5 text-fd-muted-foreground">{status}</p>
           {error && <p role="alert" className="mt-3 rounded border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
           {playbackError && <p className="mt-3 text-xs text-fd-muted-foreground">{playbackError}</p>}

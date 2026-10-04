@@ -27,7 +27,7 @@ For microphone input, transcription, and an AI conversation, see the [Realtime A
 
 ## Try streaming speech
 
-Enter your API key, check its wallet balance and current rate, then choose a language, voice, and transport. New speech charges your account. The demo keeps your credential only in page memory and uses a one-use ticket for the socket. Account JWT authentication requires the upgraded gateway.
+Enter your API key, check its wallet balance and current rate, then choose a language, voice, and transport. New speech charges your account. The demo keeps your credential only in page memory and uses a one-use ticket for the socket.
 
 <VoiceStreamingDemo />
 
@@ -264,7 +264,7 @@ For direct HTTP streaming, send `text`, `language`, `voice_id`, `output_format: 
 
 ## Authentication
 
-Use `x-api-key: YOUR_API_KEY` for developer integrations. The upgraded gateway also accepts `Authorization: Bearer YOUR_ACCOUNT_ACCESS_TOKEN`, verifies the signed-in account, and bills its wallet. Send one authentication header. Both methods exchange credentials for the same scoped socket ticket; keep credentials out of socket URLs.
+Use `x-api-key: YOUR_API_KEY` for developer integrations. Applications that already manage a signed-in session can use their session access token through the upgraded API. The interactive demo uses your developer API key; it does not ask you to obtain or paste a JWT. Send one authentication header. Both methods exchange credentials for the same scoped socket ticket; keep credentials out of socket URLs.
 
 ## Billing and recovery
 

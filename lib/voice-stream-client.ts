@@ -1,6 +1,16 @@
 export const VOICE_API = 'https://api.addisassistant.com/api/v1';
 export type AuthMode = 'api-key' | 'jwt';
 export type VoiceLanguage = 'am' | 'om' | 'ti';
+export type StreamingVoice = {
+  id: string; name: string; language: VoiceLanguage; is_available?: boolean; is_default?: boolean;
+};
+export function availableVoices(catalog: StreamingVoice[]): StreamingVoice[] {
+  return catalog.filter(v => ['am', 'om', 'ti'].includes(v.language) && v.is_available !== false);
+}
+export function selectVoice(catalog: StreamingVoice[], language: VoiceLanguage, current = ''): string {
+  const choices = availableVoices(catalog).filter(v => v.language === language);
+  return choices.find(v => v.id === current)?.id ?? choices.find(v => v.is_default)?.id ?? choices[0]?.id ?? '';
+}
 export type VoiceCompletion = {
   id: string; audio_url: string; duration_seconds: number; finish_reason?: string;
   idempotent_replay?: boolean;
