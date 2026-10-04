@@ -5,6 +5,8 @@ icon: AudioLines
 isNew: true
 ---
 
+import { VoiceStreamingDemo } from '@/components/voice-streaming-demo';
+
 Addis Voices 2 can stream speech as it is generated and save the result as a durable clip. Send text over a persistent WebSocket or use the HTTP streaming endpoint. This guide covers **Amharic, Afaan Oromo, and Tigrinya**.
 
 <div className="not-prose addis-offset-shell addis-panel my-6 p-5">
@@ -18,10 +20,16 @@ The HTTP stream and public WebSocket endpoint are live. As of October 4, 2026, P
 </Callout>
 
 <Callout type="warn" title="Production readiness checks pending">
-The current service permits one active session per wallet. Concurrent-session billing, restart recovery, and extended database-outage acceptance tests for the planned streaming upgrade have not passed yet. Account for these limits when evaluating a production integration.
+The public endpoint still uses the original gateway. Its replacement has passed isolated tests for concurrent sessions, JWT authentication, recovery after a process exit, and settlement retries without duplicate charges. Production rollout and live replacement billing checks are pending; the demo can use the current API-key interface in the meantime.
 </Callout>
 
 For microphone input, transcription, and an AI conversation, see the [Realtime API](/docs/capabilities/realtime). For completed audio files and other output formats, see [Text-to-Speech](/docs/capabilities/text-to-speech).
+
+## Try streaming speech
+
+Enter your API key, check its wallet balance and current rate, then choose a language, voice, and transport. New speech charges your account. The demo keeps your credential only in page memory and uses a one-use ticket for the socket. Account JWT authentication requires the upgraded gateway.
+
+<VoiceStreamingDemo />
 
 ## Choose a language and voice
 
@@ -43,7 +51,7 @@ Send complete sentences. A single word or a few letters can produce poor speech;
 
 ## Stream with the SDK
 
-The examples in this section use **SDK 0.3.0**. Python is available on PyPI; the Node.js examples require the 0.3.0 source release until npm publication completes. Set `ADDIS_API_KEY` in your server environment.
+The examples use the streaming SDK interface. Python **0.3.0** is published; the corrected **0.3.1** release is being prepared. npm **0.2.0** does not contain streaming; use the raw WebSocket example until the Node.js streaming release is published. Set `ADDIS_API_KEY` in your server environment.
 
 ### Persistent WebSocket
 
@@ -253,6 +261,10 @@ For generated text, send `{"type":"text.append","text":"..."}` and then `{"type"
 Choose `audio_format: "wav_mp3"` when creating a session to receive early WAV pieces followed by MP3 phrases. Each `audio.delta.format` tells the player which decoder to use. The SDK's raw event iterator supports this mode; its `speak()` helper expects `mp3`.
 
 For direct HTTP streaming, send `text`, `language`, `voice_id`, `output_format: "mp3_44100"`, and `client_request_id` as JSON. The audio protocol is a four-byte big-endian length followed by that many audio bytes. A zero-length frame precedes the final JSON completion. Inspect `X-Addis-Audio-Protocol` and handle ordinary JSON errors or an idempotent JSON replay before parsing frames. Saving the raw framed HTTP body as an MP3 file will not produce a valid MP3.
+
+## Authentication
+
+Use `x-api-key: YOUR_API_KEY` for developer integrations. The upgraded gateway also accepts `Authorization: Bearer YOUR_ACCOUNT_ACCESS_TOKEN`, verifies the signed-in account, and bills its wallet. Send one authentication header. Both methods exchange credentials for the same scoped socket ticket; keep credentials out of socket URLs.
 
 ## Billing and recovery
 
