@@ -13,8 +13,8 @@ Addis Voices 2 can stream speech as it is generated and save the result as a dur
   </p>
 </div>
 
-<Callout type="info" title="API live; SDK release pending">
-The HTTP stream and public WebSocket endpoint are live. As of October 4, 2026, npm and PyPI publish SDK **0.2.0**. The streaming methods below are prepared for **0.3.0** in the [Node.js update](https://github.com/Addis-AI-Org/addisai-js/pull/4) and [Python update](https://github.com/Addis-AI-Org/addisai-py/pull/3), but that release is not published. Use the [raw WebSocket flow](#connect-without-an-sdk) with the live API today, or the updated SDK source.
+<Callout type="info" title="Python SDK available; Node.js publication pending">
+The HTTP stream and public WebSocket endpoint are live. As of October 4, 2026, Python SDK **0.3.0** is [available on PyPI](https://pypi.org/project/addisai/0.3.0/). The [Node.js 0.3.0 source release](https://github.com/Addis-AI-Org/addisai-js/releases/tag/v0.3.0) is available, but npm still publishes **0.2.0**, which does not include these streaming methods. Use the Python SDK or the [raw WebSocket flow](#connect-without-an-sdk) while Node.js publication is pending.
 </Callout>
 
 For microphone input, transcription, and an AI conversation, see the [Realtime API](/docs/capabilities/realtime). For completed audio files and other output formats, see [Text-to-Speech](/docs/capabilities/text-to-speech).
@@ -39,7 +39,7 @@ Send complete sentences. A single word or a few letters can produce poor speech;
 
 ## Stream with the SDK
 
-The examples in this section require the **0.3.0 SDK update**. Set `ADDIS_API_KEY` in your server environment.
+The examples in this section use **SDK 0.3.0**. Python is available on PyPI; the Node.js examples require the 0.3.0 source release until npm publication completes. Set `ADDIS_API_KEY` in your server environment.
 
 ### Persistent WebSocket
 
@@ -77,7 +77,11 @@ try {
 ```
   </Tab>
   <Tab value="Python">
-The Python update uses the optional `websocket-client` dependency for realtime connections; the SDK defines it in its `realtime` extra.
+Install the Python SDK with its optional WebSocket dependency:
+
+```bash
+pip install "addisai[realtime]==0.3.0"
+```
 
 ```python
 from uuid import uuid4

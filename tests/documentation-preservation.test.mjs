@@ -328,7 +328,8 @@ test('documents the unified SDK capability matrix', () => {
   }
 
   assert.match(sdks, /Addis Voices 2 supports completed clips and \[Real-time Voice Streaming\]/);
-  assert.match(sdks, /prepared for \*\*0\.3\.0\*\*, but that release is not published yet/);
+  assert.match(sdks, /Python SDK \*\*0\.3\.0\*\* is \[published on PyPI\]/);
+  assert.match(sdks, /npm still publishes \*\*0\.2\.0\*\* while publication is pending/);
 });
 
 test('corrects capability page descriptions, terminology, and title badges', () => {
