@@ -17,21 +17,25 @@ Addis Voices 2 can stream speech as it is generated and save the result as a dur
 The HTTP stream and public WebSocket endpoint are live. As of October 4, 2026, Python SDK **0.3.0** is [available on PyPI](https://pypi.org/project/addisai/0.3.0/). The [Node.js 0.3.0 source release](https://github.com/Addis-AI-Org/addisai-js/releases/tag/v0.3.0) is available, but npm still publishes **0.2.0**, which does not include these streaming methods. Use the Python SDK or the [raw WebSocket flow](#connect-without-an-sdk) while Node.js publication is pending.
 </Callout>
 
+<Callout type="warn" title="Production readiness checks pending">
+The current service permits one active session per wallet. Concurrent-session billing, restart recovery, and extended database-outage acceptance tests for the planned streaming upgrade have not passed yet. Account for these limits when evaluating a production integration.
+</Callout>
+
 For microphone input, transcription, and an AI conversation, see the [Realtime API](/docs/capabilities/realtime). For completed audio files and other output formats, see [Text-to-Speech](/docs/capabilities/text-to-speech).
 
 ## Choose a language and voice
 
-| Language | Code |
-| --- | --- |
-| Amharic | `am` |
-| Afaan Oromo | `om` |
-| Tigrinya | `ti` |
+| Language | Code | Example voice | Voice ID |
+| --- | --- | --- | --- |
+| Amharic | `am` | Hamen | `am-hamen` |
+| Afaan Oromo | `om` | Bikila | `om-bikila` |
+| Tigrinya | `ti` | Berhane | `ti-berhane` |
 
-Fetch the current catalog with `voices.list({ language: "am" })` in Node.js or `voices.list(language="am")` in Python. Select an available voice whose language matches the request. The examples use `am-hamen`.
+Fetch the current catalog with `voices.list({ language: "ti" })` in Node.js or `voices.list(language="ti")` in Python. Select an available voice whose language matches the request. The examples below use Berhane (`ti-berhane`, `ti`); use Hamen (`am-hamen`, `am`) or Bikila (`om-bikila`, `om`) in the same calls for the other documented languages.
 
 ```bash
 curl --fail-with-body \
-  "https://api.addisassistant.com/api/v1/voice/voices?language=am" \
+  "https://api.addisassistant.com/api/v1/voice/voices?language=ti" \
   -H "x-api-key: $ADDIS_API_KEY"
 ```
 
@@ -57,15 +61,15 @@ import AddisAI from "addisai";
 const addis = new AddisAI();
 const requestId = randomUUID(); // Persist this ID to recover the same turn.
 const connection = await addis.realtime.connect({
-  voiceId: "am-hamen",
-  language: "am",
+  voiceId: "ti-berhane",
+  language: "ti",
   maxTextCharacters: 1000,
 });
 
 try {
   await pipeline(
     Readable.from(connection.speak(
-      "ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+      "ሰላም፣ እንቋዕ ናብ ኣዲስ ኤኣይ ብደሓን መጻእኩም።",
       requestId,
     )),
     createWriteStream("speech.mp3"),
@@ -91,11 +95,11 @@ request_id = str(uuid4())  # Persist this ID to recover the same turn.
 
 with AddisAI() as addis:
     with addis.realtime.connect(
-        voice_id="am-hamen", language="am", max_text_characters=1000,
+        voice_id="ti-berhane", language="ti", max_text_characters=1000,
     ) as connection:
         with open("speech.mp3", "wb") as output:
             for chunk in connection.speak(
-                "ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+                "ሰላም፣ እንቋዕ ናብ ኣዲስ ኤኣይ ብደሓን መጻእኩም።",
                 request_id,
             ):
                 output.write(chunk)
@@ -117,9 +121,9 @@ import AddisAI from "addisai";
 
 const addis = new AddisAI();
 const audio = await addis.voice.stream({
-  voiceId: "am-hamen",
-  language: "am",
-  text: "ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+  voiceId: "ti-berhane",
+  language: "ti",
+  text: "ሰላም፣ እንቋዕ ናብ ኣዲስ ኤኣይ ብደሓን መጻእኩም።",
   clientRequestId: "my-persisted-turn-id",
 });
 
@@ -133,8 +137,8 @@ from addisai import AddisAI
 
 with AddisAI() as addis:
     audio = addis.voice.stream(
-        voice_id="am-hamen", language="am",
-        text="ሰላም፣ ይህ የአዲስ ድምፅ ሁለት ሙከራ ነው።",
+        voice_id="ti-berhane", language="ti",
+        text="ሰላም፣ እንቋዕ ናብ ኣዲስ ኤኣይ ብደሓን መጻእኩም።",
         client_request_id="my-persisted-turn-id",
     )
 
@@ -158,8 +162,8 @@ curl --fail-with-body \
   -H "x-api-key: $ADDIS_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "voice_id": "am-hamen",
-    "language": "am",
+    "voice_id": "ti-berhane",
+    "language": "ti",
     "audio_format": "mp3",
     "max_text_characters": 1000
   }'
