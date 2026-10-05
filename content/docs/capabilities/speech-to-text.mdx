@@ -46,12 +46,16 @@ GPU availability depends on the current serving allocation. CPU remains separate
 
 ### Scribe SDK quick start
 
-Use the SDK update with Scribe support (version **0.4.0**) for these methods. The live REST API above is available independently of SDK publication. Scribe currently recognizes **Amharic**; the existing `speech.transcribe` method below continues to use the separate file-transcription service.
+Install SDK version **0.4.0** with the commands below; see [SDK release status](/docs/get-started/sdks#sdk-capability-matrix) for package availability. Scribe currently recognizes **Amharic**; the existing `speech.transcribe` method below continues to use the separate file-transcription service.
 
 Keep `ADDIS_API_KEY` on your application server. The docs demo asks only for a developer API key. For browser integrations, create a Scribe session on your server and return the scoped one-use ticket to the browser; users do not need to extract a JWT.
 
 <Tabs items={['Node.js', 'Python']}>
   <Tab value="Node.js">
+    ```bash
+    npm install https://github.com/Addis-AI-Org/addisai-js/releases/download/v0.4.0/addisai-0.4.0.tgz
+    ```
+
     ```ts
     import AddisAI, { fileFromPath, ulid } from "addisai";
 
@@ -71,6 +75,10 @@ Keep `ADDIS_API_KEY` on your application server. The docs demo asks only for a d
     ```
   </Tab>
   <Tab value="Python">
+    ```bash
+    pip install "addisai[realtime]==0.4.0"
+    ```
+
     ```python
     from addisai import AddisAI, ulid
 
