@@ -58,7 +58,8 @@ export async function readVoiceStream(response: Response, onAudio: (bytes: Uint8
     onAudio(bytes);
     return { ...result, idempotent_replay: true };
   }
-  if (response.headers.get('x-addis-audio-protocol') !== 'mp3-frames-v1' || !response.body) throw new Error('Unexpected audio stream protocol.');
+  // wav-mp3-frames-v1: the first phrase as WAV pieces while it is generated, later phrases as MP3.
+  if (!['mp3-frames-v1', 'wav-mp3-frames-v1'].includes(response.headers.get('x-addis-audio-protocol') ?? '') || !response.body) throw new Error('Unexpected audio stream protocol.');
   const reader = response.body.getReader();
   let pending = new Uint8Array(0), terminal = false, total = 0;
   try {

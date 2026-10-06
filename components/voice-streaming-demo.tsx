@@ -8,8 +8,8 @@ import { VOICE_API, authHeaders, readJson, readVoiceStream, validateSocketUrl, v
 import { streamingVoiceCatalog } from '@/data/streaming-voice-catalog';
 type Wallet = { balance: number; pricing: { price_per_minute: number; currency: string } };
 type Submission = { id: string; text: string; voice: string; language: VoiceLanguage; transport: 'websocket' | 'http'; maxAudio: number };
-type Runtime = { socket?: WebSocket; controller?: AbortController; context?: AudioContext; gain?: GainNode; next: number; decode: Promise<void>; muted: boolean; sources: AudioBufferSourceNode[]; parts: Uint8Array[]; total: number; started: number; deadline?: ReturnType<typeof setTimeout>; heartbeat?: ReturnType<typeof setInterval>; finished: boolean };
-const fresh = (): Runtime => ({ next: 0, decode: Promise.resolve(), muted: false, sources: [], parts: [], total: 0, started: performance.now(), finished: false });
+type Runtime = { socket?: WebSocket; controller?: AbortController; context?: AudioContext; gain?: GainNode; next: number; decode: Promise<void>; muted: boolean; wav: boolean; sources: AudioBufferSourceNode[]; parts: Uint8Array[]; total: number; started: number; deadline?: ReturnType<typeof setTimeout>; heartbeat?: ReturnType<typeof setInterval>; finished: boolean };
+const fresh = (): Runtime => ({ next: 0, decode: Promise.resolve(), muted: false, wav: false, sources: [], parts: [], total: 0, started: performance.now(), finished: false });
 const examples = {
   am: { name: 'Amharic', voice: 'am-hamen', text: 'ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።' },
   om: { name: 'Afaan Oromo', voice: 'om-bikila', text: 'Nagaa, gara Addis AI baga nagaan dhuftan.' },
@@ -68,6 +68,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
     if (rt.finished || !mounted.current) return;
     rt.total += data.length;
     if (rt.total > 16 * 1024 * 1024) throw new Error('Audio response is too large. Recover this request.');
+    if (data[0] === 0x52 && data[1] === 0x49 && data[2] === 0x46 && data[3] === 0x46) rt.wav = true;
     rt.parts.push(data); setBytes(rt.total);
     setFirstAudio(previous => previous ?? performance.now() - rt.started);
     setStatus('Receiving speech. Waiting for the saved clip and confirmed charge…');
@@ -90,7 +91,8 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
     setResult(data); setBusy(false);
     if (data.usage.credits_remaining !== null && data.usage.credits_remaining !== undefined) setWallet(prev => prev ? { ...prev, balance: data.usage.credits_remaining! } : prev);
     if (clip.current) URL.revokeObjectURL(clip.current);
-    clip.current = rt.parts.length ? URL.createObjectURL(new Blob(rt.parts.map(p => p.slice().buffer as ArrayBuffer), { type: 'audio/mpeg' })) : data.audio_url;
+    // The first phrase arrives as WAV pieces; play the saved MP3 clip then.
+    clip.current = rt.parts.length && !rt.wav ? URL.createObjectURL(new Blob(rt.parts.map(p => p.slice().buffer as ArrayBuffer), { type: 'audio/mpeg' })) : data.audio_url;
     setClipUrl(clip.current);
     setStatus(data.idempotent_replay ? 'Recovered the original clip. No additional charge.' : data.finish_reason === 'audio_limit' ? 'Audio limit reached. Clip saved.' : 'Speech ready.');
     close(rt);
@@ -118,7 +120,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
       setStatus(replay ? 'Recovering the same request…' : 'Creating your speech stream…');
       if (submission.transport === 'http') {
         current.controller = new AbortController();
-        const response = await fetch(`${VOICE_API}/voice/generations/stream`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, credentials: 'omit', cache: 'no-store', signal: current.controller.signal,
+        const response = await fetch(`${VOICE_API}/voice/generations/stream`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json', 'X-Addis-Audio-Accept': 'wav-mp3-frames-v1' }, credentials: 'omit', cache: 'no-store', signal: current.controller.signal,
           body: JSON.stringify({ text: submission.text, language: submission.language, voice_id: submission.voice, output_format: 'mp3_44100', client_request_id: submission.id }) });
         const data = await readVoiceStream(response, audio => receive(current, audio), current.controller.signal);
         complete(current, data);
@@ -126,7 +128,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
       }
       const capability = await readJson<{ version: string }>(await fetch(`${VOICE_API}/realtime`, { cache: 'no-store', credentials: 'omit' }));
       const ticket = await readJson<{ token: string; websocket_url: string }>(await fetch(`${VOICE_API}/realtime/sessions`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, cache: 'no-store', credentials: 'omit',
-        body: JSON.stringify({ voice_id: submission.voice, language: submission.language, audio_format: 'mp3', max_text_characters: Math.max(submission.text.length, 1), ...(capability.version === '2' ? { max_audio_seconds: submission.maxAudio } : {}) }) }));
+        body: JSON.stringify({ voice_id: submission.voice, language: submission.language, audio_format: 'wav_mp3', max_text_characters: Math.max(submission.text.length, 1), ...(capability.version === '2' ? { max_audio_seconds: submission.maxAudio } : {}) }) }));
       if (!mounted.current || current.finished) return;
       const socket = new WebSocket(validateSocketUrl(ticket.websocket_url)); current.socket = socket;
       socket.onopen = () => socket.send(JSON.stringify({ type: 'session.authenticate', token: ticket.token }));
@@ -140,7 +142,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
             socket.send(JSON.stringify({ type: 'speech.create', text: submission.text, request_id: submission.id }));
             current.heartbeat = setInterval(() => { if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'ping' })); }, 20000);
           } else if (data.type === 'audio.delta') {
-            if (data.request_id !== submission.id || data.format !== 'mp3' || typeof data.audio !== 'string' || data.audio.length > 3 * 1024 * 1024) throw new Error('Invalid audio event.');
+            if (data.request_id !== submission.id || (data.format !== 'mp3' && data.format !== 'wav') || typeof data.audio !== 'string' || data.audio.length > 3 * 1024 * 1024) throw new Error('Invalid audio event.');
             receive(current, Uint8Array.from(atob(data.audio), c => c.charCodeAt(0)));
           } else if (data.type === 'speech.completed' || data.type === 'speech.cancelled') {
             if (data.request_id !== submission.id) throw new Error('Unexpected request completion.');
