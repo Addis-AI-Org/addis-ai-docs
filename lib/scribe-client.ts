@@ -1,5 +1,5 @@
 export const SCRIBE_API = 'https://api.addisassistant.com/api/v1/scribe';
-export type Backend = 'cpu' | 'gpu';
+export type Backend = 'standard' | 'turbo';
 export type ScribeResult = {
   text: string; request_id: string; backend: Backend; seconds: number; compute_ms: number;
   usage: { characters: number; credits_used: number; credits_remaining: number; currency: string; settled: boolean };

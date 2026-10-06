@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { DemoNavigation } from '@/components/demo-navigation';
 import { Download, Loader2, Play, RotateCcw, VolumeX } from 'lucide-react';
 import { VOICE_API, authHeaders, readJson, readVoiceStream, validateSocketUrl, validateAudioUrl, availableVoices, selectVoice, type StreamingVoice, type VoiceLanguage, type VoiceCompletion } from '@/lib/voice-stream-client';
 
@@ -17,7 +18,7 @@ const examples = {
 const control = 'w-full rounded-md border border-fd-border bg-fd-background px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary disabled:opacity-50';
 const button = 'inline-flex items-center justify-center gap-2 rounded-md border border-fd-border px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary disabled:cursor-not-allowed disabled:opacity-50';
 
-export function VoiceStreamingDemo() {
+export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean }) {
   const [credential, setCredential] = useState('');
   const [language, setLanguage] = useState<VoiceLanguage>('am');
   const [voice, setVoice] = useState<string>(examples.am.voice);
@@ -57,7 +58,7 @@ export function VoiceStreamingDemo() {
       const catalog = await readJson<StreamingVoice[]>(await fetch(`${VOICE_API}/voice/voices`, { headers, cache: 'no-store', credentials: 'omit' }));
       const available = availableVoices(catalog);
       setWallet(account); setVoices(available); setVoice(previous => selectVoice(available, language, previous));
-      setStatus('Account checked. New generations charge your wallet; recovery uses the original request ID.');
+      setStatus('Account ready.');
     } catch (e) { setError(e instanceof Error ? e.message : 'Account check failed.'); }
     finally { setChecking(false); }
   };
@@ -87,7 +88,7 @@ export function VoiceStreamingDemo() {
     if (clip.current) URL.revokeObjectURL(clip.current);
     clip.current = rt.parts.length ? URL.createObjectURL(new Blob(rt.parts.map(p => p.slice().buffer as ArrayBuffer), { type: 'audio/mpeg' })) : data.audio_url;
     setClipUrl(clip.current);
-    setStatus(data.idempotent_replay ? 'Recovered the original clip. No additional charge.' : data.finish_reason === 'audio_limit' ? 'Audio ceiling reached. Partial speech saved and its charge confirmed.' : 'Speech complete. Saved clip and wallet charge confirmed.');
+    setStatus(data.idempotent_replay ? 'Recovered the original clip. No additional charge.' : data.finish_reason === 'audio_limit' ? 'Audio limit reached. Clip saved.' : 'Speech ready.');
     close(rt);
   };
   const run = async (replay = false) => {
@@ -151,19 +152,20 @@ export function VoiceStreamingDemo() {
   const mute = () => { const rt = runtime.current; if (!rt) return; rt.muted = true; if (rt.gain) rt.gain.gain.value = 0; setMuted(true); };
   const available = voices.filter(v => v.language === language);
   return (
-    <section className="not-prose addis-offset-shell my-10 border border-fd-border bg-fd-background" aria-labelledby="voice-demo-title">
+    <section className={`not-prose addis-offset-shell ${fullPage ? 'my-0 min-h-[calc(100dvh-10rem)]' : 'my-10'} border border-fd-border bg-fd-background`} aria-labelledby="voice-demo-title">
       <div className="border-b border-fd-border p-5 sm:p-6">
+        <DemoNavigation fullPage={fullPage} href="/docs/playground/realtime-voice" docsHref="/docs/capabilities/text-to-speech#streaming" />
         <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-fd-primary">Addis Voices 2 · Live API</p>
         <h3 id="voice-demo-title" className="text-xl font-semibold tracking-tight">Try streaming speech</h3>
-        <p className="mt-2 text-sm leading-6 text-fd-muted-foreground">Hear speech as it arrives over a WebSocket or HTTP stream. New generations charge your Addis AI wallet at the current voice rate.</p>
+        <p className="mt-2 text-sm leading-6 text-fd-muted-foreground">Listen as speech is generated. Standard voice rates apply.</p>
       </div>
       <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
         <div className="space-y-5 border-b border-fd-border p-5 sm:p-6 md:border-b-0 md:border-r">
           <fieldset disabled={busy || checking} className="space-y-3">
             <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Your account</legend>
-            <label htmlFor="voice-stream-credential" className="block text-sm font-medium">Developer API key</label>
+            <label htmlFor="voice-stream-credential" className="block text-sm font-medium">API key</label>
             <input id="voice-stream-credential" type="password" autoComplete="off" spellCheck={false} value={credential} onChange={e => { setCredential(e.target.value); resetAccount(); }} placeholder="Paste your API key" className={control} />
-            <p className="text-xs leading-5 text-fd-muted-foreground">Your credential stays in this page’s memory and is sent only to the Addis AI API. <a href="https://addisassistant.com/apikeys" className="underline">Get an API key</a>.</p>
+            <p className="text-xs leading-5 text-fd-muted-foreground">Your API key is not saved. <a href="https://addisassistant.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline">Get an API key</a>.</p>
             <button type="button" className={`${button} w-full`} disabled={!credential.trim()} onClick={checkWallet}>{checking && <Loader2 className="size-4 animate-spin" />}Check balance and rate</button>
             {wallet && <p className="text-sm tabular-nums">Balance <strong>{wallet.balance.toFixed(4)} ETB</strong><br /><span className="text-fd-muted-foreground">{wallet.pricing.price_per_minute} ETB / minute of generated audio</span></p>}
           </fieldset>
@@ -174,21 +176,21 @@ export function VoiceStreamingDemo() {
             <select id="voice-stream-voice" className={control} disabled={!available.length} value={voice} onChange={e => setVoice(e.target.value)}>{available.length ? available.map(v => <option key={v.id} value={v.id}>{v.name}</option>) : <option value="">No available voices</option>}</select>
             <label htmlFor="voice-stream-transport" className="block text-sm font-medium">Transport</label>
             <select id="voice-stream-transport" className={control} value={transport} onChange={e => setTransport(e.target.value as 'websocket' | 'http')}><option value="websocket">Persistent WebSocket</option><option value="http">HTTP stream</option></select>
-            {transport === 'websocket' && <><label htmlFor="voice-stream-ceiling" className="block text-sm font-medium">Maximum audio per turn</label><select id="voice-stream-ceiling" className={control} value={maxAudio} onChange={e => setMaxAudio(Number(e.target.value))}>{[30, 60, 120].map(s => <option key={s} value={s}>{s} seconds</option>)}</select><p className="text-xs leading-5 text-fd-muted-foreground">The upgraded gateway reserves this allowance before generation, charges actual duration, and releases unused credit. The current gateway may not expose this limit yet.</p></>}
+            {transport === 'websocket' && <><label htmlFor="voice-stream-ceiling" className="block text-sm font-medium">Maximum audio per turn</label><select id="voice-stream-ceiling" className={control} value={maxAudio} onChange={e => setMaxAudio(Number(e.target.value))}>{[30, 60, 120].map(s => <option key={s} value={s}>{s} seconds</option>)}</select><p className="text-xs leading-5 text-fd-muted-foreground">Charges are based on generated audio.</p></>}
           </fieldset>
         </div>
         <div className="flex min-h-96 flex-col p-5 sm:p-6">
           <label htmlFor="voice-stream-text" className="mb-3 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Your sentence</label>
           <textarea id="voice-stream-text" lang={language} rows={5} maxLength={1000} disabled={busy} className={`${control} text-base leading-8`} value={text} onChange={e => setText(e.target.value)} />
           <p className="mt-2 text-right text-xs tabular-nums text-fd-muted-foreground">{text.length} / 1,000 characters</p>
-          <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={busy || !credential.trim() || !voice || !text.trim() || checking} onClick={() => void run()} className={`${button} bg-fd-primary text-fd-primary-foreground`}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}Stream speech · bill my wallet</button><button type="button" disabled={!busy || muted} className={button} onClick={mute}><VolumeX className="size-4" />Mute playback</button></div>
+          <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={busy || !credential.trim() || !voice || !text.trim() || checking} onClick={() => void run()} className={`${button} bg-fd-primary text-fd-primary-foreground`}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}Stream speech</button><button type="button" disabled={!busy || muted} className={button} onClick={mute}><VolumeX className="size-4" />Mute playback</button></div>
           <p role="status" className="mt-5 text-xs leading-5 text-fd-muted-foreground">{status}</p>
           {error && <p role="alert" className="mt-3 rounded border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
           {playbackError && <p className="mt-3 text-xs text-fd-muted-foreground">{playbackError}</p>}
           <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-fd-border pt-4 text-sm tabular-nums"><div><dt className="text-xs text-fd-muted-foreground">First audio received</dt><dd className="mt-1">{firstAudio === null ? '—' : `${(firstAudio / 1000).toFixed(2)} s`}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Audio received</dt><dd className="mt-1">{(bytes / 1024).toFixed(1)} KB</dd></div>{result && <><div><dt className="text-xs text-fd-muted-foreground">{result.idempotent_replay ? 'Additional charge' : 'Confirmed charge'}</dt><dd className="mt-1 font-semibold">{(result.idempotent_replay ? 0 : result.usage.credits_used).toFixed(4)} {result.usage.currency}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Generated duration</dt><dd className="mt-1">{result.duration_seconds.toFixed(3)} s</dd></div><div><dt className="text-xs text-fd-muted-foreground">Balance at settlement</dt><dd className="mt-1">{result.usage.credits_remaining == null ? 'Check account balance' : `${result.usage.credits_remaining.toFixed(4)} ETB`}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Billing</dt><dd className="mt-1">{result.idempotent_replay ? 'Original charge recovered' : 'Settled once'}</dd></div></>}</dl>
           {clipUrl && <div className="mt-5 space-y-3"><audio controls src={clipUrl} className="w-full" /><a href={clipUrl} download="addis-voice.mp3" className={button}><Download className="size-4" />Download speech</a></div>}
           {request.current && <div className="mt-5 border-t border-fd-border pt-4"><p className="break-all font-mono text-[10px] text-fd-muted-foreground">Request: {request.current.id}</p><button type="button" className={`${button} mt-3`} disabled={busy || checking || !credential.trim()} onClick={() => void run(true)}><RotateCcw className="size-4" />Recover request</button></div>}
-          <p className="mt-5 text-xs leading-5 text-fd-muted-foreground">Muting only stops playback. Started speech continues to generate and bill. Recovering keeps the original text, voice, and request ID; a new generation uses a new ID.</p>
+          <p className="mt-5 text-xs leading-5 text-fd-muted-foreground">Muting does not cancel generation. Recover an interrupted request with no duplicate charge.</p>
         </div>
       </div>
     </section>

@@ -25,7 +25,6 @@ test('keeps the original documentation tree and adds only approved primary pages
     'get-started/quickstart',
     'capabilities/text-generation',
     'capabilities/text-to-speech',
-    'capabilities/realtime-voice',
     'capabilities/speech-to-text',
     'capabilities/multimodal',
     'capabilities/realtime',
@@ -327,9 +326,7 @@ test('documents the unified SDK capability matrix', () => {
     assert.ok(sdks.includes(row), `SDK page is missing matrix row: ${row}`);
   }
 
-  assert.match(sdks, /Addis Voices 2 supports completed clips and \[Real-time Voice Streaming\]/);
-  assert.match(sdks, /Python 0\.4\.0 is \[published on PyPI\]/);
-  assert.match(sdks, /npm still publishes \*\*0\.2\.0\*\* because publication of 0\.4\.0 was rejected by npm permissions/);
+  assert.match(sdks, /Addis Voices 2 supports completed clips and \[Streaming text-to-speech\]/);
 });
 
 test('corrects capability page descriptions, terminology, and title badges', () => {
@@ -611,5 +608,17 @@ test('resolves local documentation links and image assets', () => {
         `${absolute.slice(root.length + 1)} links to missing image ${match[1]}`,
       );
     }
+  }
+});
+
+
+test('groups speech streaming under TTS and redirects its former documentation route', () => {
+  const tts = read('content/docs/capabilities/text-to-speech.mdx');
+  assert.match(tts, /## Streaming/);
+  assert.match(tts, /<VoiceStreamingDemo \/>/);
+  assert.ok(!read('content/docs/meta.json').includes('capabilities/realtime-voice'));
+  assert.match(read('next.config.mjs'), /source: '\/docs\/capabilities\/realtime-voice',\s+destination: '\/docs\/capabilities\/text-to-speech#streaming'/);
+  for (const file of walk('content/docs').filter(file => file.endsWith('.mdx'))) {
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /Production readiness checks pending|Live billing verification|replacement has passed isolated tests/);
   }
 });

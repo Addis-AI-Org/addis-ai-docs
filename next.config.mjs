@@ -14,6 +14,11 @@ const config = {
   async redirects() {
     return [
       {
+        source: '/docs/capabilities/realtime-voice',
+        destination: '/docs/capabilities/text-to-speech#streaming',
+        permanent: true,
+      },
+      {
         source: '/docs/get-started/quick-start',
         destination: '/docs/get-started/quickstart',
         permanent: true,
