@@ -8,8 +8,8 @@ import { VOICE_API, authHeaders, readJson, readVoiceStream, validateSocketUrl, v
 import { streamingVoiceCatalog } from '@/data/streaming-voice-catalog';
 type Wallet = { balance: number; pricing: { price_per_minute: number; currency: string } };
 type Submission = { id: string; text: string; voice: string; language: VoiceLanguage; transport: 'websocket' | 'http'; maxAudio: number };
-type Runtime = { socket?: WebSocket; controller?: AbortController; context?: AudioContext; gain?: GainNode; next: number; decode: Promise<void>; muted: boolean; wav: boolean; sources: AudioBufferSourceNode[]; parts: Uint8Array[]; total: number; started: number; deadline?: ReturnType<typeof setTimeout>; heartbeat?: ReturnType<typeof setInterval>; finished: boolean };
-const fresh = (): Runtime => ({ next: 0, decode: Promise.resolve(), muted: false, wav: false, sources: [], parts: [], total: 0, started: performance.now(), finished: false });
+type Runtime = { socket?: WebSocket; controller?: AbortController; context?: AudioContext; gain?: GainNode; next: number; decode: Promise<void>; muted: boolean; stopped: boolean; wav: boolean; sources: AudioBufferSourceNode[]; parts: Uint8Array[]; total: number; started: number; deadline?: ReturnType<typeof setTimeout>; heartbeat?: ReturnType<typeof setInterval>; finished: boolean };
+const fresh = (): Runtime => ({ next: 0, decode: Promise.resolve(), muted: false, stopped: false, wav: false, sources: [], parts: [], total: 0, started: performance.now(), finished: false });
 const examples = {
   am: { name: 'Amharic', voice: 'am-hamen', text: 'ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።' },
   om: { name: 'Afaan Oromo', voice: 'om-bikila', text: 'Nagaa, gara Addis AI baga nagaan dhuftan.' },
@@ -24,7 +24,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
   const [voice, setVoice] = useState<string>(examples.am.voice);
   const [voices, setVoices] = useState<StreamingVoice[]>(streamingVoiceCatalog);
   const [text, setText] = useState<string>(examples.am.text);
-  const [transport, setTransport] = useState<'websocket' | 'http'>('websocket');
+  const [transport, setTransport] = useState<'websocket' | 'http'>('http');
   const [maxAudio, setMaxAudio] = useState(60);
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [checking, setChecking] = useState(false);
@@ -113,7 +113,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
       catch { setPlaybackError('Use the saved audio player after completion.'); }
       const current = rt;
       const fail = (message: string) => {
-        if (!mounted.current || runtime.current !== current || current.finished) return;
+        if (!mounted.current || runtime.current !== current || current.finished || current.stopped) return;
         close(current); setBusy(false); setError(message); setStatus('Keep this request ID and use Recover request before starting another generation.');
       };
       current.deadline = setTimeout(() => fail('The stream timed out before billing confirmation.'), 240000);
@@ -151,6 +151,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
         } catch (e) { fail(e instanceof Error ? e.message : 'Invalid streaming response.'); }
       };
     } catch (e) {
+      if (rt?.stopped) return;   // the user stopped it; stop() already reset the UI
       if (rt) close(rt);
       if (mounted.current) { setBusy(false); setError(e instanceof Error ? e.message : 'Speech request failed.'); }
     }
@@ -160,15 +161,16 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
     const context = runtime.current?.context; if (!context || context.state === 'closed') return;
     if (context.state === 'running') { await context.suspend(); setPaused(true); } else { await context.resume(); setPaused(false); }
   };
-  // Stop playback for good. A generation already running still completes and is billed once;
-  // on a WebSocket, speech.cancel stops further audio from being sent.
+  // Stop everything: playback and the stream. Speech the server already started is still
+  // saved and billed once; Recover request fetches it without another charge.
   const stop = () => {
     const rt = runtime.current; if (!rt) return;
-    rt.muted = true; if (rt.gain) rt.gain.gain.value = 0;
+    rt.stopped = true; rt.muted = true; if (rt.gain) rt.gain.gain.value = 0;
     rt.sources.forEach(s => { try { s.stop(); } catch { /* already ended */ } }); rt.sources = [];
-    if (busy && rt.socket?.readyState === WebSocket.OPEN) rt.socket.send(JSON.stringify({ type: 'speech.cancel' }));
-    if (rt.context?.state === 'suspended') void rt.context.resume().catch(() => {});
-    setMuted(true); setPlaying(false); setPaused(false);
+    if (rt.socket?.readyState === WebSocket.OPEN) rt.socket.send(JSON.stringify({ type: 'speech.cancel' }));
+    close(rt); void rt.context?.close().catch(() => {});
+    setMuted(true); setPlaying(false); setPaused(false); setBusy(false);
+    setStatus('Stopped. Speech already started is saved and billed once; use Recover request to get it.');
   };
   const available = voices.filter(v => v.language === language);
   return (
@@ -195,7 +197,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
             <label htmlFor="voice-stream-voice" className="block text-sm font-medium">Voice</label>
             <select id="voice-stream-voice" className={control} disabled={!available.length} value={voice} onChange={e => setVoice(e.target.value)}>{available.length ? available.map(v => <option key={v.id} value={v.id}>{v.name}</option>) : <option value="">No available voices</option>}</select>
             <label htmlFor="voice-stream-transport" className="block text-sm font-medium">Transport</label>
-            <select id="voice-stream-transport" className={control} value={transport} onChange={e => setTransport(e.target.value as 'websocket' | 'http')}><option value="websocket">Persistent WebSocket</option><option value="http">HTTP stream</option></select>
+            <select id="voice-stream-transport" className={control} value={transport} onChange={e => setTransport(e.target.value as 'websocket' | 'http')}><option value="http">HTTP stream</option><option value="websocket">Persistent WebSocket</option></select>
             {transport === 'websocket' && <><label htmlFor="voice-stream-ceiling" className="block text-sm font-medium">Maximum audio per turn</label><select id="voice-stream-ceiling" className={control} value={maxAudio} onChange={e => setMaxAudio(Number(e.target.value))}>{[30, 60, 120].map(s => <option key={s} value={s}>{s} seconds</option>)}</select><p className="text-xs leading-5 text-fd-muted-foreground">Charges are based on generated audio.</p></>}
           </fieldset>
         </div>
