@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { DemoNavigation } from '@/components/demo-navigation';
-import { Download, Loader2, Play, RotateCcw, VolumeX } from 'lucide-react';
+import { Download, Loader2, Pause, Play, RotateCcw, Square } from 'lucide-react';
 import { VOICE_API, authHeaders, readJson, readVoiceStream, validateSocketUrl, validateAudioUrl, availableVoices, selectVoice, type StreamingVoice, type VoiceLanguage, type VoiceCompletion } from '@/lib/voice-stream-client';
 
 import { streamingVoiceCatalog } from '@/data/streaming-voice-catalog';
 type Wallet = { balance: number; pricing: { price_per_minute: number; currency: string } };
 type Submission = { id: string; text: string; voice: string; language: VoiceLanguage; transport: 'websocket' | 'http'; maxAudio: number };
-type Runtime = { socket?: WebSocket; controller?: AbortController; context?: AudioContext; gain?: GainNode; next: number; decode: Promise<void>; muted: boolean; parts: Uint8Array[]; total: number; started: number; deadline?: ReturnType<typeof setTimeout>; heartbeat?: ReturnType<typeof setInterval>; finished: boolean };
-const fresh = (): Runtime => ({ next: 0, decode: Promise.resolve(), muted: false, parts: [], total: 0, started: performance.now(), finished: false });
+type Runtime = { socket?: WebSocket; controller?: AbortController; context?: AudioContext; gain?: GainNode; next: number; decode: Promise<void>; muted: boolean; sources: AudioBufferSourceNode[]; parts: Uint8Array[]; total: number; started: number; deadline?: ReturnType<typeof setTimeout>; heartbeat?: ReturnType<typeof setInterval>; finished: boolean };
+const fresh = (): Runtime => ({ next: 0, decode: Promise.resolve(), muted: false, sources: [], parts: [], total: 0, started: performance.now(), finished: false });
 const examples = {
   am: { name: 'Amharic', voice: 'am-hamen', text: 'ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።' },
   om: { name: 'Afaan Oromo', voice: 'om-bikila', text: 'Nagaa, gara Addis AI baga nagaan dhuftan.' },
@@ -37,6 +37,8 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
   const [bytes, setBytes] = useState(0);
   const [clipUrl, setClipUrl] = useState('');
   const [muted, setMuted] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [paused, setPaused] = useState(false);
   const request = useRef<Submission | null>(null);
   const runtime = useRef<Runtime | null>(null);
   const mounted = useRef(true);
@@ -76,6 +78,8 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
         if (rt.muted || !mounted.current || runtime.current !== rt) return;
         const source = rt.context.createBufferSource(); source.buffer = buffer; source.connect(rt.gain!);
         const start = Math.max(rt.context.currentTime + 0.03, rt.next); source.start(start); rt.next = start + buffer.duration;
+        rt.sources.push(source); setPlaying(true);
+        source.onended = () => { rt.sources = rt.sources.filter(s => s !== source); if (!rt.sources.length && runtime.current === rt && mounted.current) setPlaying(false); };
       } catch { if (mounted.current) setPlaybackError('Live playback is unavailable for this audio chunk. Use the saved clip below after completion.'); }
     });
   };
@@ -101,7 +105,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
       request.current = submission;
       const previous = runtime.current; if (previous) { close(previous); void previous.context?.close().catch(() => {}); }
       rt = fresh(); runtime.current = rt;
-      setBusy(true); setError(''); setPlaybackError(''); setResult(null); setFirstAudio(null); setBytes(0); setMuted(false); setClipUrl('');
+      setBusy(true); setError(''); setPlaybackError(''); setResult(null); setFirstAudio(null); setBytes(0); setMuted(false); setPlaying(false); setPaused(false); setClipUrl('');
       // Resume from the button gesture, before any network request.
       try { rt.context = new AudioContext(); rt.gain = rt.context.createGain(); rt.gain.connect(rt.context.destination); await rt.context.resume(); }
       catch { setPlaybackError('Use the saved audio player after completion.'); }
@@ -149,7 +153,21 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
       if (mounted.current) { setBusy(false); setError(e instanceof Error ? e.message : 'Speech request failed.'); }
     }
   };
-  const mute = () => { const rt = runtime.current; if (!rt) return; rt.muted = true; if (rt.gain) rt.gain.gain.value = 0; setMuted(true); };
+  // Pause and resume only the local player; the stream keeps arriving and queues up.
+  const togglePause = async () => {
+    const context = runtime.current?.context; if (!context || context.state === 'closed') return;
+    if (context.state === 'running') { await context.suspend(); setPaused(true); } else { await context.resume(); setPaused(false); }
+  };
+  // Stop playback for good. A generation already running still completes and is billed once;
+  // on a WebSocket, speech.cancel stops further audio from being sent.
+  const stop = () => {
+    const rt = runtime.current; if (!rt) return;
+    rt.muted = true; if (rt.gain) rt.gain.gain.value = 0;
+    rt.sources.forEach(s => { try { s.stop(); } catch { /* already ended */ } }); rt.sources = [];
+    if (busy && rt.socket?.readyState === WebSocket.OPEN) rt.socket.send(JSON.stringify({ type: 'speech.cancel' }));
+    if (rt.context?.state === 'suspended') void rt.context.resume().catch(() => {});
+    setMuted(true); setPlaying(false); setPaused(false);
+  };
   const available = voices.filter(v => v.language === language);
   return (
     <section className={`not-prose addis-offset-shell ${fullPage ? 'my-0 min-h-[calc(100dvh-10rem)]' : 'my-10'} border border-fd-border bg-fd-background`} aria-labelledby="voice-demo-title">
@@ -183,14 +201,14 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
           <label htmlFor="voice-stream-text" className="mb-3 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Your sentence</label>
           <textarea id="voice-stream-text" lang={language} rows={5} maxLength={1000} disabled={busy} className={`${control} text-base leading-8`} value={text} onChange={e => setText(e.target.value)} />
           <p className="mt-2 text-right text-xs tabular-nums text-fd-muted-foreground">{text.length} / 1,000 characters</p>
-          <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={busy || !credential.trim() || !voice || !text.trim() || checking} onClick={() => void run()} className={`${button} bg-fd-primary text-fd-primary-foreground`}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}Stream speech</button><button type="button" disabled={!busy || muted} className={button} onClick={mute}><VolumeX className="size-4" />Mute playback</button></div>
+          <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={busy || !credential.trim() || !voice || !text.trim() || checking} onClick={() => void run()} className={`${button} bg-fd-primary text-fd-primary-foreground`}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}Stream speech</button><button type="button" disabled={(!busy && !playing) || muted} className={button} onClick={() => void togglePause()}>{paused ? <Play className="size-4" /> : <Pause className="size-4" />}{paused ? 'Resume' : 'Pause'}</button><button type="button" disabled={(!busy && !playing) || muted} className={button} onClick={stop}><Square className="size-4" />Stop</button></div>
           <p role="status" className="mt-5 text-xs leading-5 text-fd-muted-foreground">{status}</p>
           {error && <p role="alert" className="mt-3 rounded border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
           {playbackError && <p className="mt-3 text-xs text-fd-muted-foreground">{playbackError}</p>}
           <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-fd-border pt-4 text-sm tabular-nums"><div><dt className="text-xs text-fd-muted-foreground">First audio received</dt><dd className="mt-1">{firstAudio === null ? '—' : `${(firstAudio / 1000).toFixed(2)} s`}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Audio received</dt><dd className="mt-1">{(bytes / 1024).toFixed(1)} KB</dd></div>{result && <><div><dt className="text-xs text-fd-muted-foreground">{result.idempotent_replay ? 'Additional charge' : 'Confirmed charge'}</dt><dd className="mt-1 font-semibold">{(result.idempotent_replay ? 0 : result.usage.credits_used).toFixed(4)} {result.usage.currency}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Generated duration</dt><dd className="mt-1">{result.duration_seconds.toFixed(3)} s</dd></div><div><dt className="text-xs text-fd-muted-foreground">Balance at settlement</dt><dd className="mt-1">{result.usage.credits_remaining == null ? 'Check account balance' : `${result.usage.credits_remaining.toFixed(4)} ETB`}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Billing</dt><dd className="mt-1">{result.idempotent_replay ? 'Original charge recovered' : 'Settled once'}</dd></div></>}</dl>
           {clipUrl && <div className="mt-5 space-y-3"><audio controls src={clipUrl} className="w-full" /><a href={clipUrl} download="addis-voice.mp3" className={button}><Download className="size-4" />Download speech</a></div>}
           {request.current && <div className="mt-5 border-t border-fd-border pt-4"><p className="break-all font-mono text-[10px] text-fd-muted-foreground">Request: {request.current.id}</p><button type="button" className={`${button} mt-3`} disabled={busy || checking || !credential.trim()} onClick={() => void run(true)}><RotateCcw className="size-4" />Recover request</button></div>}
-          <p className="mt-5 text-xs leading-5 text-fd-muted-foreground">Muting does not cancel generation. Recover an interrupted request with no duplicate charge.</p>
+          <p className="mt-5 text-xs leading-5 text-fd-muted-foreground">Stopping playback does not cancel a generation that has started; it is still saved and billed once. Recover an interrupted request with no duplicate charge.</p>
         </div>
       </div>
     </section>
