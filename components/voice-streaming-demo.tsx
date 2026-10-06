@@ -120,7 +120,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
       setStatus(replay ? 'Recovering the same request…' : 'Creating your speech stream…');
       if (submission.transport === 'http') {
         current.controller = new AbortController();
-        const response = await fetch(`${VOICE_API}/voice/generations/stream`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json', 'X-Addis-Audio-Accept': 'wav-mp3-frames-v1' }, credentials: 'omit', cache: 'no-store', signal: current.controller.signal,
+        const response = await fetch(`${VOICE_API}/voice/generations/stream`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, credentials: 'omit', cache: 'no-store', signal: current.controller.signal,
           body: JSON.stringify({ text: submission.text, language: submission.language, voice_id: submission.voice, output_format: 'mp3_44100', client_request_id: submission.id }) });
         const data = await readVoiceStream(response, audio => receive(current, audio), current.controller.signal);
         complete(current, data);
@@ -128,7 +128,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
       }
       const capability = await readJson<{ version: string }>(await fetch(`${VOICE_API}/realtime`, { cache: 'no-store', credentials: 'omit' }));
       const ticket = await readJson<{ token: string; websocket_url: string }>(await fetch(`${VOICE_API}/realtime/sessions`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, cache: 'no-store', credentials: 'omit',
-        body: JSON.stringify({ voice_id: submission.voice, language: submission.language, audio_format: 'wav_mp3', max_text_characters: Math.max(submission.text.length, 1), ...(capability.version === '2' ? { max_audio_seconds: submission.maxAudio } : {}) }) }));
+        body: JSON.stringify({ voice_id: submission.voice, language: submission.language, audio_format: 'mp3', max_text_characters: Math.max(submission.text.length, 1), ...(capability.version === '2' ? { max_audio_seconds: submission.maxAudio } : {}) }) }));
       if (!mounted.current || current.finished) return;
       const socket = new WebSocket(validateSocketUrl(ticket.websocket_url)); current.socket = socket;
       socket.onopen = () => socket.send(JSON.stringify({ type: 'session.authenticate', token: ticket.token }));
