@@ -73,6 +73,8 @@ The SDKs read `ADDIS_API_KEY` by default. Keep this key on a trusted server—ne
 | Scribe partial transcript stream (0.4.0 update) | `addis.scribe.stream` |
 | Scribe live PCM sessions (0.4.0 update) | `addis.scribe.connect` |
 | Scribe usage and request recovery (0.4.0 update) | `addis.scribe.usage`, `addis.scribe.recover` |
+| Scribe word timestamps and caption cues (0.5.0 update) | `addis.scribe.transcribe` with `timestamps: "word"` |
+| SRT and VTT captions from a Scribe result (0.5.0 update) | `toSrt` / `toVtt` (Node.js), `addisai.to_srt` / `addisai.to_vtt` (Python) |
 | Translation | `addis.translate.create` |
 | Image and document reasoning | `addis.chat.completions.create` with `attachments` |
 | Audio reasoning | `addis.chat.completions.create` with audio input |

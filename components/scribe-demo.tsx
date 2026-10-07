@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DemoNavigation } from '@/components/demo-navigation';
-import { Check, Copy, FileAudio, Loader2, Mic, Square, Zap } from 'lucide-react';
-import { SCRIBE_API, authHeaders, pcm16, readJson, readTranscriptStream, validateSocketUrl, type Backend, type ScribeResult } from '@/lib/scribe-client';
+import { Captions, Check, Copy, Download, FileAudio, Loader2, Mic, Square, Zap } from 'lucide-react';
+import { SCRIBE_API, authHeaders, pcm16, readJson, readTranscriptStream, segmentAt, toSrt, toVtt, validateSocketUrl, wordsBySegment, wrapCaption, type Backend, type ScribeResult, type ScribeWord } from '@/lib/scribe-client';
 
 type Phase = 'idle' | 'connecting' | 'recording' | 'processing';
 type Runtime = { socket?: WebSocket; context?: AudioContext; stream?: MediaStream; source?: MediaStreamAudioSourceNode; node?: AudioWorkletNode; mute?: GainNode; timer?: ReturnType<typeof setTimeout>; deadline?: ReturnType<typeof setTimeout>; cancelled: boolean; flushed?: () => void };
@@ -15,6 +15,8 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const [backend, setBackend] = useState<Backend>('standard');
   const [file, setFile] = useState<File | null>(null);
   const [uploadStream, setUploadStream] = useState(false);
+  const [timestamps, setTimestamps] = useState(true);
+  const [captionFile, setCaptionFile] = useState<File | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [text, setText] = useState('');
   const [status, setStatus] = useState('Record Amharic speech or upload audio.');
@@ -60,7 +62,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const startRequest = () => {
     const headers = authHeaders(credential);
     const id = `docs_${crypto.randomUUID().replaceAll('-', '')}`;
-    setRequestId(id); setText(''); setResult(null); setError(''); setCopied(false);
+    setRequestId(id); setText(''); setResult(null); setError(''); setCopied(false); setCaptionFile(null);
     return { headers, id };
   };
   const recover = async () => {
@@ -74,9 +76,13 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
     if (file.size > 25 * 1024 * 1024) { setError('Choose a file no larger than 25 MB.'); return; }
     try {
       const { headers, id } = startRequest();
-      setPhase('processing'); setStatus(uploadStream ? 'Uploading audio, then streaming transcript updates…' : 'Uploading and transcribing audio…');
+      // Timestamps are only available for completed uploads, so they never combine with stream=true.
+      const streamUpdates = uploadStream && !timestamps;
+      if (timestamps) setCaptionFile(file);
+      setPhase('processing'); setStatus(streamUpdates ? 'Uploading audio, then streaming transcript updates…' : timestamps ? 'Uploading and transcribing audio with word timestamps…' : 'Uploading and transcribing audio…');
       const body = new FormData(); body.set('audio', file);
-      const query = new URLSearchParams({ backend, chunk: '1120ms', stream: String(uploadStream), request_id: id });
+      const query = new URLSearchParams({ backend, chunk: '1120ms', stream: String(streamUpdates), request_id: id });
+      if (timestamps) query.set('timestamps', 'word');
       const response = await fetch(`${SCRIBE_API}/transcribe?${query}`, { method: 'POST', headers, body, cache: 'no-store' });
       const data = await readTranscriptStream(response, partial => { if (mounted.current) setText(partial); });
       if (mounted.current) complete(data);
@@ -188,22 +194,142 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
           </div>
           <div className="space-y-3 border-t border-fd-border pt-5">
             <label htmlFor="scribe-file" className="flex items-center gap-2 text-sm font-medium"><FileAudio className="size-4" />Upload audio</label>
-            <input id="scribe-file" type="file" accept="audio/*,.wav,.mp3,.m4a,.webm,.ogg,.flac" disabled={busy} onChange={e => setFile(e.target.files?.[0] ?? null)} className={`${control} file:mr-3 file:rounded file:border-0 file:bg-fd-secondary file:px-2 file:py-1 file:text-fd-foreground`} />
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={uploadStream} disabled={busy} onChange={e => setUploadStream(e.target.checked)} />Show partial text after upload</label>
+            <input id="scribe-file" type="file" accept="audio/*,.wav,.mp3,.m4a,.webm,.ogg,.flac" disabled={busy} onChange={e => { setFile(e.target.files?.[0] ?? null); setCaptionFile(null); }} className={`${control} file:mr-3 file:rounded file:border-0 file:bg-fd-secondary file:px-2 file:py-1 file:text-fd-foreground`} />
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={timestamps} disabled={busy} aria-describedby="scribe-timestamps-hint" onChange={e => { setTimestamps(e.target.checked); if (e.target.checked) setUploadStream(false); }} />Word timestamps and captions</label>
+            <label className={`flex items-center gap-2 text-sm ${timestamps ? 'text-fd-muted-foreground' : ''}`}><input type="checkbox" checked={uploadStream && !timestamps} disabled={busy || timestamps} aria-describedby="scribe-timestamps-hint" onChange={e => setUploadStream(e.target.checked)} />Show partial text after upload</label>
+            <p id="scribe-timestamps-hint" className="text-xs leading-5 text-fd-muted-foreground">{timestamps ? 'Timestamps return the full result at once, so partial text is off. Turn timestamps off to see partial text.' : 'Turn on timestamps to play the file with synced captions and download SRT or VTT.'} Live recording returns text only.</p>
             <button type="button" className={`${button} w-full`} disabled={busy || !file || !credential.trim()} onClick={upload}>{phase === 'processing' && <Loader2 className="size-4 animate-spin" />}Transcribe file</button>
             <p className="text-xs text-fd-muted-foreground">WAV, MP3, M4A, WebM, OGG or FLAC · 25 MB · 3 minutes</p>
           </div>
         </div>
         <div className="flex min-h-96 flex-col p-5 sm:p-6">
-          <div className="mb-5 flex items-center justify-between gap-3"><span className="text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Transcript</span><button type="button" className={`${button} px-3 py-1.5`} disabled={!text} onClick={copy}>{copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}{copied ? 'Copied' : 'Copy'}</button></div>
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Transcript</span>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className={`${button} px-3 py-1.5`} disabled={!text} onClick={copy}>{copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}{copied ? 'Copied' : 'Copy'}</button>
+              {result?.segments && <>
+                <button type="button" className={`${button} px-3 py-1.5`} onClick={() => downloadCaptions(toSrt(result), 'application/x-subrip;charset=utf-8', `${captionName(captionFile)}.srt`)}><Download aria-hidden="true" className="size-3.5" />Download SRT</button>
+                <button type="button" className={`${button} px-3 py-1.5`} onClick={() => downloadCaptions(toVtt(result), 'text/vtt;charset=utf-8', `${captionName(captionFile)}.vtt`)}><Download aria-hidden="true" className="size-3.5" />Download VTT</button>
+              </>}
+            </div>
+          </div>
           <p role="status" className="mb-4 flex items-center gap-2 text-xs leading-5 text-fd-muted-foreground">{busy && <Loader2 className="size-3.5 shrink-0 animate-spin" />}{status}</p>
           {error && <p role="alert" className="mb-4 rounded border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
           <div lang="am" aria-live="polite" aria-atomic="true" className="min-h-40 flex-1 whitespace-pre-wrap break-words text-lg leading-9">{text || <span className="text-fd-muted-foreground/60">የእርስዎ ጽሑፍ እዚህ ይታያል።</span>}</div>
+          {result?.segments && captionFile && <CaptionPlayer key={`${result.request_id}-${captionFile.name}-${captionFile.lastModified}`} file={captionFile} result={result} />}
           {result && <dl className="mt-6 grid grid-cols-2 gap-3 border-t border-fd-border pt-4 text-sm tabular-nums"><div><dt className="text-xs text-fd-muted-foreground">Charged</dt><dd className="mt-1 font-semibold">{result.usage.credits_used.toFixed(4)} {result.usage.currency}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Characters</dt><dd className="mt-1 font-semibold">{result.usage.characters}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Audio duration</dt><dd className="mt-1">{result.seconds.toFixed(2)} s</dd></div><div><dt className="text-xs text-fd-muted-foreground">Model compute</dt><dd className="mt-1">{(result.compute_ms / 1000).toFixed(2)} s · {result.backend === 'standard' ? 'Standard' : 'Turbo'}</dd></div></dl>}
           {requestId && <div className="mt-5 border-t border-fd-border pt-4"><p className="break-all font-mono text-[10px] text-fd-muted-foreground">Request: {requestId}</p><button type="button" disabled={busy} onClick={recover} className={`${button} mt-3`}>Recover request</button></div>}
           <p className="mt-5 text-xs leading-5 text-fd-muted-foreground">Disconnected? Recover your transcript with no duplicate charge.</p>
         </div>
       </div>
+    </section>
+  );
+}
+
+function captionName(file: File | null) {
+  return file?.name.replace(/\.[^.]+$/, '').trim() || 'captions';
+}
+
+function downloadCaptions(content: string, type: string, filename: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const link = document.createElement('a');
+  link.href = url; link.download = filename;
+  document.body.appendChild(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function clock(seconds: number) {
+  const whole = Math.max(0, seconds);
+  return `${Math.floor(whole / 60)}:${(whole % 60).toFixed(1).padStart(4, '0')}`;
+}
+
+/** Splits the cue's words into the same two lines the SRT/VTT files use. */
+function captionLines(text: string, words: ScribeWord[]): { text: string; words: ScribeWord[] }[] {
+  const lines = wrapCaption(words.length ? words.map(word => word.text).join(' ') : text);
+  if (!words.length) return lines.map(line => ({ text: line, words: [] }));
+  let offset = 0;
+  return lines.map(line => {
+    const count = line.split(' ').length;
+    return { text: line, words: words.slice(offset, (offset += count)) };
+  });
+}
+
+function CaptionPlayer({ file, result }: { file: File; result: ScribeResult }) {
+  const segments = useMemo(() => result.segments ?? [], [result]);
+  const groups = useMemo(() => wordsBySegment(result), [result]);
+  const audio = useRef<HTMLAudioElement | null>(null);
+  const list = useRef<HTMLOListElement | null>(null);
+  const frame = useRef(0);
+  const [time, setTime] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const active = segmentAt(segments, time);
+
+  // The object URL lives exactly as long as this audio element shows this file.
+  const attachAudio = useCallback((element: HTMLAudioElement | null) => {
+    audio.current = element;
+    if (!element) return;
+    const url = URL.createObjectURL(file);
+    element.src = url;
+    return () => { element.pause(); element.removeAttribute('src'); element.load(); URL.revokeObjectURL(url); };
+  }, [file]);
+
+  useEffect(() => {
+    if (!playing) return;
+    const tick = () => { if (audio.current) setTime(audio.current.currentTime); frame.current = requestAnimationFrame(tick); };
+    frame.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame.current);
+  }, [playing]);
+
+  useEffect(() => {
+    const container = list.current, item = active >= 0 ? container?.children[active] as HTMLElement | undefined : undefined;
+    if (!playing || !container || !item) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    container.scrollTo({ top: Math.max(0, item.offsetTop - 8), behavior: reduce ? 'auto' : 'smooth' });
+  }, [active, playing]);
+
+  const seek = (start: number) => {
+    if (!audio.current) return;
+    audio.current.currentTime = start + 0.01;
+    setTime(start + 0.01);
+  };
+  const sync = () => { if (audio.current) setTime(audio.current.currentTime); };
+  const cue = active >= 0 ? segments[active] : undefined;
+  const words = active >= 0 ? groups[active] ?? [] : [];
+  const spoken = words.filter(word => time >= word.start).length;
+
+  return (
+    <section aria-labelledby="scribe-captions-title" className="mt-6 space-y-4 border-t border-fd-border pt-4">
+      <h4 id="scribe-captions-title" className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground"><Captions aria-hidden="true" className="size-4" />Captions · {segments.length} cues · {result.words?.length ?? 0} words</h4>
+      <audio ref={attachAudio} controls preload="metadata" className="w-full" aria-label={`Play ${file.name} with captions`} onPlay={() => setPlaying(true)} onPause={() => { setPlaying(false); sync(); }} onEnded={() => { setPlaying(false); sync(); }} onSeeked={sync} onTimeUpdate={() => { if (!playing) sync(); }} />
+      <div aria-label="Caption preview" role="region" className="flex min-h-28 flex-col items-center justify-center rounded-md border border-fd-border bg-fd-secondary/40 px-4 py-5 text-center">
+        {cue ? (
+          <p lang="am" className="text-lg leading-8">
+            {captionLines(cue.text, words).map((line, lineIndex, lines) => {
+              const before = lines.slice(0, lineIndex).reduce((sum, previous) => sum + previous.words.length, 0);
+              return (
+                <span key={lineIndex} className="block">
+                  {line.words.length ? line.words.map((word, i) => {
+                    const index = before + i;
+                    return <span key={i}>{i > 0 && ' '}<span className={`rounded px-0.5 motion-safe:transition-colors ${index < spoken ? 'text-fd-foreground' : 'text-fd-muted-foreground/70'} ${index === spoken - 1 ? 'bg-fd-primary/15 text-fd-primary' : ''}`}>{word.text}</span></span>;
+                  }) : line.text}
+                </span>
+              );
+            })}
+          </p>
+        ) : <p className="text-sm text-fd-muted-foreground">{time > 0 ? '…' : 'Press play to see captions in sync with the audio.'}</p>}
+        <p className="mt-2 font-mono text-[10px] tabular-nums text-fd-muted-foreground">{clock(time)}</p>
+      </div>
+      <ol ref={list} aria-label="Caption cues. Select a cue to play from it." className="relative max-h-64 space-y-1 overflow-y-auto pr-1">
+        {segments.map((segment, i) => (
+          <li key={`${segment.start}-${i}`}>
+            <button type="button" aria-current={i === active ? 'true' : undefined} onClick={() => seek(segment.start)} className={`grid w-full grid-cols-[4.5rem_minmax(0,1fr)] gap-3 rounded-md border px-3 py-2 text-left text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary ${i === active ? 'border-fd-primary bg-fd-primary/10' : 'border-transparent hover:border-fd-border'}`}>
+              <span className="font-mono text-[11px] leading-5 tabular-nums text-fd-muted-foreground">{clock(segment.start)}<br />{clock(segment.end)}</span>
+              <span lang="am" className="leading-6">{wrapCaption(segment.text).map((line, j) => <span key={j} className="block">{line}</span>)}</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+      <p className="text-xs leading-5 text-fd-muted-foreground">Captions break at pauses because Scribe adds no punctuation. They usually appear about 0.15 s after speech starts and clear about 0.4 s before the speaker finishes.</p>
     </section>
   );
 }

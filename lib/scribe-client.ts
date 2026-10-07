@@ -4,7 +4,70 @@ export type ScribeResult = {
   text: string; request_id: string; backend: Backend; seconds: number; compute_ms: number;
   usage: { characters: number; credits_used: number; credits_remaining: number; currency: string; settled: boolean };
   idempotent_replay?: boolean;
+  /** Present when the request used `timestamps=word`. Times are seconds, already corrected by the server. */
+  words?: ScribeWord[];
+  segments?: ScribeSegment[];
 };
+export type ScribeWord = { text: string; start: number; end: number };
+export type ScribeSegment = { text: string; start: number; end: number };
+
+export const CAPTION_LINE_LENGTH = 42;
+
+/** Greedy wrap at 42 characters per line, at most two lines (any overflow joins the second line). */
+export function wrapCaption(text: string): string[] {
+  const lines: string[] = [];
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    const last = lines.length - 1;
+    if (last >= 0 && lines[last].length + 1 + word.length <= CAPTION_LINE_LENGTH) lines[last] += ` ${word}`;
+    else lines.push(word);
+  }
+  return lines.length > 2 ? [lines[0], lines.slice(1).join(' ')] : lines;
+}
+
+function captionTime(seconds: number, separator: ',' | '.'): string {
+  const total = Math.max(0, Math.round(seconds * 1000));
+  const pad = (value: number, size = 2) => String(value).padStart(size, '0');
+  const h = Math.floor(total / 3600000), m = Math.floor(total / 60000) % 60, s = Math.floor(total / 1000) % 60;
+  return `${pad(h)}:${pad(m)}:${pad(s)}${separator}${pad(total % 1000, 3)}`;
+}
+
+function requireSegments(result: { segments?: ScribeSegment[] }): ScribeSegment[] {
+  if (!Array.isArray(result.segments)) throw new Error('This result has no caption segments. Transcribe with timestamps=word.');
+  return result.segments;
+}
+
+/** SubRip captions computed locally from the returned segments (no API call). */
+export function toSrt(result: { segments?: ScribeSegment[] }): string {
+  return requireSegments(result)
+    .map((segment, i) => `${i + 1}\n${captionTime(segment.start, ',')} --> ${captionTime(segment.end, ',')}\n${wrapCaption(segment.text).join('\n')}\n`)
+    .join('\n');
+}
+
+/** WebVTT captions computed locally from the returned segments (no API call). */
+export function toVtt(result: { segments?: ScribeSegment[] }): string {
+  const cues = requireSegments(result)
+    .map(segment => `${captionTime(segment.start, '.')} --> ${captionTime(segment.end, '.')}\n${wrapCaption(segment.text).join('\n')}\n`);
+  return ['WEBVTT\n', ...cues].join('\n');
+}
+
+/** Groups words under each caption segment in order; falls back to time ranges when word counts disagree. */
+export function wordsBySegment(result: { words?: ScribeWord[]; segments?: ScribeSegment[] }): ScribeWord[][] {
+  const words = result.words ?? [], segments = result.segments ?? [];
+  const counts = segments.map(segment => segment.text.split(/\s+/).filter(Boolean).length);
+  if (counts.reduce((sum, count) => sum + count, 0) === words.length) {
+    let offset = 0;
+    return counts.map(count => words.slice(offset, (offset += count)));
+  }
+  return segments.map((segment, i) => {
+    const until = segments[i + 1]?.start ?? Infinity;
+    return words.filter(word => word.start >= segment.start && word.start < until);
+  });
+}
+
+/** Index of the segment on screen at `time`, or -1 between cues. */
+export function segmentAt(segments: ScribeSegment[], time: number): number {
+  return segments.findIndex(segment => time >= segment.start && time < segment.end);
+}
 export function authHeaders(value: string): Record<string, string> {
   const credential = value.trim();
   if (!credential) throw new Error('Enter your developer API key.');

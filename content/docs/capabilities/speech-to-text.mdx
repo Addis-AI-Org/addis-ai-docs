@@ -9,12 +9,13 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 import { Callout } from 'fumadocs-ui/components/callout';
 import { AudioWaveform, Mic, FileAudio, AlertTriangle } from 'lucide-react';
 import { ScribeDemo } from '@/components/scribe-demo';
+import { NewBadge } from '@/components/docs';
 
 Our Speech-to-Text (STT) technology is powered by specialized models trained to accurately recognize African languages. Unlike generic transcription services, our models are optimized for the specific phonemes, accents, and dialects of **Amharic** and **Afaan Oromo**.
 
 ## Try Addis Scribe live
 
-Transcribe **Amharic** live or upload audio. Choose **Standard** or **Turbo · 3× speed** and enter your API key. Both modes use the same transcription rate.
+Transcribe **Amharic** live or upload audio. Choose **Standard** or **Turbo · 3× speed** and enter your API key. Both modes use the same transcription rate. Uploaded files can also return [word timestamps and captions](#timestamps-and-captions) that play in sync with your audio.
 
 <ScribeDemo />
 
@@ -208,6 +209,8 @@ For browser audio, use `addis.scribe.createSession({ requestId })` on the server
 | Issue a one-use browser ticket | `scribe.createSession(...)` | `scribe.create_session(...)` |
 | Open a live PCM connection | `scribe.connect(...)` | `scribe.connect(...)` |
 | Recover an existing request | `scribe.recover(requestId)` | `scribe.recover(request_id)` |
+| Word timestamps and caption cues (0.5.0) | `scribe.transcribe({ ..., timestamps: "word" })` | `scribe.transcribe(..., timestamps="word")` |
+| Build SRT or VTT captions locally (0.5.0) | `toSrt(result)`, `toVtt(result)` | `addisai.to_srt(result)`, `addisai.to_vtt(result)` |
 
 HTTP defaults to Standard and `1120ms` chunks; live sessions default to Standard and `320ms` chunks. Either transport accepts `320ms` or `1120ms`. File uploads accept at most **25 MiB / 180 seconds**. Socket frames accept at most two seconds each and 180 seconds total. Socket tickets are one-use and expire after **60 seconds**. An unavailable mode returns an error.
 
@@ -218,6 +221,127 @@ Only the **final transcript** is billable. Partial events are provisional cumula
 Save a request ID before sending audio. The SDK disables automatic retries for paid uploads and ticket creation. If the response is interrupted or billing is pending, call `scribe.recover` with that ID and the same account's key. A completed replay returns its original settled result without another deduction. Use a new ID when changing audio, backend, chunk, or HTTP streaming settings. Accepted audio can still finish and be billed after a socket disconnect or when you stop reading an HTTP stream.
 
 Completed results remain recoverable for 24 hours; pending settlement remains recoverable. Recovery can report `IN_PROGRESS`, `BILLING_PENDING`, `REQUEST_INTERRUPTED`, or `NOT_FOUND`. Do not display a confirmed charge unless `usage.settled` is true. A busy account/backend returns HTTP 429, and changed inputs with a reused ID return HTTP 409.
+
+### Timestamps and captions <NewBadge className="ml-2 align-middle" /> [#timestamps-and-captions]
+
+Scribe can return the time of every word and ready-made caption cues for a completed file upload. Use them to subtitle a video, highlight words while audio plays, or jump to the moment a phrase was said. Ask for JSON with `timestamps=word`, or ask for a caption file directly with `format=srt` or `format=vtt`.
+
+These query parameters are added to `POST /api/v1/scribe/transcribe`. Everything else about the request stays the same.
+
+<TypeTable
+  type={{
+    'timestamps': {
+      description: '"word" adds `words` and `segments` to the JSON result. "none" returns text only.',
+      type: '"none" | "word"',
+      default: '"none"',
+    },
+    'format': {
+      description: '"srt" or "vtt" returns a caption file instead of JSON and implies timestamps=word. Caption responses keep the X-Request-Id and X-Scribe-* usage headers.',
+      type: '"json" | "srt" | "vtt"',
+      default: '"json"',
+    },
+  }}
+/>
+
+With `timestamps=word`, the usual `data` object also contains:
+
+```json
+{
+  "data": {
+    "text": "ሰላም ወዳጆቻችን እንዴት ከረማችሁ ዛሬ እንግዲህ",
+    "words": [
+      { "text": "ሰላም", "start": 18.9, "end": 19.52 },
+      { "text": "ወዳጆቻችን", "start": 19.6, "end": 20.08 }
+    ],
+    "segments": [
+      { "text": "ሰላም ወዳጆቻችን እንዴት ከረማችሁ ዛሬ እንግዲህ", "start": 18.8, "end": 21.8 }
+    ]
+  }
+}
+```
+
+- Times are seconds from the start of the file, with at most two decimals.
+- `words` are in spoken order. A word's `end` is never before its `start`.
+- `segments` are caption cues. A cue breaks at a pause of half a second or more, at two lines of 42 characters, or at 7 seconds, and cues never overlap. Segment `text` is one line; caption files wrap it at 42 characters, two lines at most.
+
+`format=srt` returns a SubRip file (`application/x-subrip`). `format=vtt` returns WebVTT (`text/vtt`) with a `WEBVTT` header and `00:00:18.800`-style times.
+
+```text
+1
+00:00:18,800 --> 00:00:21,800
+ሰላም ወዳጆቻችን እንዴት ከረማችሁ ዛሬ እንግዲህ እንግዳ አድርጌ
+ያቀረኩላችሁ
+```
+
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```bash
+    npm install https://github.com/Addis-AI-Org/addisai-js/releases/download/v0.5.0/addisai-0.5.0.tgz
+    ```
+
+    ```ts
+    import { writeFile } from "node:fs/promises";
+    import AddisAI, { fileFromPath, toSrt, ulid } from "addisai";
+
+    const addis = new AddisAI();
+    const result = await addis.scribe.transcribe({
+      audio: await fileFromPath("audio.wav"),
+      timestamps: "word",
+      requestId: ulid(),
+    });
+
+    for (const word of result.words ?? []) {
+      console.log(word.start, word.end, word.text);
+    }
+    await writeFile("captions.srt", toSrt(result)); // or toVtt(result)
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```bash
+    pip install "addisai[realtime]==0.5.0"
+    ```
+
+    ```python
+    import addisai
+    from addisai import AddisAI, ulid
+
+    with AddisAI() as client, open("audio.wav", "rb") as audio:
+        result = client.scribe.transcribe(
+            audio=audio, timestamps="word", request_id=ulid(),
+        )
+
+    for word in result["words"]:
+        print(word["start"], word["end"], word["text"])
+    with open("captions.srt", "w", encoding="utf-8") as captions:
+        captions.write(addisai.to_srt(result))  # or addisai.to_vtt(result)
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    # JSON with words and segments
+    curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?timestamps=word&request_id=my-captions-1' \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'audio=@audio.wav'
+
+    # An SRT caption file
+    curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?format=srt&request_id=my-captions-2' \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'audio=@audio.wav' \
+      -o captions.srt
+    ```
+  </Tab>
+</Tabs>
+
+`toSrt`/`toVtt` and `to_srt`/`to_vtt` run locally on the result you already have; they make no API call. To get captions for an earlier request, call `GET /api/v1/scribe/requests/YOUR_REQUEST_ID?format=srt` (or `vtt`). This works only for requests made with timestamps.
+
+**Limits**
+
+- Timestamps are available for completed file uploads only. They are not available with `stream=true` or on live WebSocket sessions; combining them with `stream=true` returns HTTP 422 `INVALID_REQUEST`.
+- Files are limited to **180 seconds** and **25 MiB**, as for other uploads.
+- There is no extra charge. Billing stays per transcribed character.
+- Scribe does not add punctuation, so captions break at pauses rather than at the ends of sentences.
+
+**Accuracy.** Times come from the speech model and are close, not exact. On long Amharic recordings, captions usually appear about 0.15 seconds after the speaker starts and disappear about 0.4 seconds before they finish. That is fine for subtitles and following along, but check by ear if you need frame-exact edits.
 
 
 ## Usage Guide
