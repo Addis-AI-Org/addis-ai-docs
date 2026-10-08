@@ -1,0 +1,47 @@
+---
+title: Streaming
+description: Choose the right streaming API for chat, transcription, and speech.
+icon: Radio
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Addis AI streams results over HTTP or WebSocket, depending on what you are building. This page helps you choose the right API, then sends you to the guide that covers it in full.
+
+## Choose a streaming API
+
+| You want to… | Use | Guide |
+| --- | --- | --- |
+| Show a chat reply as it is written | Chat `stream: true` | [Streaming and attachments](/docs/capabilities/text-generation#5-streaming-and-attachments) |
+| Transcribe a recording and show progress | Scribe HTTP stream | [Stream transcript updates after a file upload](/docs/capabilities/speech-to-text#stream-transcript-updates-after-a-file-upload) |
+| Transcribe a microphone as the person speaks | Scribe live WebSocket | [Connect live audio with the SDK](/docs/capabilities/speech-to-text#connect-live-audio-with-the-sdk) |
+| Speak one known text with minimal wait | Text-to-speech HTTP stream | [HTTP streaming](/docs/capabilities/text-to-speech#http-streaming) |
+| Speak successive turns or LLM output on one connection | Text-to-speech WebSocket | [Persistent WebSocket](/docs/capabilities/text-to-speech#persistent-websocket) |
+| Hold a live two-way voice conversation | Realtime API (Beta) | [Realtime API](/docs/capabilities/realtime) |
+
+## Compare streaming APIs
+
+| Surface | Transport and endpoint | Browser auth | Audio | Billing | Key limits | Recovery |
+| --- | --- | --- | --- | --- | --- | --- |
+| Chat streaming | HTTP, `stream: true` on `addis.chat.completions.create` | Server only (API key) | None | Tokens, see [Pricing](/docs/platform/pricing) | Cannot be combined with tools, attachments, or audio input | None |
+| Scribe file stream | HTTP `POST /api/v1/scribe/transcribe?stream=true`; SDK `scribe.stream` | Server only (`x-api-key`) | File upload, up to 25 MB and 180 seconds | 3.5 ETB per 1,000 final characters | One transcription per wallet at a time | `GET /api/v1/scribe/requests/{id}`, `scribe.recover` |
+| Scribe live | WebSocket at `data.websocket_url` from `POST /api/v1/scribe/sessions`; SDK `scribe.connect`, or `createSession` and `connectScribe` in the browser | One-use ticket sent as the first frame (`session.authenticate`); expires in 60 seconds | 16 kHz mono PCM16 little-endian; 100 ms frames ideal, up to 2 seconds per frame, up to 180 seconds total | Same as Scribe file stream | Same as Scribe file stream | Same as Scribe file stream |
+| Text-to-speech HTTP stream | HTTP `POST /api/v1/voice/generations/stream`; SDK `voice.stream` | Server only (`x-api-key`) | `mp3_44100` in length-prefixed frames | 5 ETB per generated minute | None listed | Replay with the same `client_request_id` |
+| Text-to-speech WebSocket | `POST /api/v1/realtime/sessions`, then `wss://api.addisassistant.com/api/v1/realtime/voice`; SDK `realtime.connect` | One-use session ticket | `mp3` or `wav_mp3` | 5 ETB per generated minute | 10-minute session, 5,000 characters, 100 turns, one turn at a time | Replay with the same `request_id` |
+| Realtime API (Beta) | WebSocket at `wss://relay.addisassistant.com/ws` | See its page | See its page | Realtime Audio token rates, see [Pricing](/docs/platform/pricing) | See its page | See its page |
+
+<Callout type="info" title="Two different “realtime” names">
+The `/api/v1/realtime/*` endpoints and the `addis.realtime.connect` SDK method stream **text-to-speech**. The [Realtime API](/docs/capabilities/realtime) on `relay.addisassistant.com` is a separate conversation product. They share a word, not a service.
+</Callout>
+
+## Rules for every stream
+
+- For transcription and speech streams, save a request ID before you send anything, so you can recover or replay the request.
+- Keep API keys on your server. Browsers connect with one-use tickets that your server creates.
+- Treat partial transcripts and streamed audio as provisional until the completion event confirms the usage.
+- Work the service has accepted is still finished and billed if your connection drops or you stop reading.
+
+## Try it
+
+- [Speech-to-Text playground](/docs/playground/speech-to-text)
+- [Realtime voice playground](/docs/playground/realtime-voice)

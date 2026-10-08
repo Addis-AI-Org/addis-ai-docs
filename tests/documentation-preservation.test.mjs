@@ -616,6 +616,15 @@ test('resolves local documentation links and image assets', () => {
 });
 
 
+test('adds a streaming overview page that links each streaming guide', () => {
+  assert.ok(read('content/docs/meta.json').includes('"capabilities/streaming"'));
+  const streaming = read('content/docs/capabilities/streaming.mdx');
+  for (const route of ['text-generation', 'speech-to-text', 'text-to-speech', 'realtime']) {
+    assert.ok(streaming.includes(`/docs/capabilities/${route}`), `missing link to ${route}`);
+  }
+  assert.doesNotMatch(streaming, /^## Endpoint$/m);
+});
+
 test('groups speech streaming under TTS and redirects its former documentation route', () => {
   const tts = read('content/docs/capabilities/text-to-speech.mdx');
   assert.match(tts, /## Streaming/);

@@ -12,6 +12,7 @@
     "capabilities/text-generation",
     "capabilities/text-to-speech",
     "capabilities/speech-to-text",
+    "capabilities/streaming",
     "capabilities/multimodal",
     "capabilities/realtime",
     "capabilities/translation",

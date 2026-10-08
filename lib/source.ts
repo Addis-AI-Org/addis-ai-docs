@@ -8,6 +8,7 @@ const newDocUrls = new Set([
   '/docs/get-started/sdks',
   '/docs/capabilities/text-to-speech',
   '/docs/capabilities/realtime-voice',
+  '/docs/capabilities/streaming',
 ]);
 
 const navigationLabelsPlugin = {
