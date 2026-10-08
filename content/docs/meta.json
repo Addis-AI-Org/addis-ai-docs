@@ -16,6 +16,9 @@
     "capabilities/multimodal",
     "capabilities/realtime",
     "capabilities/translation",
+    "--- Playgrounds ---",
+    "[Speech-to-Text](/docs/playground/speech-to-text)",
+    "[Text-to-Speech Streaming](/docs/playground/text-to-speech)",
     
 
     "--- Integration ---",

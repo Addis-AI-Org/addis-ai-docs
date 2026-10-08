@@ -406,6 +406,8 @@ Pass a fresh request ID for a new utterance, and keep it with the exact text and
 
 HTTP endpoints use `https://api.addisassistant.com`.
 
+The `/api/v1/realtime` paths and the SDK's `addis.realtime.connect` serve text-to-speech streaming. They are separate from the [Realtime API](/docs/capabilities/realtime) for microphone conversations.
+
 | Event | Meaning |
 | --- | --- |
 | `session.created` | Authenticated socket, session ID, and voice settings |

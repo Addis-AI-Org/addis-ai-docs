@@ -587,7 +587,7 @@ test('uses current platform routes and consistent release terminology', () => {
 test('resolves local documentation links and image assets', () => {
   const meta = JSON.parse(read('content/docs/meta.json'));
   const publicPages = [
-    ...meta.pages.filter((page) => !page.startsWith('---')),
+    ...meta.pages.filter((page) => !page.startsWith('---') && !page.startsWith('[')),
     'capabilities/text-to-speech-legacy',
   ];
 
@@ -634,4 +634,13 @@ test('groups speech streaming under TTS and redirects its former documentation r
   for (const file of walk('content/docs').filter(file => file.endsWith('.mdx'))) {
     assert.doesNotMatch(readFileSync(file, 'utf8'), /Production readiness checks pending|Live billing verification|replacement has passed isolated tests/);
   }
+});
+
+test('keeps streaming wayfinding: renamed TTS playground, redirect, sidebar group, no deprecated stream advice', () => {
+  assert.ok(existsSync(join(root, 'app/docs/playground/text-to-speech/page.tsx')));
+  assert.ok(!existsSync(join(root, 'app/docs/playground/realtime-voice')));
+  assert.match(read('next.config.mjs'), /source: '\/docs\/playground\/realtime-voice',\s+destination: '\/docs\/playground\/text-to-speech'/);
+  assert.doesNotMatch(read('lib/source.ts'), /realtime-voice/);
+  assert.match(read('content/docs/meta.json'), /--- Playgrounds ---/);
+  assert.doesNotMatch(read('content/docs/platform/faq.mdx'), /stream: true/);
 });
