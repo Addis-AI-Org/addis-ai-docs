@@ -12,7 +12,13 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+// Link previews need absolute image URLs. Production builds fall back to the
+// public docs domain so og:image never points at localhost.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.NODE_ENV === 'production'
+    ? 'https://docs.addisassistant.com'
+    : 'http://localhost:3000');
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
