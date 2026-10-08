@@ -660,3 +660,13 @@ test('publishes the streaming voice agent guide without credentials in URLs', ()
   assert.ok(!guide.includes('apiKey='));
   assert.ok(!guide.includes('?token='));
 });
+
+test('ships a visible favicon and absolute link-preview URLs in production', () => {
+  for (const file of ['app/icon.tsx', 'app/apple-icon.tsx', 'lib/brand-icon.tsx']) {
+    assert.ok(existsSync(join(root, file)), `${file} is missing`);
+  }
+  assert.match(read('lib/brand-icon.tsx'), /public\/images\/addis-logo\.png/);
+  const appLayout = read('app/layout.tsx');
+  assert.match(appLayout, /'https:\/\/docs\.addisassistant\.com'/);
+  assert.doesNotMatch(appLayout, /NEXT_PUBLIC_SITE_URL \?\? 'http:\/\/localhost:3000'/);
+});
