@@ -19,6 +19,11 @@ const config = {
         permanent: true,
       },
       {
+        source: '/docs/playground/realtime-voice',
+        destination: '/docs/playground/text-to-speech',
+        permanent: true,
+      },
+      {
         source: '/docs/get-started/quick-start',
         destination: '/docs/get-started/quickstart',
         permanent: true,

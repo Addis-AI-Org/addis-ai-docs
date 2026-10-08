@@ -176,7 +176,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
   return (
     <section className={`not-prose addis-offset-shell ${fullPage ? 'my-0 min-h-[calc(100dvh-10rem)]' : 'my-10'} border border-fd-border bg-fd-background`} aria-labelledby="voice-demo-title">
       <div className="border-b border-fd-border p-5 sm:p-6">
-        <DemoNavigation fullPage={fullPage} href="/docs/playground/realtime-voice" docsHref="/docs/capabilities/text-to-speech#streaming" />
+        <DemoNavigation fullPage={fullPage} href="/docs/playground/text-to-speech" docsHref="/docs/capabilities/text-to-speech#streaming" />
         <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-fd-primary">Addis Voices 2 · Live API</p>
         <h3 id="voice-demo-title" className="text-xl font-semibold tracking-tight">Try streaming speech</h3>
         <p className="mt-2 text-sm leading-6 text-fd-muted-foreground">Listen as speech is generated. Standard voice rates apply.</p>
