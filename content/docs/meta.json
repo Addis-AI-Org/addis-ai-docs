@@ -26,6 +26,7 @@
     "integration/mobile",
     "integration/server",
     "integration/voice-interface",
+    "integration/streaming-voice-agent",
 
     "--- Platform ---",
     "platform/pricing",

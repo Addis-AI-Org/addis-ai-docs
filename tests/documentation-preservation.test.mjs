@@ -650,3 +650,13 @@ test('keeps streaming wayfinding: renamed TTS playground, redirect, sidebar grou
   assert.match(read('content/docs/meta.json'), /--- Playgrounds ---/);
   assert.doesNotMatch(read('content/docs/platform/faq.mdx'), /stream: true/);
 });
+
+test('publishes the streaming voice agent guide without credentials in URLs', () => {
+  assert.ok(read('content/docs/meta.json').includes('"integration/streaming-voice-agent"'));
+  const guide = read('content/docs/integration/streaming-voice-agent.mdx');
+  for (const text of ['session.authenticate', 'audio.finish', 'stream: true', 'addis.realtime.connect']) {
+    assert.ok(guide.includes(text), `Guide is missing ${text}`);
+  }
+  assert.ok(!guide.includes('apiKey='));
+  assert.ok(!guide.includes('?token='));
+});
