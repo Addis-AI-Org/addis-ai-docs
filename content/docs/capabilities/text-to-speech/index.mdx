@@ -7,7 +7,7 @@ isNew: true
 
 import { VoiceCatalog } from '@/components/voice-catalog';
 
-Addis Voices 2 turns Amharic and Afaan Oromo text into durable audio clips. It is billed by generated duration at **5 ETB per minute**. Use `voice.generate` for completed clips, or follow [Streaming text-to-speech](/docs/capabilities/text-to-speech#streaming) for HTTP streams and persistent WebSocket sessions.
+Addis Voices 2 turns Amharic and Afaan Oromo text into durable audio clips. It is billed by generated duration at **5 ETB per minute**. Use `voice.generate` for completed clips, or follow [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming) for HTTP streams and persistent WebSocket sessions.
 
 <Callout type="warn" title="Maintaining a Voice 1 integration?">
 The original Text-to-Speech API is deprecated and hidden from the primary navigation. [Open the Legacy Text-to-Speech guide →](/docs/capabilities/text-to-speech-legacy)
@@ -299,7 +299,7 @@ Ensure high-quality output and reliable billing with these production patterns.
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
       <div><strong className="text-fd-foreground">Persist IDs:</strong> Store durable clip IDs instead of expiring signed URLs.</div>
-      <div><strong className="text-fd-foreground">Stream or save:</strong> Use `voice.generate` for a completed clip, or [Streaming text-to-speech](/docs/capabilities/text-to-speech#streaming) to receive speech during generation.</div>
+      <div><strong className="text-fd-foreground">Stream or save:</strong> Use `voice.generate` for a completed clip, or [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming) to receive speech during generation.</div>
     </div>
   </div>
 </div>
@@ -314,7 +314,7 @@ Addis Voices 2 uses the same Addis AI API key as the legacy API, so no credentia
 | Authentication | Existing Addis AI API key in `X-API-Key` | The same API key through the SDK or `x-api-key`; no credential change |
 | Request | `text`, `language`, and optional `stream` | `text`, `voice_id`, `language`, `output_format`, and optional `client_request_id` |
 | Voice selection | Language selects the legacy engine | Query the [voice catalog](#discover-voices), preview an available voice, then send its exact ID |
-| Response | Base64 WAV JSON or a legacy audio stream | Durable clip metadata and a signed `audio_url`; [HTTP and WebSocket streaming](/docs/capabilities/text-to-speech#streaming) are also available |
+| Response | Base64 WAV JSON or a legacy audio stream | Durable clip metadata and a signed `audio_url`; [HTTP and WebSocket streaming](/docs/capabilities/text-to-speech/streaming) are also available |
 | SDK | `legacy.audio.generate()` or `legacy.audio.stream()` | `voice.generate()`, `voices.list()`, estimates, usage, and clip management |
 | Pricing | Existing Voice 1 account pricing remains unchanged | **5 ETB per generated minute**, with a pre-generation estimate |
 

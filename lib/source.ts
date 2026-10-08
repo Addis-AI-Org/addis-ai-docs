@@ -9,6 +9,8 @@ const newDocUrls = new Set([
   '/docs/capabilities/text-to-speech',
   '/docs/capabilities/speech-to-text',
   '/docs/capabilities/streaming',
+  '/docs/capabilities/text-to-speech/streaming',
+  '/docs/capabilities/speech-to-text/live',
 ]);
 
 const navigationLabelsPlugin = {

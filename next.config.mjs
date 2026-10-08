@@ -15,7 +15,7 @@ const config = {
     return [
       {
         source: '/docs/capabilities/realtime-voice',
-        destination: '/docs/capabilities/text-to-speech#streaming',
+        destination: '/docs/capabilities/text-to-speech/streaming',
         permanent: true,
       },
       {

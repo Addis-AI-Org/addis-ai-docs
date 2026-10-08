@@ -151,7 +151,7 @@ test('preserves original onboarding screenshots and page structures', () => {
 test('preserves capability depth and best-practice guidance', () => {
   const required = new Map([
     ['content/docs/capabilities/text-generation.mdx', ['## API Reference', '## Best Practices']],
-    ['content/docs/capabilities/speech-to-text.mdx', ['## API Reference', '## Best Practices']],
+    ['content/docs/capabilities/speech-to-text/index.mdx', ['## API Reference', '## Best Practices']],
     ['content/docs/capabilities/multimodal.mdx', ['## API Reference', '## Best Practices']],
     ['content/docs/capabilities/translation.mdx', ['## Use Cases', '#### Available Parameters', '## API Reference', '## Best Practices']],
     ['content/docs/capabilities/realtime.mdx', ['## Audio Format Requirements', '## Protocol & Events', '## Live Interactive Demo', '## Capabilities Roadmap']],
@@ -164,7 +164,7 @@ test('preserves capability depth and best-practice guidance', () => {
 });
 
 test('documents Voice 2 while retaining the full hidden legacy workflow', () => {
-  const voice2 = read('content/docs/capabilities/text-to-speech.mdx');
+  const voice2 = read('content/docs/capabilities/text-to-speech/index.mdx');
   const legacy = read('content/docs/capabilities/text-to-speech-legacy.mdx');
   const catalog = read('data/voice-catalog.ts');
   const catalogComponent = read('components/voice-catalog.tsx');
@@ -254,8 +254,8 @@ test('keeps SDK examples primary without removing cURL interoperability', () => 
   for (const path of [
     'content/docs/get-started/quickstart.mdx',
     'content/docs/capabilities/text-generation.mdx',
-    'content/docs/capabilities/text-to-speech.mdx',
-    'content/docs/capabilities/speech-to-text.mdx',
+    'content/docs/capabilities/text-to-speech/index.mdx',
+    'content/docs/capabilities/speech-to-text/index.mdx',
     'content/docs/capabilities/multimodal.mdx',
     'content/docs/capabilities/translation.mdx',
   ]) {
@@ -332,8 +332,8 @@ test('documents the unified SDK capability matrix', () => {
 test('corrects capability page descriptions, terminology, and title badges', () => {
   const docsPage = read('app/docs/[[...slug]]/page.tsx');
   const textGeneration = read('content/docs/capabilities/text-generation.mdx');
-  const textToSpeech = read('content/docs/capabilities/text-to-speech.mdx');
-  const speechToText = read('content/docs/capabilities/speech-to-text.mdx');
+  const textToSpeech = read('content/docs/capabilities/text-to-speech/index.mdx');
+  const speechToText = read('content/docs/capabilities/speech-to-text/index.mdx');
   const translation = read('content/docs/capabilities/translation.mdx');
   const multimodal = read('content/docs/capabilities/multimodal.mdx');
   const voiceInterface = read('content/docs/integration/voice-interface.mdx');
@@ -429,9 +429,9 @@ test('publishes status documentation and legacy route redirects', () => {
 test('keeps raw endpoint panels only where the Realtime protocol requires one', () => {
   for (const path of [
     'content/docs/capabilities/text-generation.mdx',
-    'content/docs/capabilities/text-to-speech.mdx',
+    'content/docs/capabilities/text-to-speech/index.mdx',
     'content/docs/capabilities/text-to-speech-legacy.mdx',
-    'content/docs/capabilities/speech-to-text.mdx',
+    'content/docs/capabilities/speech-to-text/index.mdx',
     'content/docs/capabilities/multimodal.mdx',
     'content/docs/capabilities/translation.mdx',
   ]) {
@@ -460,7 +460,7 @@ test('uses the shared cyan New badge for page, section, and announcement titles'
   const components = read('components/docs.tsx');
   const page = read('app/docs/[[...slug]]/page.tsx');
   const schema = read('source.config.ts');
-  const voice = read('content/docs/capabilities/text-to-speech.mdx');
+  const voice = read('content/docs/capabilities/text-to-speech/index.mdx');
 
   assert.match(components, /export function NewBadge/);
   assert.match(components, /border-fd-primary\/35 bg-fd-primary\/10/);
@@ -482,9 +482,9 @@ test('uses one reversible visual system across custom documentation surfaces', (
     'content/docs/get-started/introduction.mdx',
     'content/docs/get-started/sdks.mdx',
     'content/docs/capabilities/text-generation.mdx',
-    'content/docs/capabilities/text-to-speech.mdx',
+    'content/docs/capabilities/text-to-speech/index.mdx',
     'content/docs/capabilities/text-to-speech-legacy.mdx',
-    'content/docs/capabilities/speech-to-text.mdx',
+    'content/docs/capabilities/speech-to-text/index.mdx',
     'content/docs/capabilities/multimodal.mdx',
     'content/docs/capabilities/realtime.mdx',
     'content/docs/capabilities/translation.mdx',
@@ -589,16 +589,22 @@ test('resolves local documentation links and image assets', () => {
   const publicPages = [
     ...meta.pages.filter((page) => !page.startsWith('---') && !page.startsWith('[')),
     'capabilities/text-to-speech-legacy',
+    'capabilities/text-to-speech/streaming',
+    'capabilities/speech-to-text/live',
   ];
+  const resolveDocFile = (base, page) => {
+    const file = join(root, base, `${page}.mdx`);
+    return existsSync(file) ? file : join(root, base, page, 'index.mdx');
+  };
 
   for (const page of publicPages) {
-    const absolute = join(root, 'content/docs', `${page}.mdx`);
+    const absolute = resolveDocFile('content/docs', page);
     const source = readFileSync(absolute, 'utf8');
 
     for (const match of source.matchAll(/\]\((\/docs(?:\/[^)#\s]+)?)(?:#[^)]+)?\)/g)) {
       const route = match[1];
       if (route === '/docs') continue;
-      const page = join(root, 'content', `${route}.mdx`);
+      const page = resolveDocFile('content', route);
       const appPage = join(root, 'app', route, 'page.tsx');
       assert.ok(
         existsSync(page) || existsSync(appPage),
@@ -626,11 +632,11 @@ test('adds a streaming overview page that links each streaming guide', () => {
 });
 
 test('groups speech streaming under TTS and redirects its former documentation route', () => {
-  const tts = read('content/docs/capabilities/text-to-speech.mdx');
+  const tts = read('content/docs/capabilities/text-to-speech/index.mdx');
   assert.match(tts, /## Streaming/);
-  assert.match(tts, /<VoiceStreamingDemo \/>/);
+  assert.match(read('content/docs/capabilities/text-to-speech/streaming.mdx'), /<VoiceStreamingDemo \/>/);
   assert.ok(!read('content/docs/meta.json').includes('capabilities/realtime-voice'));
-  assert.match(read('next.config.mjs'), /source: '\/docs\/capabilities\/realtime-voice',\s+destination: '\/docs\/capabilities\/text-to-speech#streaming'/);
+  assert.match(read('next.config.mjs'), /source: '\/docs\/capabilities\/realtime-voice',\s+destination: '\/docs\/capabilities\/text-to-speech\/streaming'/);
   for (const file of walk('content/docs').filter(file => file.endsWith('.mdx'))) {
     assert.doesNotMatch(readFileSync(file, 'utf8'), /Production readiness checks pending|Live billing verification|replacement has passed isolated tests/);
   }
