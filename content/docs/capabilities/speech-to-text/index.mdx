@@ -31,13 +31,7 @@ curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?backend=standard&r
 
 Use `backend=standard` for Standard or `backend=turbo` for Turbo. Add `stream=true` for newline-delimited `transcript.partial` events after uploading; `transcript.completed` includes the final text and confirmed wallet usage. An ordinary HTTP request returns `data.text`, `data.seconds`, `data.compute_ms`, and `data.usage` as JSON.
 
-For live microphone input, create a one-use ticket with `POST /api/v1/scribe/sessions`, using your API key in the `x-api-key` header and this JSON body:
-
-```json
-{"backend":"standard","chunk":"320ms","request_id":"my-live-transcript-1"}
-```
-
-Connect to the returned `data.websocket_url`. Send `{"type":"session.authenticate","token":"YOUR_ONE_USE_TICKET"}` as the first frame. After `session.created`, send binary **16 kHz mono PCM16 little-endian** frames, ideally 100 ms each. Finish with `{"type":"audio.finish"}`. Tickets expire after 60 seconds and bind the backend, chunk size, and request ID. Keep API keys and tickets out of WebSocket URLs.
+For live microphone input, see [Live transcription](/docs/capabilities/speech-to-text/live).
 
 `transcript.partial` text is provisional. `transcript.completed` confirms the final text and settled charge. Once audio is accepted, disconnecting still finishes transcription and billing. Recover an interrupted response with `GET /api/v1/scribe/requests/YOUR_REQUEST_ID` and the same account's API key. Replaying a completed request returns its original result without another charge; changed audio or settings require a new ID. Completed results are recoverable for 24 hours; pending settlements remain recoverable. One transcription per wallet is admitted at a time; a busy backend returns an error without switching backends.
 
@@ -135,68 +129,7 @@ Keep `ADDIS_API_KEY` on your application server. For browser integrations, creat
 
 ### Connect live audio with the SDK
 
-Send **raw mono PCM16 little-endian at 16 kHz**. WAV/MP3 container bytes belong in the file-upload API; strip or decode them before sending PCM. A 100 ms frame is 3,200 bytes. Read events while sending audio, then call `finish()` to obtain the final transcript and billing result.
-
-<Tabs items={['Node.js', 'Python']}>
-  <Tab value="Node.js">
-    ```ts
-    import { createReadStream } from "node:fs";
-    import { setTimeout as delay } from "node:timers/promises";
-
-    const live = await addis.scribe.connect({
-      backend: "standard", chunk: "320ms", requestId: ulid(),
-    });
-    try {
-      await Promise.all([
-        (async () => {
-          for await (const event of live) {
-            if (event.type === "transcript.partial") console.log(event.text);
-            if (event.type === "transcript.completed") {
-              console.log(event.data.text, event.data.usage.creditsUsed);
-            }
-          }
-        })(),
-        (async () => {
-          for await (const frame of createReadStream("speech.pcm", { highWaterMark: 3200 })) {
-            live.sendAudio(frame);
-            await delay(100); // Pace this PCM file like microphone input
-          }
-          live.finish();
-        })(),
-      ]);
-    } finally {
-      live.close();
-    }
-    ```
-  </Tab>
-  <Tab value="Python">
-    ```python
-    # pip install "addisai[realtime]"
-    from concurrent.futures import ThreadPoolExecutor
-    from time import sleep
-
-    def send_pcm(live):
-        with open("speech.pcm", "rb") as audio:
-            while frame := audio.read(3200):
-                live.send_audio(frame)
-                sleep(0.1)  # Pace this raw PCM file like microphone input
-        live.finish()
-
-    with addis.scribe.connect(request_id=ulid(), backend="standard") as live:
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            sender = executor.submit(send_pcm, live)
-            for event in live:
-                if event["type"] == "transcript.partial":
-                    print(event["text"])
-                elif event["type"] == "transcript.completed":
-                    print(event["data"]["text"])
-                    print(event["data"]["usage"]["credits_used"])
-            sender.result()
-    ```
-  </Tab>
-</Tabs>
-
-For browser audio, use `addis.scribe.createSession({ requestId })` on the server and `connectScribe(session)` in the browser. Python uses `create_session` and `connect_scribe`. The helper authenticates with the ticket in the first frame and waits for admission before audio is sent. A completed replay may immediately return `transcript.completed` without `session.created`; it does not accept new audio.
+Stream microphone or PCM audio with `scribe.connect`. See [Connect live audio with the SDK](/docs/capabilities/speech-to-text/live#connect-live-audio-with-the-sdk) on the Live transcription page.
 
 ### Scribe methods and limits
 
