@@ -5,13 +5,56 @@ icon: Megaphone
 ---
 
 
-<AnnouncementHero date="2026-07-23">
-  This release brings Addis Voices 2, official Node.js and Python SDKs, richer chat
-  controls, and an SDK-first documentation experience.
+<AnnouncementHero date="2026-10-08">
+  Addis Scribe brings live and file speech-to-text with word timestamps and captions,
+  and Addis Voices 2 now streams speech as it is generated. The July 23 release brought
+  Addis Voices 2, official Node.js and Python SDKs, richer chat controls, and an
+  SDK-first documentation experience.
 </AnnouncementHero>
 
 <AnnouncementFeed>
-  <AnnouncementItem label="Voice" title="Addis Voices 2 is available" isNew>
+  <AnnouncementItem label="Speech-to-Text" title="Addis Scribe speech-to-text" isNew>
+    Addis Scribe transcribes **Amharic** from a microphone or an uploaded file. Choose
+    **Standard** or **Turbo** (3× speed) at the same price. Stream live audio over a
+    WebSocket with a one-use session ticket, or upload a file of up to 25 MB and 180
+    seconds and receive partial transcripts while it is processed. Only the final
+    transcript is billed, at **3.5 ETB per 1,000 characters**. The SDKs add
+    `scribe.transcribe`, `scribe.stream`, `scribe.connect`, and request recovery.
+
+    - [Try Scribe in the playground](/docs/playground/speech-to-text)
+
+    <AnnouncementLink href="/docs/capabilities/speech-to-text">
+      Build with Addis Scribe
+    </AnnouncementLink>
+  </AnnouncementItem>
+
+  <AnnouncementItem label="Captions" title="Word timestamps and captions" isNew>
+    Scribe file uploads can return the start and end time of every word with
+    `timestamps=word`, or a ready-made caption file with `format=srt` or `format=vtt`.
+    Use them to subtitle video, highlight words during playback, or jump to the moment
+    a phrase was said. SDK 0.5.0 adds `timestamps: "word"` and local SRT and VTT
+    helpers.
+
+    <AnnouncementLink href="/docs/capabilities/speech-to-text#timestamps-and-captions">
+      Add timestamps and captions
+    </AnnouncementLink>
+  </AnnouncementItem>
+
+  <AnnouncementItem label="Voice" title="Streaming text-to-speech" isNew>
+    Addis Voices 2 can now play speech while it is generated. Use an HTTP stream for
+    individual requests or a persistent WebSocket for successive turns on one
+    connection, with Amharic, Afaan Oromo, and Tigrinya voices. Streaming uses the same
+    **5 ETB per generated minute** pricing and wallet as saved clips, and every streamed
+    turn is saved as a durable clip. Use `voice.stream` in the SDKs.
+
+    - [Try streaming in the playground](/docs/playground/realtime-voice)
+
+    <AnnouncementLink href="/docs/capabilities/text-to-speech#streaming">
+      Stream text-to-speech
+    </AnnouncementLink>
+  </AnnouncementItem>
+
+  <AnnouncementItem label="Voice" title="Addis Voices 2 is available">
     Addis Voices 2 introduces a production voice catalog, previews, cost estimates,
     durable generated clips, idempotent requests, and minute-based billing at **5
     ETB per generated minute**. Use `am-hamen` for the minimal Amharic example,
@@ -22,7 +65,7 @@ icon: Megaphone
     </AnnouncementLink>
   </AnnouncementItem>
 
-  <AnnouncementItem label="SDKs" title="Official Node.js and Python SDKs" isNew>
+  <AnnouncementItem label="SDKs" title="Official Node.js and Python SDKs">
     The official `addisai` packages are now the recommended way to integrate Addis
     AI. The documentation leads with Node.js and Python examples, while raw REST
     remains available for unsupported runtimes and interoperability.
@@ -32,7 +75,7 @@ icon: Megaphone
     - [View the package on PyPI](https://pypi.org/project/addisai/)
   </AnnouncementItem>
 
-  <AnnouncementItem label="Chat" title="New chat controls" isNew>
+  <AnnouncementItem label="Chat" title="New chat controls">
     Chat requests now document system instructions, personas, and structured
     function calls. System instructions control behavior, personas define
     identity, and messages preserve conversation state.

@@ -445,8 +445,8 @@ test('renders announcements as a release feed with in-card cyan New labels', () 
   const announcements = read('content/docs/announcements.mdx');
   const components = read('components/docs.tsx');
 
-  assert.match(announcements, /<AnnouncementHero date="2026-07-23">/);
-  assert.equal((announcements.match(/<AnnouncementItem/g) ?? []).length, 4);
+  assert.match(announcements, /<AnnouncementHero date="2026-10-08">/);
+  assert.equal((announcements.match(/<AnnouncementItem/g) ?? []).length, 7);
   assert.equal((announcements.match(/\bisNew\b/g) ?? []).length, 3);
   assert.doesNotMatch(announcements, /<NewBadge/);
   assert.match(components, /flex flex-wrap items-center gap-2/);
@@ -599,7 +599,11 @@ test('resolves local documentation links and image assets', () => {
       const route = match[1];
       if (route === '/docs') continue;
       const page = join(root, 'content', `${route}.mdx`);
-      assert.ok(existsSync(page), `${absolute.slice(root.length + 1)} links to missing ${route}`);
+      const appPage = join(root, 'app', route, 'page.tsx');
+      assert.ok(
+        existsSync(page) || existsSync(appPage),
+        `${absolute.slice(root.length + 1)} links to missing ${route}`,
+      );
     }
 
     for (const match of source.matchAll(/!\[[^\]]*]\((\/images\/[^)]+)\)/g)) {
