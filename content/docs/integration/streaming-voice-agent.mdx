@@ -49,6 +49,9 @@ The examples below combine three billed services. Run them end to end against yo
 
     app.post("/api/scribe-ticket", async (req, res) => {
       // Authenticate your own user here and enforce your spending policy.
+      // Store this ID with your user's turn so an interrupted transcript can be
+      // recovered with GET /api/v1/scribe/requests/{id}.
+      const requestId = randomUUID();
       const response = await fetch("https://api.addisassistant.com/api/v1/scribe/sessions", {
         method: "POST",
         headers: {
@@ -58,7 +61,7 @@ The examples below combine three billed services. Run them end to end against yo
         body: JSON.stringify({
           backend: "standard",
           chunk: "320ms",
-          request_id: randomUUID(),
+          request_id: requestId,
         }),
       });
       if (!response.ok) return res.status(502).json({ error: "Could not create a session" });
@@ -138,7 +141,9 @@ The examples below combine three billed services. Run them end to end against yo
       await context.resume();
 
       // 3. Fetch the ticket from your server.
-      const ticket = await (await fetch("/api/scribe-ticket", { method: "POST" })).json();
+      const response = await fetch("/api/scribe-ticket", { method: "POST" });
+      if (!response.ok) throw new Error("Could not get a Scribe ticket");
+      const ticket = await response.json();
 
       // 4. Open the socket and authenticate in the first frame.
       const socket = new WebSocket(ticket.websocket_url);
@@ -199,19 +204,38 @@ The examples below combine three billed services. Run them end to end against yo
     import AddisAI from "addisai";
 
     const addis = new AddisAI();
-    const connections = new Map(); // One text-to-speech connection per user session.
+    // One text-to-speech connection per user session, with its usage so far.
+    const sessions = new Map(); // sessionId -> { connection, openedAt, characters, turns }
+    const queues = new Map(); // sessionId -> promise of the previous turn
 
-    async function getConnection(sessionId) {
-      let connection = connections.get(sessionId);
-      if (!connection) {
-        connection = await addis.realtime.connect({
-          voiceId: "am-hamen",
-          language: "am",
-          maxTextCharacters: 5000,
-        });
-        connections.set(sessionId, connection);
+    // Reuse the connection until it nears a session limit, then open a fresh one.
+    async function getConnection(sessionId, sentence) {
+      let s = sessions.get(sessionId);
+      if (
+        s &&
+        (Date.now() - s.openedAt > 9 * 60 * 1000 || // 10-minute session
+          s.characters + sentence.length > 5000 || // cumulative characters
+          s.turns >= 100) // request IDs
+      ) {
+        s.connection.close();
+        s = undefined;
       }
-      return connection;
+      if (!s) {
+        s = {
+          connection: await addis.realtime.connect({
+            voiceId: "am-hamen",
+            language: "am",
+            maxTextCharacters: 5000,
+          }),
+          openedAt: Date.now(),
+          characters: 0,
+          turns: 0,
+        };
+        sessions.set(sessionId, s);
+      }
+      s.characters += sentence.length;
+      s.turns += 1;
+      return s.connection;
     }
 
     // Split off complete sentences; keep the unfinished tail in the buffer.
@@ -235,11 +259,20 @@ The examples below combine three billed services. Run them end to end against yo
       res.setHeader("Content-Type", "audio/mpeg");
       res.setHeader("Cache-Control", "no-store");
 
+      // One generation at a time per connection: wait for this session's previous turn.
+      const previous = queues.get(sessionId) ?? Promise.resolve();
+      let finish;
+      queues.set(sessionId, new Promise((resolve) => (finish = resolve)));
+      await previous;
+
       try {
-        const connection = await getConnection(sessionId);
+        let connection;
         const speak = async (sentence) => {
-          // One generation at a time per connection, so speak sentences in order.
-          for await (const chunk of connection.speak(sentence, randomUUID())) {
+          connection = await getConnection(sessionId, sentence);
+          // Store this ID with your turn ID before speaking, so the same turn
+          // can be retried with the same ID.
+          const requestId = randomUUID();
+          for await (const chunk of connection.speak(sentence, requestId)) {
             res.write(chunk); // MP3 bytes
           }
         };
@@ -259,18 +292,19 @@ The examples below combine three billed services. Run them end to end against yo
         }
         if (buffer.trim()) await speak(buffer.trim()); // Speak any remaining text.
 
-        console.log(connection.lastCompletion?.usage);
+        console.log(connection?.lastCompletion?.usage);
       } catch (error) {
         console.error(error);
-        connections.get(sessionId)?.close();
-        connections.delete(sessionId);
+        sessions.get(sessionId)?.connection.close();
+        sessions.delete(sessionId);
       } finally {
         res.end();
+        finish(); // Let the next turn for this session start.
       }
     });
     ```
 
-    A connection lasts 10 minutes and accepts at most 5,000 characters and 100 request IDs. Close it and open a new one before you reach any of those limits. Streaming chat cannot be combined with tools, attachments, or audio input.
+    A connection lasts 10 minutes and accepts at most 5,000 characters and 100 request IDs. `getConnection` closes it and opens a new one before any of those limits is reached. Streaming chat cannot be combined with tools, attachments, or audio input.
   </Step>
 
   <Step>
