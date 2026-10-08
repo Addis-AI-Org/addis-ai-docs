@@ -1,0 +1,65 @@
+---
+title: Status
+description: Current availability, incidents, and uptime history for Addis AI services.
+icon: Activity
+---
+
+import { CheckCircle2 } from 'lucide-react';
+
+Public status is manually maintained by Addis AI. For API failures, keep the request ID from the response headers or error payload so support can trace the request.
+
+## Current status
+
+| Service | Endpoint or surface | Status |
+| --- | --- | --- |
+| REST API | `api.addisassistant.com` | Operational |
+| Realtime API | `relay.addisassistant.com` | Operational |
+| Developer platform and API Keys | `addisassistant.com` dashboard and API key management | Operational |
+| Playground | Addis AI Playground | Operational |
+| Voice Lab | Addis Voices 2 preview and voice-management experience | Operational |
+
+## Status labels
+
+| Label | Meaning |
+| --- | --- |
+| Operational | The service is available and performing normally. |
+| Degraded Performance | The service is available, but latency or error rates are elevated. |
+| Partial Outage | A subset of users, regions, or features is unavailable. |
+| Major Outage | The service is unavailable or severely impaired for most users. |
+| Maintenance | Planned maintenance is in progress. |
+
+## Current incidents
+
+<div className="not-prose addis-offset-shell my-6">
+  <div className="border border-fd-border bg-fd-background p-5">
+    <div className="flex items-center gap-2 text-sm font-semibold text-fd-foreground">
+      <CheckCircle2 className="size-4 text-green-500" aria-hidden="true" />
+      No active incidents
+    </div>
+    <p className="mt-2 text-sm leading-6 text-fd-muted-foreground">
+      All tracked services are currently listed as Operational.
+    </p>
+  </div>
+</div>
+
+## Resolved incidents
+
+| Date | Incident | Affected services | Resolution |
+| --- | --- | --- | --- |
+| No recent resolved incidents | None reported | None | No incident postmortem is available. |
+
+## Recent uptime history
+
+| Date | REST API | Realtime API | Developer platform and API Keys | Playground | Voice Lab |
+| --- | --- | --- | --- | --- | --- |
+| 2026-08-09 | Operational | Operational | Operational | Operational | Operational |
+| 2026-08-08 | Operational | Operational | Operational | Operational | Operational |
+| 2026-08-07 | Operational | Operational | Operational | Operational | Operational |
+| 2026-08-06 | Operational | Operational | Operational | Operational | Operational |
+| 2026-08-05 | Operational | Operational | Operational | Operational | Operational |
+| 2026-08-04 | Operational | Operational | Operational | Operational | Operational |
+| 2026-08-03 | Operational | Operational | Operational | Operational | Operational |
+
+## Support escalation
+
+If all systems are operational and your request still fails, contact `support@addisassistant.com` with the endpoint, status code, request ID, and approximate request time.

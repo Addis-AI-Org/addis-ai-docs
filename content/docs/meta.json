@@ -1,5 +1,5 @@
 {
-  "title": "Addis AI docs",
+  "title": "Addis AI Documentation | APIs & SDKs for African Languages",
   "root": true,
   "pages": [
     "announcements",
@@ -12,9 +12,13 @@
     "capabilities/text-generation",
     "capabilities/text-to-speech",
     "capabilities/speech-to-text",
+    "capabilities/streaming",
     "capabilities/multimodal",
     "capabilities/realtime",
     "capabilities/translation",
+    "--- Playgrounds ---",
+    "[Speech-to-Text](/docs/playground/speech-to-text)",
+    "[Text-to-Speech Streaming](/docs/playground/text-to-speech)",
     
 
     "--- Integration ---",
@@ -22,10 +26,12 @@
     "integration/mobile",
     "integration/server",
     "integration/voice-interface",
+    "integration/streaming-voice-agent",
 
     "--- Platform ---",
     "platform/pricing",
     "platform/errors",
+    "platform/status",
     "platform/faq"
   ]
 }

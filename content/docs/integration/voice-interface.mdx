@@ -172,7 +172,7 @@ The "Request-Response" model adds up latency (STT time + LLM time + TTS time). T
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
       <div>
-        **Segment deliberately.** For long responses, split complete sentences into separate Addis Voices 2 clips and queue them in order. Addis Voices 2 returns completed clips; it does not stream one generation.
+        **Stream complete utterances.** Use [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming) to receive Addis Voices 2 audio during generation, or `voice.generate` when your application needs a completed clip. Keep sentences intact and let the service segment phrases. For a full streaming pipeline, follow the [Streaming voice agent guide](/docs/integration/streaming-voice-agent).
       </div>
     </div>
   </div>
@@ -184,7 +184,7 @@ The "Request-Response" model adds up latency (STT time + LLM time + TTS time). T
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
       <div>
-        **The Ultimate Solution.** If latency is critical (e.g., live customer support), switch to our **[Realtime API](/docs/capabilities/realtime)**. It handles STT, Logic, and TTS on the server over a single WebSocket connection with sub-300ms latency.
+        For live, interruption-capable conversations, use the **[Realtime API](/docs/capabilities/realtime)** instead of the request-response STT → LLM → Addis Voices 2 pipeline.
       </div>
     </div>
   </div>

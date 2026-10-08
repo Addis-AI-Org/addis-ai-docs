@@ -7,6 +7,10 @@ import { createElement } from 'react';
 const newDocUrls = new Set([
   '/docs/get-started/sdks',
   '/docs/capabilities/text-to-speech',
+  '/docs/capabilities/speech-to-text',
+  '/docs/capabilities/streaming',
+  '/docs/capabilities/text-to-speech/streaming',
+  '/docs/capabilities/speech-to-text/live',
 ]);
 
 const navigationLabelsPlugin = {

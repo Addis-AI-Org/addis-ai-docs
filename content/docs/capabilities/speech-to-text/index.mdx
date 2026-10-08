@@ -1,0 +1,455 @@
+---
+title: Speech-to-Text
+description: Transcribe Amharic and Afaan Oromo audio into text.
+icon: Mic
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Callout } from 'fumadocs-ui/components/callout';
+import { AudioWaveform, Mic, FileAudio, AlertTriangle } from 'lucide-react';
+import { ScribeDemo } from '@/components/scribe-demo';
+import { NewBadge } from '@/components/docs';
+
+Our Speech-to-Text (STT) technology is powered by specialized models trained to accurately recognize African languages. Unlike generic transcription services, our models are optimized for the specific phonemes, accents, and dialects of **Amharic** and **Afaan Oromo**.
+
+## Try Addis Scribe live
+
+Transcribe **Amharic** live or upload audio. Choose **Standard** or **Turbo · 3× speed** and enter your API key. Both modes use the same transcription rate. Uploaded files can also return [word timestamps and captions](#timestamps-and-captions) that play in sync with your audio.
+
+<ScribeDemo />
+
+### Scribe HTTP and streaming API
+
+The Scribe endpoints are separate from the existing file-transcription API documented below. Upload one `audio` file, up to **25 MB** and **180 seconds**, with a unique `request_id`:
+
+```bash
+curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?backend=standard&request_id=my-transcript-1' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -F 'audio=@audio.wav'
+```
+
+Use `backend=standard` for Standard or `backend=turbo` for Turbo. Add `stream=true` for newline-delimited `transcript.partial` events after uploading; `transcript.completed` includes the final text and confirmed wallet usage. An ordinary HTTP request returns `data.text`, `data.seconds`, `data.compute_ms`, and `data.usage` as JSON.
+
+For live microphone input, see [Live transcription](/docs/capabilities/speech-to-text/live).
+
+`transcript.partial` text is provisional. `transcript.completed` confirms the final text and settled charge. Once audio is accepted, disconnecting still finishes transcription and billing. Recover an interrupted response with `GET /api/v1/scribe/requests/YOUR_REQUEST_ID` and the same account's API key. Replaying a completed request returns its original result without another charge; changed audio or settings require a new ID. Completed results are recoverable for 24 hours; pending settlements remain recoverable. One transcription per wallet is admitted at a time; a busy backend returns an error without switching backends.
+
+`GET /api/v1/scribe/usage` returns the current STT rate and account balance. Billing uses final transcribed characters, at the existing **3.5 ETB per 1,000 characters** rate as of October 4, 2026. Standard and Turbo pricing is the same. Model compute time excludes upload, network, and wallet settlement time.
+
+### Scribe SDK quick start
+
+Install the SDK with the commands below. Scribe currently recognizes **Amharic**; the existing `speech.transcribe` method below continues to use the separate file-transcription service.
+
+Keep `ADDIS_API_KEY` on your application server. For browser integrations, create a Scribe session on your server and return the scoped one-use ticket to the browser.
+
+<Tabs items={['Node.js', 'Python']}>
+  <Tab value="Node.js">
+    ```bash
+    npm install https://github.com/Addis-AI-Org/addisai-js/releases/download/v0.4.0/addisai-0.4.0.tgz
+    ```
+
+    ```ts
+    import AddisAI, { fileFromPath, ulid } from "addisai";
+
+    const addis = new AddisAI(); // Reads ADDIS_API_KEY
+    const requestId = ulid();   // Save before sending audio
+    const result = await addis.scribe.transcribe({
+      audio: await fileFromPath("audio.wav"),
+      backend: "standard",
+      requestId,
+    });
+
+    console.log(result.text);
+    console.log(result.usage.creditsUsed, result.usage.currency);
+    console.log(result.seconds, result.computeMs);
+    // After an interrupted response, recover this ID before retrying:
+    // const result = await addis.scribe.recover(requestId);
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```bash
+    pip install "addisai[realtime]==0.4.0"
+    ```
+
+    ```python
+    from addisai import AddisAI, ulid
+
+    request_id = ulid()  # Save before sending audio
+    with AddisAI() as addis, open("audio.wav", "rb") as audio:
+        result = addis.scribe.transcribe(
+            audio=audio, backend="standard", request_id=request_id,
+        )
+        print(result["text"])
+        print(result["usage"]["credits_used"], result["usage"]["currency"])
+        print(result["seconds"], result["compute_ms"])
+        # After an interrupted response, recover this ID before retrying:
+        # result = addis.scribe.recover(request_id)
+    ```
+  </Tab>
+</Tabs>
+
+### Stream transcript updates after a file upload
+
+`scribe.stream` uploads the audio first, then yields provisional partials followed by a settled completion. This is useful when you already have a recording. Use a WebSocket session for audio captured as the speaker talks.
+
+<Tabs items={['Node.js', 'Python']}>
+  <Tab value="Node.js">
+    ```ts
+    const stream = await addis.scribe.stream({
+      audio: await fileFromPath("audio.wav"),
+      backend: "standard",
+      requestId: ulid(),
+    });
+    try {
+      for await (const event of stream) {
+        if (event.type === "transcript.partial") console.log(event.text);
+        if (event.type === "transcript.completed") {
+          console.log(event.data.text, event.data.usage.creditsUsed);
+        }
+      }
+    } finally {
+      stream.close();
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    with open("audio.wav", "rb") as audio:
+        with addis.scribe.stream(audio=audio, request_id=ulid()) as stream:
+            for event in stream:
+                if event["type"] == "transcript.partial":
+                    print(event["text"])
+                elif event["type"] == "transcript.completed":
+                    print(event["data"]["text"])
+                    print(event["data"]["usage"]["credits_used"])
+    ```
+  </Tab>
+</Tabs>
+
+### Connect live audio with the SDK
+
+Stream microphone or PCM audio with `scribe.connect`. See [Connect live audio with the SDK](/docs/capabilities/speech-to-text/live#connect-live-audio-with-the-sdk) on the Live transcription page.
+
+### Scribe methods and limits
+
+| Operation | Node.js | Python |
+| --- | --- | --- |
+| Read model capabilities and limits | `scribe.capabilities()` | `scribe.capabilities()` |
+| Check wallet and current character rate | `scribe.usage()` | `scribe.usage()` |
+| Transcribe a file | `scribe.transcribe(...)` | `scribe.transcribe(...)` |
+| File upload with partial updates | `scribe.stream(...)` | `scribe.stream(...)` |
+| Issue a one-use browser ticket | `scribe.createSession(...)` | `scribe.create_session(...)` |
+| Open a live PCM connection | `scribe.connect(...)` | `scribe.connect(...)` |
+| Recover an existing request | `scribe.recover(requestId)` | `scribe.recover(request_id)` |
+| Word timestamps and caption cues (0.5.0) | `scribe.transcribe({ ..., timestamps: "word" })` | `scribe.transcribe(..., timestamps="word")` |
+| Build SRT or VTT captions locally (0.5.0) | `toSrt(result)`, `toVtt(result)` | `addisai.to_srt(result)`, `addisai.to_vtt(result)` |
+
+HTTP defaults to Standard and `1120ms` chunks; live sessions default to Standard and `320ms` chunks. Either transport accepts `320ms` or `1120ms`. File uploads accept at most **25 MiB / 180 seconds**. Socket frames accept at most two seconds each and 180 seconds total. Socket tickets are one-use and expire after **60 seconds**. An unavailable mode returns an error.
+
+### Billing and interrupted requests
+
+Only the **final transcript** is billable. Partial events are provisional cumulative text and do not add separate charges. Character counts use UTF-16 code units, matching the existing STT wallet ledger. Read the current rate through `scribe.usage()`; confirmed completion includes the charged characters, rate, credits used, remaining balance, currency, and ledger record ID. Audio duration and model compute time are metrics, not the billing unit.
+
+Save a request ID before sending audio. The SDK disables automatic retries for paid uploads and ticket creation. If the response is interrupted or billing is pending, call `scribe.recover` with that ID and the same account's key. A completed replay returns its original settled result without another deduction. Use a new ID when changing audio, backend, chunk, or HTTP streaming settings. Accepted audio can still finish and be billed after a socket disconnect or when you stop reading an HTTP stream.
+
+Completed results remain recoverable for 24 hours; pending settlement remains recoverable. Recovery can report `IN_PROGRESS`, `BILLING_PENDING`, `REQUEST_INTERRUPTED`, or `NOT_FOUND`. Do not display a confirmed charge unless `usage.settled` is true. A busy account/backend returns HTTP 429, and changed inputs with a reused ID return HTTP 409.
+
+### Timestamps and captions <NewBadge className="ml-2 align-middle" /> [#timestamps-and-captions]
+
+Scribe can return the time of every word and ready-made caption cues for a completed file upload. Use them to subtitle a video, highlight words while audio plays, or jump to the moment a phrase was said. Ask for JSON with `timestamps=word`, or ask for a caption file directly with `format=srt` or `format=vtt`.
+
+These query parameters are added to `POST /api/v1/scribe/transcribe`. Everything else about the request stays the same.
+
+<TypeTable
+  type={{
+    'timestamps': {
+      description: '"word" adds `words` and `segments` to the JSON result. "none" returns text only.',
+      type: '"none" | "word"',
+      default: '"none"',
+    },
+    'format': {
+      description: '"srt" or "vtt" returns a caption file instead of JSON and implies timestamps=word. Caption responses keep the X-Request-Id and X-Scribe-* usage headers.',
+      type: '"json" | "srt" | "vtt"',
+      default: '"json"',
+    },
+  }}
+/>
+
+With `timestamps=word`, the usual `data` object also contains:
+
+```json
+{
+  "data": {
+    "text": "ሰላም ወዳጆቻችን እንዴት ከረማችሁ ዛሬ እንግዲህ",
+    "words": [
+      { "text": "ሰላም", "start": 18.9, "end": 19.52 },
+      { "text": "ወዳጆቻችን", "start": 19.6, "end": 20.08 }
+    ],
+    "segments": [
+      { "text": "ሰላም ወዳጆቻችን እንዴት ከረማችሁ ዛሬ እንግዲህ", "start": 18.8, "end": 21.8 }
+    ]
+  }
+}
+```
+
+- Times are seconds from the start of the file, with at most two decimals.
+- `words` are in spoken order. A word's `end` is never before its `start`.
+- `segments` are caption cues. A cue breaks at a pause of half a second or more, at two lines of 42 characters, or at 7 seconds, and cues never overlap. Segment `text` is one line; caption files wrap it at 42 characters, two lines at most.
+
+`format=srt` returns a SubRip file (`application/x-subrip`). `format=vtt` returns WebVTT (`text/vtt`) with a `WEBVTT` header and `00:00:18.800`-style times.
+
+```text
+1
+00:00:18,800 --> 00:00:21,800
+ሰላም ወዳጆቻችን እንዴት ከረማችሁ ዛሬ እንግዲህ እንግዳ አድርጌ
+ያቀረኩላችሁ
+```
+
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```bash
+    npm install https://github.com/Addis-AI-Org/addisai-js/releases/download/v0.5.0/addisai-0.5.0.tgz
+    ```
+
+    ```ts
+    import { writeFile } from "node:fs/promises";
+    import AddisAI, { fileFromPath, toSrt, ulid } from "addisai";
+
+    const addis = new AddisAI();
+    const result = await addis.scribe.transcribe({
+      audio: await fileFromPath("audio.wav"),
+      timestamps: "word",
+      requestId: ulid(),
+    });
+
+    for (const word of result.words ?? []) {
+      console.log(word.start, word.end, word.text);
+    }
+    await writeFile("captions.srt", toSrt(result)); // or toVtt(result)
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```bash
+    pip install "addisai[realtime]==0.5.0"
+    ```
+
+    ```python
+    import addisai
+    from addisai import AddisAI, ulid
+
+    with AddisAI() as client, open("audio.wav", "rb") as audio:
+        result = client.scribe.transcribe(
+            audio=audio, timestamps="word", request_id=ulid(),
+        )
+
+    for word in result["words"]:
+        print(word["start"], word["end"], word["text"])
+    with open("captions.srt", "w", encoding="utf-8") as captions:
+        captions.write(addisai.to_srt(result))  # or addisai.to_vtt(result)
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    # JSON with words and segments
+    curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?timestamps=word&request_id=my-captions-1' \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'audio=@audio.wav'
+
+    # An SRT caption file
+    curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?format=srt&request_id=my-captions-2' \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'audio=@audio.wav' \
+      -o captions.srt
+    ```
+  </Tab>
+</Tabs>
+
+`toSrt`/`toVtt` and `to_srt`/`to_vtt` run locally on the result you already have; they make no API call. To get captions for an earlier request, call `GET /api/v1/scribe/requests/YOUR_REQUEST_ID?format=srt` (or `vtt`). This works only for requests made with timestamps.
+
+**Limits**
+
+- Timestamps are available for completed file uploads only. They are not available with `stream=true` or on live WebSocket sessions; combining them with `stream=true` returns HTTP 422 `INVALID_REQUEST`.
+- Files are limited to **180 seconds** and **25 MiB**, as for other uploads.
+- There is no extra charge. Billing stays per transcribed character.
+- Scribe does not add punctuation, so captions break at pauses rather than at the ends of sentences.
+
+**Accuracy.** Times come from the speech model and are close, not exact. On long Amharic recordings, captions usually appear about 0.15 seconds after the speaker starts and disappear about 0.4 seconds before they finish. That is fine for subtitles and following along, but check by ear if you need frame-exact edits.
+
+
+## Usage Guide
+
+Speech-to-text uploads use **`multipart/form-data`**. The SDK handles the transport format when you pass an audio file and language.
+
+### Transcribe a File
+Upload an audio file to get the text transcription.
+
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```ts
+    import AddisAI, { fileFromPath } from "addisai";
+
+    const addis = new AddisAI();
+    const result = await addis.speech.transcribe({
+      audio: await fileFromPath("audio.wav"),
+      language: "am",
+    });
+
+    console.log(result.text);
+    console.log(result.confidence);
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from addisai import AddisAI
+
+    addis = AddisAI()
+    with open("audio.wav", "rb") as audio:
+        result = addis.speech.transcribe(audio=audio, language="am")
+
+    print(result["text"])
+    print(result.get("confidence"))
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    curl --location 'https://api.addisassistant.com/api/v2/stt' \\
+      --header 'x-api-key: $ADDIS_API_KEY' \\
+      --form 'audio=@"audio.wav"' \\
+      --form 'request_data="{ \"language_code\": \"am\" }"'
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## API Reference
+
+### Form Data Parameters
+These fields are sent as multipart form data.
+
+<TypeTable
+  type={{
+    'audio': {
+      description: 'The audio file binary. Max size 10MB.',
+      type: 'file',
+      required: true
+    },
+    'request_data': {
+      description: 'A JSON string containing the configuration options (see below).',
+      type: 'string (JSON)',
+      required: true
+    }
+  }}
+/>
+
+### Request Data Object
+These parameters go inside the `request_data` JSON string.
+
+<TypeTable
+  type={{
+    'language_code': {
+      description: 'The spoken language. "am" (Amharic) or "om" (Afaan Oromo).',
+      type: 'string',
+      required: true
+    }
+  }}
+/>
+
+### Response Schema
+
+```json
+{
+  "status": "success",
+  "data": {
+    "transcription": "ሰላም እንኳን ደህና መጣችሁ",
+    "usage_metadata": {
+      "totalBilledDuration": "15s",
+      "requestId": "69b60667-0000-2a1e-b6d3-d4f547fe6724"
+    }
+  },
+  "confidence": 0.982
+}
+
+```
+---
+
+### Supported Formats
+
+We support standard audio containers. For the fastest processing, we recommend **WAV**.
+
+| Format | Content Types (MIME) |
+| :--- | :--- |
+| **WAV** | `audio/wav`, `audio/x-wav`, `audio/wave` |
+| **MP3** | `audio/mpeg`, `audio/mp3` |
+| **M4A** | `audio/mp4`, `audio/x-m4a` |
+| **WebM** | `audio/webm` |
+
+---
+## Best Practices
+
+To ensure high accuracy (WER < 10%), follow these recording guidelines.
+<div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-2 mt-10">
+{/* Audio Quality Card */}
+<div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+<div className="flex items-center gap-2.5 mb-4">
+<AudioWaveform className="w-4 h-4 text-blue-500" />
+<h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Audio Specs</h3>
+</div>
+<div className="space-y-3 text-sm text-fd-muted-foreground">
+<div>
+<strong className="text-fd-foreground">Sample Rate:</strong> 16kHz or higher is recommended for clarity.
+</div>
+<div>
+<strong className="text-fd-foreground">Channel:</strong> Mono is preferred. Stereo files are supported but mixed down before processing.
+</div>
+</div>
+</div>
+{/* Environment Card */}
+<div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+<div className="flex items-center gap-2.5 mb-4">
+<Mic className="w-4 h-4 text-green-500" />
+<h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Environment</h3>
+</div>
+<div className="space-y-3 text-sm text-fd-muted-foreground">
+<div>
+<strong className="text-fd-foreground">Noise:</strong> Background noise significantly degrades accuracy. Record in quiet environments.
+</div>
+<div>
+<strong className="text-fd-foreground">Distance:</strong> Keep the speaker 10-30cm from the microphone for optimal volume levels.
+</div>
+</div>
+</div>
+{/* Limits Card */}
+<div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+<div className="flex items-center gap-2.5 mb-4">
+<FileAudio className="w-4 h-4 text-orange-500" />
+<h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Constraints</h3>
+</div>
+<div className="space-y-3 text-sm text-fd-muted-foreground">
+<div className="flex items-center justify-between p-2 rounded bg-fd-secondary/40 border border-fd-border/50">
+<span className="text-xs font-medium">Max Duration</span>
+<code className="text-xs text-fd-foreground">60 Seconds</code>
+</div>
+<div className="flex items-center justify-between p-2 rounded bg-fd-secondary/40 border border-fd-border/50">
+<span className="text-xs font-medium">Max File Size</span>
+<code className="text-xs text-fd-foreground">10 MB</code>
+</div>
+</div>
+</div>
+{/* Limitations Card */}
+<div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+<div className="flex items-center gap-2.5 mb-4">
+<AlertTriangle className="w-4 h-4 text-red-500" />
+<h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Limitations</h3>
+</div>
+<div className="space-y-3 text-sm text-fd-muted-foreground">
+<div>
+<strong className="text-fd-foreground">Speakers:</strong> The model is optimized for single-speaker audio. Overlapping voices may result in skipped words.
+</div>
+<div>
+<strong className="text-fd-foreground">Technical Terms:</strong> Rare technical jargon or code-switching (mixing English heavily) may have lower accuracy.
+</div>
+</div>
+</div>
+</div>

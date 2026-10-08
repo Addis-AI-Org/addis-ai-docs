@@ -1,6 +1,6 @@
 ---
 title: Multimodal
-description: Chat with images and audio files using our unified Multimodal Model.
+description: Reason over images, audio recordings, and documents through the unified chat API.
 icon: Layers
 ---
 
@@ -9,7 +9,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Image, FileAudio, ScanText, FileImage } from 'lucide-react';
 
-The **Multimodal** capability extends `Addis-፩-አሌፍ` beyond text. You can upload **Images** and **Audio files** alongside your prompts to perform complex reasoning tasks.
+The **Multimodal** capability extends `Addis-፩-አሌፍ` beyond text. You can upload images, audio files, and documents alongside your prompts to perform complex reasoning tasks.
 
 *   **Vision:** Visual Q&A, Scene Description, and Object Detection.
 *   **Audio Analysis:** Summarize voice notes, analyze sentiment, or extract action items from meetings (distinct from simple transcription).
@@ -113,7 +113,7 @@ Upload an audio file (e.g., a voice note or meeting recording) and ask the model
 Use the vision model to extract text from scanned African documents, ID cards, or handwritten notes.
 
 <Callout title="Dedicated Endpoint" type="info">
-  We are finalizing a dedicated OCR endpoint (`/api/v1/ocr`) for bulk processing. For now, you can use the chat endpoint with extraction prompts.
+  Use the chat endpoint with an image or document attachment and an explicit extraction prompt for OCR and document-text extraction.
 </Callout>
 
 <Tabs items={['Node.js', 'Python', 'cURL']}>

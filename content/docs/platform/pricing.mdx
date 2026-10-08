@@ -21,6 +21,12 @@ Addis AI bills natively in Ethiopian birr (ETB). Any USD or EUR amount shown in 
 Use `voice.estimate` before generation when a user must approve spend. The estimate reports the expected duration, billable duration, cost, balance, currency, and whether generation can proceed.
 </Callout>
 
+## Voice streaming billing
+
+[Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming) uses the Addis Voices 2 generated-audio rate above. Its HTTP and WebSocket speech output is billed by measured duration. The Realtime Audio input/output token rates apply to the separate [Realtime API](/docs/capabilities/realtime).
+
+A text-based estimate can differ from the final charge. Read the confirmed usage after streaming completes, and reuse the original request ID and inputs for a recovery request to avoid another charge.
+
 ## Billing Guidance
 
 <div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-2 mt-8">
