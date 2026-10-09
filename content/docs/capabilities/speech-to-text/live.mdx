@@ -89,7 +89,7 @@ Add `"speakers": true` to the session body to label who is speaking as you recor
 {"backend":"turbo","chunk":"320ms","request_id":"my-live-transcript-2","speakers":true}
 ```
 
-`session.created` then includes `"speakers": true`. After each pause in speech (0.5 s of quiet after at least 1 s of speech, or every 8 s at most), the session sends a `transcript.segment` event with the words and caption segments committed since the last one:
+`session.created` then includes `"speakers": true`. After each pause in speech (0.5 s of quiet after at least 1 s of speech, or every 5 s at most), the session sends a `transcript.segment` event with the words and caption segments committed since the last one:
 
 ```json
 {"type":"transcript.segment","request_id":"my-live-transcript-2","words":[{"text":"ሰላም","start":0.32,"end":0.81,"speaker":1},{"text":"እንዴት","start":1.62,"end":2.05,"speaker":2},{"text":"ነህ","start":2.05,"end":2.4,"speaker":2}],"segments":[{"text":"ሰላም","start":0.32,"end":0.81,"speaker":1},{"text":"እንዴት ነህ","start":1.62,"end":2.4,"speaker":2}],"speakers":2}
@@ -112,7 +112,7 @@ socket.onmessage = ({ data }) => {
 };
 ```
 
-Live labels are a preview. On two-person conversations they closely match labels from transcribing the whole file. With three or more people, voices are confused more often, so for group recordings upload the file with `speakers=true` instead. Sessions last up to 180 seconds and label up to 8 speakers.
+Live labels are a preview. Each line is usually labelled within about a second of the pause (median 0.3 s for two people, 0.9 s for groups). On two-person conversations they closely match labels from transcribing the whole file. With three or more people, voices are confused more often, so for group recordings upload the file with `speakers=true` instead. Sessions last up to 180 seconds and label up to 8 speakers.
 
 
 ## Limits and billing
