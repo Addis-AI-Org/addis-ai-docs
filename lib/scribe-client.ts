@@ -7,9 +7,12 @@ export type ScribeResult = {
   /** Present when the request used `timestamps=word`. Times are seconds, already corrected by the server. */
   words?: ScribeWord[];
   segments?: ScribeSegment[];
+  /** Present when the request used `speakers=true` (Turbo only): the number of distinct speakers. */
+  speakers?: number;
 };
-export type ScribeWord = { text: string; start: number; end: number };
-export type ScribeSegment = { text: string; start: number; end: number };
+/** `speaker` is 1-based, numbered by first appearance; `null` means the word or cue could not be attributed. */
+export type ScribeWord = { text: string; start: number; end: number; speaker?: number | null };
+export type ScribeSegment = { text: string; start: number; end: number; speaker?: number | null };
 
 export const CAPTION_LINE_LENGTH = 42;
 
@@ -36,17 +39,27 @@ function requireSegments(result: { segments?: ScribeSegment[] }): ScribeSegment[
   return result.segments;
 }
 
-/** SubRip captions computed locally from the returned segments (no API call). */
+function hasSpeaker(segment: ScribeSegment): segment is ScribeSegment & { speaker: number } {
+  return typeof segment.speaker === 'number';
+}
+
+/** SubRip captions computed locally from the returned segments (no API call). A `Speaker N: ` prefix counts toward line wrapping. */
 export function toSrt(result: { segments?: ScribeSegment[] }): string {
   return requireSegments(result)
-    .map((segment, i) => `${i + 1}\n${captionTime(segment.start, ',')} --> ${captionTime(segment.end, ',')}\n${wrapCaption(segment.text).join('\n')}\n`)
+    .map((segment, i) => {
+      const text = hasSpeaker(segment) ? `Speaker ${segment.speaker}: ${segment.text}` : segment.text;
+      return `${i + 1}\n${captionTime(segment.start, ',')} --> ${captionTime(segment.end, ',')}\n${wrapCaption(text).join('\n')}\n`;
+    })
     .join('\n');
 }
 
-/** WebVTT captions computed locally from the returned segments (no API call). */
+/** WebVTT captions computed locally from the returned segments (no API call). Speakers become a leading `<v Speaker N>` voice span. */
 export function toVtt(result: { segments?: ScribeSegment[] }): string {
   const cues = requireSegments(result)
-    .map(segment => `${captionTime(segment.start, '.')} --> ${captionTime(segment.end, '.')}\n${wrapCaption(segment.text).join('\n')}\n`);
+    .map(segment => {
+      const voice = hasSpeaker(segment) ? `<v Speaker ${segment.speaker}>` : '';
+      return `${captionTime(segment.start, '.')} --> ${captionTime(segment.end, '.')}\n${voice}${wrapCaption(segment.text).join('\n')}\n`;
+    });
   return ['WEBVTT\n', ...cues].join('\n');
 }
 

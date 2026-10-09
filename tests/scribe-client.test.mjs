@@ -79,3 +79,28 @@ test('words are grouped under their caption cue and the active cue follows playb
   assert.equal(segmentAt(segments, 21), -1);
   assert.equal(segmentAt(segments, 23.8), 1);
 });
+
+const speakerVector = [
+  { text: 'ሰላም ወዳጆቻችን', start: 0.6, end: 1.6, speaker: 1 },
+  { text: 'እንዴት ናችሁ', start: 1.7, end: 3.0, speaker: 2 },
+];
+
+test('speaker captions match the shared contract test vector exactly', () => {
+  assert.equal(
+    toSrt({ segments: speakerVector }),
+    '1\n00:00:00,600 --> 00:00:01,600\nSpeaker 1: ሰላም ወዳጆቻችን\n\n2\n00:00:01,700 --> 00:00:03,000\nSpeaker 2: እንዴት ናችሁ\n',
+  );
+  assert.equal(
+    toVtt({ segments: speakerVector }),
+    'WEBVTT\n\n00:00:00.600 --> 00:00:01.600\n<v Speaker 1>ሰላም ወዳጆቻችን\n\n00:00:01.700 --> 00:00:03.000\n<v Speaker 2>እንዴት ናችሁ\n',
+  );
+});
+test('the SRT speaker prefix counts toward wrapping, VTT voice spans do not, and null speakers get no label', () => {
+  const text = `${'a'.repeat(30)} ${'b'.repeat(10)}`; // 41 characters: one line alone, two lines after "Speaker 1: "
+  const segments = [{ text, start: 0, end: 1, speaker: 1 }];
+  assert.equal(toSrt({ segments }), `1\n00:00:00,000 --> 00:00:01,000\nSpeaker 1: ${'a'.repeat(30)}\n${'b'.repeat(10)}\n`);
+  assert.equal(toVtt({ segments }), `WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n<v Speaker 1>${text}\n`);
+  const unattributed = [{ text: 'ነው', start: 0, end: 1, speaker: null }];
+  assert.equal(toSrt({ segments: unattributed }), '1\n00:00:00,000 --> 00:00:01,000\nነው\n');
+  assert.equal(toVtt({ segments: unattributed }), 'WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nነው\n');
+});

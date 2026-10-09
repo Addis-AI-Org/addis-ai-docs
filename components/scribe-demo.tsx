@@ -2,12 +2,27 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DemoNavigation } from '@/components/demo-navigation';
-import { Captions, Check, Copy, Download, FileAudio, Loader2, Mic, Square, Zap } from 'lucide-react';
+import { Captions, Check, Copy, Download, FileAudio, Loader2, Mic, Square, Users, Zap } from 'lucide-react';
 import { SCRIBE_API, authHeaders, pcm16, readJson, readTranscriptStream, segmentAt, toSrt, toVtt, validateSocketUrl, wordsBySegment, wrapCaption, type Backend, type ScribeResult, type ScribeWord } from '@/lib/scribe-client';
 
 type Phase = 'idle' | 'connecting' | 'recording' | 'processing';
 type Runtime = { socket?: WebSocket; context?: AudioContext; stream?: MediaStream; source?: MediaStreamAudioSourceNode; node?: AudioWorkletNode; mute?: GainNode; timer?: ReturnType<typeof setTimeout>; deadline?: ReturnType<typeof setTimeout>; cancelled: boolean; flushed?: () => void };
 const control = 'w-full rounded-md border border-fd-border bg-fd-background px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary disabled:opacity-50';
+/** Fixed speaker palette: Fumadocs primary first, then Tailwind hues with light/dark text shades that stay readable on both themes. Labels always accompany colour. */
+const SPEAKER_STYLES = [
+  { text: 'text-fd-primary', bg: 'bg-fd-primary/15', dot: 'bg-fd-primary' },
+  { text: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-500/15', dot: 'bg-amber-500' },
+  { text: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-500/15', dot: 'bg-emerald-500' },
+  { text: 'text-rose-700 dark:text-rose-300', bg: 'bg-rose-500/15', dot: 'bg-rose-500' },
+  { text: 'text-violet-700 dark:text-violet-300', bg: 'bg-violet-500/15', dot: 'bg-violet-500' },
+  { text: 'text-teal-700 dark:text-teal-300', bg: 'bg-teal-500/15', dot: 'bg-teal-500' },
+  { text: 'text-lime-700 dark:text-lime-300', bg: 'bg-lime-500/15', dot: 'bg-lime-500' },
+  { text: 'text-pink-700 dark:text-pink-300', bg: 'bg-pink-500/15', dot: 'bg-pink-500' },
+] as const;
+const UNATTRIBUTED_STYLE = { text: 'text-fd-muted-foreground', bg: 'bg-fd-muted', dot: 'bg-fd-muted-foreground/50' };
+function speakerStyle(speaker: number | null | undefined) {
+  return typeof speaker === 'number' && speaker >= 1 ? SPEAKER_STYLES[(speaker - 1) % SPEAKER_STYLES.length] : UNATTRIBUTED_STYLE;
+}
 const button = 'inline-flex items-center justify-center gap-2 rounded-md border border-fd-border px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary disabled:cursor-not-allowed disabled:opacity-50';
 
 export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
@@ -16,6 +31,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const [file, setFile] = useState<File | null>(null);
   const [uploadStream, setUploadStream] = useState(false);
   const [timestamps, setTimestamps] = useState(true);
+  const [speakers, setSpeakers] = useState(false);
   const [captionFile, setCaptionFile] = useState<File | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [text, setText] = useState('');
@@ -29,6 +45,8 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const runtime = useRef<Runtime>({ cancelled: false });
   const mounted = useRef(true);
   const busy = phase !== 'idle';
+  // Speaker labels ride on word timestamps and are Turbo only, so they pin the backend to Turbo while on.
+  const labelSpeakers = timestamps && speakers;
 
   const stopAudio = (rt: Runtime) => {
     clearTimeout(rt.timer);
@@ -79,10 +97,11 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
       // Timestamps are only available for completed uploads, so they never combine with stream=true.
       const streamUpdates = uploadStream && !timestamps;
       if (timestamps) setCaptionFile(file);
-      setPhase('processing'); setStatus(streamUpdates ? 'Uploading audio, then streaming transcript updates…' : timestamps ? 'Uploading and transcribing audio with word timestamps…' : 'Uploading and transcribing audio…');
+      setPhase('processing'); setStatus(streamUpdates ? 'Uploading audio, then streaming transcript updates…' : labelSpeakers ? 'Uploading and transcribing audio with word timestamps and speaker labels…' : timestamps ? 'Uploading and transcribing audio with word timestamps…' : 'Uploading and transcribing audio…');
       const body = new FormData(); body.set('audio', file);
-      const query = new URLSearchParams({ backend, chunk: '1120ms', stream: String(streamUpdates), request_id: id });
+      const query = new URLSearchParams({ backend: labelSpeakers ? 'turbo' : backend, chunk: '1120ms', stream: String(streamUpdates), request_id: id });
       if (timestamps) query.set('timestamps', 'word');
+      if (labelSpeakers) query.set('speakers', 'true');
       const response = await fetch(`${SCRIBE_API}/transcribe?${query}`, { method: 'POST', headers, body, cache: 'no-store' });
       const data = await readTranscriptStream(response, partial => { if (mounted.current) setText(partial); });
       if (mounted.current) complete(data);
@@ -179,7 +198,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
             <div className="grid grid-cols-2 items-start gap-2">
               {(['standard', 'turbo'] as const).map(value => (
                 <div key={value}>
-                  <button type="button" aria-pressed={backend === value} aria-describedby={value === 'turbo' ? 'scribe-turbo-speed' : undefined} onClick={() => setBackend(value)} className={`${button} w-full whitespace-nowrap ${backend === value ? 'border-fd-primary bg-fd-primary/10 text-fd-primary' : ''}`}>
+                  <button type="button" aria-pressed={backend === value} disabled={labelSpeakers && value === 'standard'} aria-describedby={value === 'turbo' ? 'scribe-turbo-speed' : labelSpeakers ? 'scribe-speakers-turbo' : undefined} onClick={() => setBackend(value)} className={`${button} w-full whitespace-nowrap ${backend === value ? 'border-fd-primary bg-fd-primary/10 text-fd-primary' : ''}`}>
                     {value === 'turbo' && <Zap aria-hidden="true" className="size-4" />}
                     {value === 'standard' ? 'Standard' : 'Turbo'}
                   </button>
@@ -187,6 +206,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
                 </div>
               ))}
             </div>
+            {labelSpeakers && <p id="scribe-speakers-turbo" className="mt-2 text-xs leading-5 text-fd-muted-foreground">Speaker labels need Turbo. Turn off Label speakers to choose Standard.</p>}
           </fieldset>
           <div className="space-y-3">
             <button type="button" className={`${button} w-full bg-fd-primary text-fd-primary-foreground`} disabled={(busy && phase !== 'recording') || !credential.trim()} onClick={phase === 'recording' ? finishRecording : record}>{phase === 'recording' ? <><Square className="size-4" />Finish recording</> : <><Mic className="size-4" />Record live</>}</button>
@@ -196,6 +216,8 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
             <label htmlFor="scribe-file" className="flex items-center gap-2 text-sm font-medium"><FileAudio className="size-4" />Upload audio</label>
             <input id="scribe-file" type="file" accept="audio/*,.wav,.mp3,.m4a,.webm,.ogg,.flac" disabled={busy} onChange={e => { setFile(e.target.files?.[0] ?? null); setCaptionFile(null); }} className={`${control} file:mr-3 file:rounded file:border-0 file:bg-fd-secondary file:px-2 file:py-1 file:text-fd-foreground`} />
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={timestamps} disabled={busy} aria-describedby="scribe-timestamps-hint" onChange={e => { setTimestamps(e.target.checked); if (e.target.checked) setUploadStream(false); }} />Word timestamps and captions</label>
+            {timestamps && <label className="ml-6 flex items-center gap-2 text-sm"><input type="checkbox" checked={speakers} disabled={busy} aria-describedby="scribe-speakers-hint" onChange={e => { setSpeakers(e.target.checked); if (e.target.checked) setBackend('turbo'); }} /><Users aria-hidden="true" className="size-4" />Label speakers</label>}
+            {timestamps && <p id="scribe-speakers-hint" className="ml-6 text-xs leading-5 text-fd-muted-foreground">Marks who said what as Speaker 1, 2… (not names). Uses Turbo.</p>}
             <label className={`flex items-center gap-2 text-sm ${timestamps ? 'text-fd-muted-foreground' : ''}`}><input type="checkbox" checked={uploadStream && !timestamps} disabled={busy || timestamps} aria-describedby="scribe-timestamps-hint" onChange={e => setUploadStream(e.target.checked)} />Show partial text after upload</label>
             <p id="scribe-timestamps-hint" className="text-xs leading-5 text-fd-muted-foreground">{timestamps ? 'Timestamps return the full result at once, so partial text is off. Turn timestamps off to see partial text.' : 'Turn on timestamps to play the file with synced captions and download SRT or VTT.'} Live recording returns text only.</p>
             <button type="button" className={`${button} w-full`} disabled={busy || !file || !credential.trim()} onClick={upload}>{phase === 'processing' && <Loader2 className="size-4 animate-spin" />}Transcribe file</button>
@@ -238,6 +260,10 @@ function downloadCaptions(content: string, type: string, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
+function speakerLabel(speaker: number | null | undefined) {
+  return typeof speaker === 'number' ? `Speaker ${speaker}` : 'Unattributed';
+}
+
 function clock(seconds: number) {
   const whole = Math.max(0, seconds);
   return `${Math.floor(whole / 60)}:${(whole % 60).toFixed(1).padStart(4, '0')}`;
@@ -263,6 +289,10 @@ function CaptionPlayer({ file, result }: { file: File; result: ScribeResult }) {
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
   const active = segmentAt(segments, time);
+  // Speaker labels are present only when the request used speakers=true.
+  const labelled = typeof result.speakers === 'number' || segments.some(segment => segment.speaker !== undefined);
+  const speakerCount = result.speakers ?? new Set(segments.map(segment => segment.speaker).filter(speaker => typeof speaker === 'number')).size;
+  const hasUnattributed = labelled && (segments.some(segment => segment.speaker === null) || (result.words ?? []).some(word => word.speaker === null));
 
   // The object URL lives exactly as long as this audio element shows this file.
   const attachAudio = useCallback((element: HTMLAudioElement | null) => {
@@ -299,9 +329,18 @@ function CaptionPlayer({ file, result }: { file: File; result: ScribeResult }) {
 
   return (
     <section aria-labelledby="scribe-captions-title" className="mt-6 space-y-4 border-t border-fd-border pt-4">
-      <h4 id="scribe-captions-title" className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground"><Captions aria-hidden="true" className="size-4" />Captions · {segments.length} cues · {result.words?.length ?? 0} words</h4>
+      <h4 id="scribe-captions-title" className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground"><Captions aria-hidden="true" className="size-4" />Captions · {segments.length} cues · {result.words?.length ?? 0} words{labelled && ` · ${speakerCount} ${speakerCount === 1 ? 'speaker' : 'speakers'}`}</h4>
+      {labelled && (
+        <ul aria-label={`${speakerCount} ${speakerCount === 1 ? 'speaker' : 'speakers'} found`} className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
+          {Array.from({ length: speakerCount }, (_, i) => i + 1).map(speaker => (
+            <li key={speaker} className={`flex items-center gap-1.5 font-medium ${speakerStyle(speaker).text}`}><span aria-hidden="true" className={`size-2.5 rounded-full ${speakerStyle(speaker).dot}`} />Speaker {speaker}</li>
+          ))}
+          {hasUnattributed && <li className={`flex items-center gap-1.5 ${UNATTRIBUTED_STYLE.text}`}><span aria-hidden="true" className={`size-2.5 rounded-full ${UNATTRIBUTED_STYLE.dot}`} />Unattributed</li>}
+        </ul>
+      )}
       <audio ref={attachAudio} controls preload="metadata" className="w-full" aria-label={`Play ${file.name} with captions`} onPlay={() => setPlaying(true)} onPause={() => { setPlaying(false); sync(); }} onEnded={() => { setPlaying(false); sync(); }} onSeeked={sync} onTimeUpdate={() => { if (!playing) sync(); }} />
       <div aria-label="Caption preview" role="region" className="flex min-h-28 flex-col items-center justify-center rounded-md border border-fd-border bg-fd-secondary/40 px-4 py-5 text-center">
+        {cue && labelled && <p className={`mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${speakerStyle(cue.speaker).text}`}><span aria-hidden="true" className={`size-2 rounded-full ${speakerStyle(cue.speaker).dot}`} />{speakerLabel(cue.speaker)}</p>}
         {cue ? (
           <p lang="am" className="text-lg leading-8">
             {captionLines(cue.text, words).map((line, lineIndex, lines) => {
@@ -310,6 +349,11 @@ function CaptionPlayer({ file, result }: { file: File; result: ScribeResult }) {
                 <span key={lineIndex} className="block">
                   {line.words.length ? line.words.map((word, i) => {
                     const index = before + i;
+                    if (labelled) {
+                      // Spoken words take their speaker's colour; the current word also gets its speaker's tint.
+                      const style = speakerStyle(word.speaker === undefined ? cue.speaker : word.speaker);
+                      return <span key={i}>{i > 0 && ' '}<span className={`rounded px-0.5 motion-safe:transition-colors ${index < spoken ? (style === UNATTRIBUTED_STYLE ? 'text-fd-foreground' : style.text) : 'text-fd-muted-foreground/70'} ${index === spoken - 1 ? style.bg : ''}`}>{word.text}</span></span>;
+                    }
                     return <span key={i}>{i > 0 && ' '}<span className={`rounded px-0.5 motion-safe:transition-colors ${index < spoken ? 'text-fd-foreground' : 'text-fd-muted-foreground/70'} ${index === spoken - 1 ? 'bg-fd-primary/15 text-fd-primary' : ''}`}>{word.text}</span></span>;
                   }) : line.text}
                 </span>
@@ -322,14 +366,18 @@ function CaptionPlayer({ file, result }: { file: File; result: ScribeResult }) {
       <ol ref={list} aria-label="Caption cues. Select a cue to play from it." className="relative max-h-64 space-y-1 overflow-y-auto pr-1">
         {segments.map((segment, i) => (
           <li key={`${segment.start}-${i}`}>
-            <button type="button" aria-current={i === active ? 'true' : undefined} onClick={() => seek(segment.start)} className={`grid w-full grid-cols-[4.5rem_minmax(0,1fr)] gap-3 rounded-md border px-3 py-2 text-left text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary ${i === active ? 'border-fd-primary bg-fd-primary/10' : 'border-transparent hover:border-fd-border'}`}>
+            <button type="button" aria-current={i === active ? 'true' : undefined} onClick={() => seek(segment.start)} className={`relative grid w-full grid-cols-[4.5rem_minmax(0,1fr)] gap-3 rounded-md border px-3 py-2 text-left text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary ${i === active ? 'border-fd-primary bg-fd-primary/10' : 'border-transparent hover:border-fd-border'}`}>
+              {labelled && <span aria-hidden="true" className={`absolute inset-y-2 left-0.5 w-1 rounded-full ${speakerStyle(segment.speaker).dot}`} />}
               <span className="font-mono text-[11px] leading-5 tabular-nums text-fd-muted-foreground">{clock(segment.start)}<br />{clock(segment.end)}</span>
-              <span lang="am" className="leading-6">{wrapCaption(segment.text).map((line, j) => <span key={j} className="block">{line}</span>)}</span>
+              <span className="leading-6">
+                {labelled && <span className={`block text-[11px] font-semibold uppercase tracking-wider ${speakerStyle(segment.speaker).text}`}>{speakerLabel(segment.speaker)}</span>}
+                <span lang="am">{wrapCaption(segment.text).map((line, j) => <span key={j} className="block">{line}</span>)}</span>
+              </span>
             </button>
           </li>
         ))}
       </ol>
-      <p className="text-xs leading-5 text-fd-muted-foreground">Captions break at pauses because Scribe adds no punctuation. They usually appear about 0.15 s after speech starts and clear about 0.4 s before the speaker finishes.</p>
+      <p className="text-xs leading-5 text-fd-muted-foreground">Captions break at pauses because Scribe adds no punctuation. They usually appear about 0.15 s after speech starts and clear about 0.4 s before the speaker finishes.{labelled && ' Speakers are numbered in the order they first talk, not named. Labels are most reliable with 2 to 4 speakers taking turns; overlapping speech is harder.'}</p>
     </section>
   );
 }
