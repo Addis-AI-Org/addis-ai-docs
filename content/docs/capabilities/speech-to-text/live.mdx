@@ -81,6 +81,39 @@ Send **raw mono PCM16 little-endian at 16 kHz**. WAV/MP3 container bytes belong 
 
 For browser audio, use `addis.scribe.createSession({ requestId })` on the server and `connectScribe(session)` in the browser. Python uses `create_session` and `connect_scribe`. The helper authenticates with the ticket in the first frame and waits for admission before audio is sent. A completed replay may immediately return `transcript.completed` without `session.created`; it does not accept new audio.
 
+## Live speaker labels (preview)
+
+Add `"speakers": true` to the session body to label who is speaking as you record. Speaker labels need the Turbo backend; with `"backend":"standard"` the request fails with `422 INVALID_REQUEST`.
+
+```json
+{"backend":"turbo","chunk":"320ms","request_id":"my-live-transcript-2","speakers":true}
+```
+
+`session.created` then includes `"speakers": true`. After each pause in speech (0.5 s of quiet after at least 1 s of speech, or every 8 s at most), the session sends a `transcript.segment` event with the words and caption segments committed since the last one:
+
+```json
+{"type":"transcript.segment","request_id":"my-live-transcript-2","words":[{"text":"ሰላም","start":0.32,"end":0.81,"speaker":1},{"text":"እንዴት","start":1.62,"end":2.05,"speaker":2},{"text":"ነህ","start":2.05,"end":2.4,"speaker":2}],"segments":[{"text":"ሰላም","start":0.32,"end":0.81,"speaker":1},{"text":"እንዴት ነህ","start":1.62,"end":2.4,"speaker":2}],"speakers":2}
+```
+
+Times are seconds from the start of the session. `speaker` is numbered from 1 in the order people first talk, not named, and is `null` when a word cannot be attributed. Labels already sent never change, and later segments keep the same numbering. `speakers` counts the distinct speakers so far. `transcript.partial` events still arrive with the unlabelled running text of the current stretch.
+
+`transcript.completed` includes `data.words`, `data.segments` (with `speaker`) and `data.speakers`, like an upload with `speakers=true`, so you can build SRT or VTT captions from it. Its `data.text` is the joined words.
+
+```js
+const lines = [];
+socket.onmessage = ({ data }) => {
+  const event = JSON.parse(data);
+  if (event.type === "transcript.segment") {
+    for (const s of event.segments) lines.push(`${s.speaker ? `Speaker ${s.speaker}` : "Unattributed"}: ${s.text}`);
+    render(lines, ""); // committed, labelled lines
+  }
+  if (event.type === "transcript.partial") render(lines, event.text); // unlabelled, may change
+  if (event.type === "transcript.completed") console.log(event.data.segments, event.data.speakers);
+};
+```
+
+Live labels are a preview. On two-person conversations they closely match labels from transcribing the whole file. With three or more people, voices are confused more often, so for group recordings upload the file with `speakers=true` instead. Sessions last up to 180 seconds and label up to 8 speakers.
+
 
 ## Limits and billing
 
