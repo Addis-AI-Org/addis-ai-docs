@@ -73,9 +73,9 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 5. **CI**: add `.github/workflows/ci.yml` running `pnpm test`, `lint`, `typecheck` and `build` on PRs (F44).
 6. **Writer guide**: replace the boilerplate README and add a content style section to `AGENTS.md` (F45).
 7. **Dead weight**: remove unused components, plugins and the lucide spread (F46).
+8. **"New" badges on folder pages** (found while executing 006, pre-existing): `lib/source.ts` `newDocUrls` lists `/docs/capabilities/text-to-speech` and `/docs/capabilities/speech-to-text`, but those are folder index pages, and the `transformPageTree.file()` hook never reaches them, so their sidebar badge never renders. Fold into the F34 badge clean-up: drive badges from `isNew` frontmatter, including folder indexes.
 9. **Strip MDX `import` lines from the AI-facing Markdown** (found while reviewing 008): `/llms-full.txt` and the per-page `.mdx` output include lines like `import { Tabs } from 'fumadocs-ui/components/tabs'` (46 in llms-full). Harmless but noisy for AI readers; filter them in `getLLMText` (`lib/source.ts`).
 10. **Hosting setting for 008**: set `VERCEL_DEEP_CLONE=true` on Vercel so git-based "Last updated" dates resolve at build time.
-8. **"New" badges on folder pages** (found while executing 006, pre-existing): `lib/source.ts` `newDocUrls` lists `/docs/capabilities/text-to-speech` and `/docs/capabilities/speech-to-text`, but those are folder index pages, and the `transformPageTree.file()` hook never reaches them, so their sidebar badge never renders. Fold into the F34 badge clean-up: drive badges from `isNew` frontmatter, including folder indexes.
 
 ## Findings considered and rejected
 
