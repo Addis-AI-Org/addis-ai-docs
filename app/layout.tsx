@@ -7,18 +7,11 @@ import {
   DEFAULT_METADATA_DESCRIPTION,
   DOCUMENTATION_SITE_NAME,
 } from '@/lib/metadata';
+import { siteUrl } from '@/lib/site-url';
 
 const inter = Inter({
   subsets: ['latin'],
 });
-
-// Link previews need absolute image URLs. Production builds fall back to the
-// public docs domain so og:image never points at localhost.
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.NODE_ENV === 'production'
-    ? 'https://docs.addisassistant.com'
-    : 'http://localhost:3000');
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

@@ -579,9 +579,9 @@ test('ships a visible favicon and absolute link-preview URLs in production', () 
     assert.ok(existsSync(join(root, file)), `${file} is missing`);
   }
   assert.match(read('lib/brand-icon.tsx'), /public\/images\/addis-logo\.png/);
-  const appLayout = read('app/layout.tsx');
-  assert.match(appLayout, /'https:\/\/docs\.addisassistant\.com'/);
-  assert.doesNotMatch(appLayout, /NEXT_PUBLIC_SITE_URL \?\? 'http:\/\/localhost:3000'/);
+  const siteUrlSource = read('lib/site-url.ts');
+  assert.match(siteUrlSource, /'https:\/\/docs\.addisassistant\.com'/);
+  assert.doesNotMatch(siteUrlSource, /NEXT_PUBLIC_SITE_URL \?\? 'http:\/\/localhost:3000'/);
 });
 
 test('publishes no placeholder, template, or orphaned documentation pages', () => {
