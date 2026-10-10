@@ -40,7 +40,7 @@ This repo's `AGENTS.md` says: *ask instead of assuming on product, content, navi
 | [004](./004-turn-preservation-tests-into-invariants.md) | Tests guard invariants, not decoration/copy | P1 | M | (001 recommended) | D8 | DONE (5b5344a, 0ef26ec reviewed and approved; preservation 31/31 + invariants 2/2; test diff is deletions only) |
 | [005](./005-rewrite-quickstart-as-single-path-tutorial.md) | Quick Start as a four-step tutorial | P1 | M | 002, 004 | D7, D14 | DONE (88e77ae reviewed and approved; 34/34 content tests, build + typecheck + lint OK) |
 | [006](./006-restructure-sidebar-navigation.md) | Sidebar: one clear path, no duplicates or emoji | P1 | S–M | 001, 004 (005 optional) | D9 | DONE (bee4199 reviewed and approved; 35/35 content tests, build + typecheck + lint OK; sidebar order verified in built HTML) |
-| [007](./007-split-text-generation-into-overview-guides-reference.md) | Split Text Generation into overview + guides + API reference (pilot) | P1 | L | 004, 006 (001 recommended) | — (D4 follow-up) | TODO |
+| [007](./007-split-text-generation-into-overview-guides-reference.md) | Split Text Generation into overview + guides + API reference (pilot) | P1 | L | 004, 006 (001 recommended) | — (D4 follow-up) | DONE (c8bd4f3 reviewed and approved; all 483 original content lines conserved; 35/35 content tests, build + typecheck + lint OK) |
 | [008](./008-ai-readable-docs-and-page-chrome.md) | llms.txt, `.mdx` pages, Copy/Open in AI, last updated, Edit on GitHub, sitemap, 404 | P2 | M | 001 | — | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
