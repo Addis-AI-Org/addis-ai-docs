@@ -56,9 +56,9 @@ Upload an image and ask questions about it. Ideal for explaining diagrams, ident
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl https://api.addisassistant.com/api/v1/chat_generate \\
-      -H "x-api-key: $ADDIS_API_KEY" \\
-      -F 'attachment_0=@market.jpg;type=image/jpeg' \\
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'attachment_0=@market.jpg;type=image/jpeg' \
       -F 'request_data={"prompt":"Describe this image in Amharic.","target_language":"am","attachment_field_names":["attachment_0"]}'
     ```
   </Tab>
@@ -101,9 +101,9 @@ Upload an audio file (e.g., a voice note or meeting recording) and ask the model
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl https://api.addisassistant.com/api/v1/chat_generate \\
-      -H "x-api-key: $ADDIS_API_KEY" \\
-      -F 'chat_audio_input=@command.wav;type=audio/wav' \\
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'chat_audio_input=@command.wav;type=audio/wav' \
       -F 'request_data={"prompt":"Follow the instruction in this recording.","target_language":"am"}'
     ```
   </Tab>
@@ -146,9 +146,9 @@ Use the vision model to extract text from scanned African documents, ID cards, o
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl https://api.addisassistant.com/api/v1/chat_generate \\
-      -H "x-api-key: $ADDIS_API_KEY" \\
-      -F 'attachment_0=@document.png;type=image/png' \\
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'attachment_0=@document.png;type=image/png' \
       -F 'request_data={"prompt":"Extract every visible line exactly as written.","target_language":"am","attachment_field_names":["attachment_0"]}'
     ```
   </Tab>
@@ -197,7 +197,7 @@ The SDK examples retrieve the reusable attachment metadata from the first upload
     ```bash
     curl --location 'https://api.addisassistant.com/api/v1/chat_generate' \
       --header 'Content-Type: application/json' \
-      --header 'X-API-Key: $ADDIS_API_KEY' \
+      --header "X-API-Key: $ADDIS_API_KEY" \
       --data '{
         "prompt": "What was the document talking about in detail?",
         "target_language": "am",

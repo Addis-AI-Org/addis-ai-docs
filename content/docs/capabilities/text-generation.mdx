@@ -56,9 +56,9 @@ Send a prompt and a target language to get an immediate response.
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl https://api.addisassistant.com/api/v1/chat_generate \\
-      -H "Content-Type: application/json" \\
-      -H "x-api-key: $ADDIS_API_KEY" \\
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "Content-Type: application/json" \
+      -H "x-api-key: $ADDIS_API_KEY" \
       -d '{
         "prompt": "የአድዋ ጦርነት ታሪክ በአጭሩ",
         "target_language": "am",
@@ -105,9 +105,9 @@ The SDK accepts the same turns as `messages` and maps them to the native convers
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl https://api.addisassistant.com/api/v1/chat_generate \\
-      -H "Content-Type: application/json" \\
-      -H "x-api-key: $ADDIS_API_KEY" \\
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "Content-Type: application/json" \
+      -H "x-api-key: $ADDIS_API_KEY" \
       -d '{
         "prompt": "የሁለተኛው ክልል ስም ማን ነው?",
         "target_language": "am",
@@ -149,9 +149,9 @@ Both fields are optional plain strings. `persona` defines who the assistant is; 
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl https://api.addisassistant.com/api/v1/chat_generate \\
-      -H "Content-Type: application/json" \\
-      -H "x-api-key: $ADDIS_API_KEY" \\
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "Content-Type: application/json" \
+      -H "x-api-key: $ADDIS_API_KEY" \
       -d '{
         "persona":"You are a patient Ethiopian language tutor.",
         "system":"Answer in Amharic, then include one short English gloss.",

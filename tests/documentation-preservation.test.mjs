@@ -707,3 +707,23 @@ test('publishes no placeholder, template, or orphaned documentation pages', () =
     );
   }
 });
+
+test('keeps copied shell and server samples runnable', () => {
+  const pages = walk('content/docs').filter((path) => path.endsWith('.mdx'));
+
+  for (const absolute of pages) {
+    const path = absolute.slice(root.length + 1);
+    const lines = readFileSync(absolute, 'utf8').split('\n');
+    let inFence = false;
+
+    lines.forEach((line, index) => {
+      if (/^\s*```/.test(line)) inFence = !inFence;
+      else if (inFence) {
+        assert.doesNotMatch(line, /\\\\\s*$/, `${path}:${index + 1} ends a code line with a double backslash`);
+        assert.doesNotMatch(line, /'[^']*\$ADDIS_API_KEY[^']*'/, `${path}:${index + 1} single-quotes $ADDIS_API_KEY, so the shell never expands it`);
+      }
+    });
+
+    assert.doesNotMatch(readFileSync(absolute, 'utf8'), /ADDIS_AI_KEY/, `${path} uses ADDIS_AI_KEY instead of ADDIS_API_KEY`);
+  }
+});

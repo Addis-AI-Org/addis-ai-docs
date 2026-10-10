@@ -144,7 +144,7 @@ Use this for chatbots, translation, or simple text generation where waiting 2-3 
 
     func main() {
     	r := gin.Default()
-    	apiKey := os.Getenv("ADDIS_AI_KEY")
+    	apiKey := os.Getenv("ADDIS_API_KEY")
 
     	r.POST("/api/chat", func(c *gin.Context) {
     		var input struct {
@@ -159,13 +159,20 @@ Use this for chatbots, translation, or simple text generation where waiting 2-3 
     		}
     		jsonValue, _ := json.Marshal(payload)
 
-    		req, _ := http.NewRequest("POST", "https://api.addisassistant.com/api/v1/chat_generate", bytes.NewBuffer(jsonValue))
+    		req, err := http.NewRequest("POST", "https://api.addisassistant.com/api/v1/chat_generate", bytes.NewBuffer(jsonValue))
+    		if err != nil {
+    			c.JSON(http.StatusInternalServerError, gin.H{"error": gin.H{"message": "Could not build the request"}})
+    			return
+    		}
     		req.Header.Set("Content-Type", "application/json")
     		req.Header.Set("X-API-Key", apiKey)
 
     		client := &http.Client{}
     		resp, err := client.Do(req)
-            // Error handling omitted for brevity
+    		if err != nil {
+    			c.JSON(http.StatusBadGateway, gin.H{"error": gin.H{"message": "Could not reach Addis AI"}})
+    			return
+    		}
     		defer resp.Body.Close()
 
     		var result map[string]interface{}
@@ -184,7 +191,7 @@ Use this for chatbots, translation, or simple text generation where waiting 2-3 
 
     Route::post('/api/chat', function (Request $request) {
         $response = Http::withHeaders([
-            'X-API-Key' => env('ADDIS_AI_KEY'),
+            'X-API-Key' => env('ADDIS_API_KEY'),
             'Content-Type' => 'application/json',
         ])->post('https://api.addisassistant.com/api/v1/chat_generate', [
             'model' => 'Addis-፩-አሌፍ',

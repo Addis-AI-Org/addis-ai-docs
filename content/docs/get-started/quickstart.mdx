@@ -193,7 +193,7 @@ This guide will take you through the complete lifecycle: testing your ideas visu
           <Tab value="cURL">
             ```bash
             curl --location 'https://api.addisassistant.com/api/v2/stt' \
-              --header 'x-api-key: $ADDIS_API_KEY' \
+              --header "x-api-key: $ADDIS_API_KEY" \
               --form 'audio=@"audio.wav"' \
               --form 'request_data="{ \"language_code\": \"am\" }"'
             ```
@@ -239,7 +239,7 @@ This guide will take you through the complete lifecycle: testing your ideas visu
             ```bash
             curl --location 'https://api.addisassistant.com/api/v1/translate' \
               --header 'Content-Type: application/json' \
-              --header 'x-api-key: $ADDIS_API_KEY' \
+              --header "x-api-key: $ADDIS_API_KEY" \
               --data '{
                 "text": "ገበሬው ማሳውን ዘወትር ይጎበኛል",
                 "source_language": "am",

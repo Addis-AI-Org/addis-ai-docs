@@ -65,7 +65,7 @@ Your frontend (React, Vue, Blade) should call your **own** backend, which then c
           usage: response.usage,
         });
       } catch (error) {
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: { message: "Internal Server Error" } }, { status: 500 });
       }
     }
     ```
@@ -82,12 +82,12 @@ Your frontend (React, Vue, Blade) should call your **own** backend, which then c
     app.use(express.json());
     const addis = new AddisAI();
 
-    app.post('/api/proxy', async (req, res) => {
-      const { prompt } = req.body;
+    app.post('/api/chat', async (req, res) => {
+      const { message } = req.body;
 
       try {
         const response = await addis.chat.completions.create({
-          messages: [{ role: "user", content: prompt }],
+          messages: [{ role: "user", content: message }],
           language: "am",
         });
 
@@ -96,7 +96,7 @@ Your frontend (React, Vue, Blade) should call your **own** backend, which then c
           usage: response.usage,
         });
       } catch (error) {
-        res.status(500).json({ error: "Proxy Connection Failed" });
+        res.status(500).json({ error: { message: "Proxy Connection Failed" } });
       }
     });
     ```
@@ -113,7 +113,7 @@ Your frontend (React, Vue, Blade) should call your **own** backend, which then c
     Route::post('/chat', function (Request $request) {
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-            'X-API-Key' => env('ADDIS_AI_KEY'),
+            'X-API-Key' => env('ADDIS_API_KEY'),
         ])->post('https://api.addisassistant.com/api/v1/chat_generate', [
             'prompt' => $request->input('message'),
             'target_language' => 'am',

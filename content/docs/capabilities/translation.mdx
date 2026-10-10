@@ -80,9 +80,9 @@ Translate text between any of the supported languages (`am`, `om`, `en`).
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl --location 'https://api.addisassistant.com/api/v1/translate' \\
-      --header 'Content-Type: application/json' \\
-      --header 'x-api-key: $ADDIS_API_KEY' \\
+    curl --location 'https://api.addisassistant.com/api/v1/translate' \
+      --header 'Content-Type: application/json' \
+      --header "x-api-key: $ADDIS_API_KEY" \
       --data '{
         "text": "ገበሬው ማሳውን ዘወትር ይጎበኛል",
         "source_language": "am",
