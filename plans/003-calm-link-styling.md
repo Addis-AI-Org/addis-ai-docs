@@ -157,7 +157,7 @@ You can do the introduction bullets in one pass: `sed -i -E 's/^\*   \*\*(\[[^]]
 
 ### Step 4: Build
 
-**Verify**: `pnpm install && pnpm typecheck && pnpm build` → all exit 0. If you cannot install dependencies, say so in your report and rely on Steps 1-3.
+**Verify**: `pnpm install && pnpm build && pnpm typecheck` → all exit 0. If you cannot install dependencies, say so in your report and rely on Steps 1-3.
 
 ### Step 5: Visual QA handoff (human)
 

@@ -226,7 +226,7 @@ In `content/docs/get-started/introduction.mdx`:
 
 In `lib/source.ts`, delete the whole `if (node.url === '/docs/announcements') { … }` block (lines 19-24, 6 lines). Keep the rest of `file(node)` unchanged.
 
-**Verify**: `grep -c "announcements" lib/source.ts` → `0`. `pnpm typecheck` → exit 0, if dependencies are installed.
+**Verify**: `grep -c "announcements" lib/source.ts` → `0`. `pnpm typecheck` → exit 0, if dependencies are installed (on a fresh checkout run `pnpm build` first; it generates the Next.js route types typecheck needs).
 
 ### Step 5: Lock the new invariants
 
