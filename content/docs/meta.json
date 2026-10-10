@@ -6,6 +6,8 @@
     "--- Get Started ---",
     "get-started/introduction",
     "get-started/quickstart",
+    "get-started/playground",
+    "get-started/api-overview",
     "get-started/sdks",
 
     "--- Capabilities ---",

@@ -1,44 +1,19 @@
 ---
 title: Quick Start
-description: From Playground to Production in less than 5 minutes.
+description: Create an API key, install the SDK, and make your first request in four steps.
 icon: Zap
 ---
 
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
-This guide will take you through the complete lifecycle: testing your ideas visually, securing an API key, and writing your first line of code.
+This guide takes you from a new account to your first Amharic response. Prefer to experiment without code first? Use the [Playground guide](/docs/get-started/playground).
 
 <Steps>
   <Step>
-    ## Prototype in Playground
-    
-    Before writing code, we recommend testing your prompts interactively.
+    ## Create an API key
 
-    ### Test your Parameters
-    [Open the Addis AI Playground](https://addisassistant.com/playground).
-    
-    ![Current Addis AI Playground showing model, language, output, temperature, and token controls](/images/playgroundchat.png)
-    
-    1.  **Select a model:** Choose `Addis-፩-አሌፍ` for text generation.
-    2.  **Choose the language and output type:** Select Amharic or Afaan Oromo and the response format you want to test.
-    3.  **Adjust temperature:**
-        *   Set to **0.2** for factual answers (History, Math).
-        *   Set to **0.7** for creative writing (Stories, Poems).
-    4.  **Set the response length and check usage:** Adjust the maximum completion tokens, send a text or audio prompt, and review the token count.
-
-    The **Voice Lab** experience is available from the **Voice Lab** navigation item when you want to discover and preview Addis Voices 2 separately from the Playground.
-
-    Once you are happy with the result, you are ready to integrate.
-  </Step>
-
-  <Step>
-    ## Get your API Key
-    
-    Authentication is handled via a secret `x-api-key` header.
-    
-    ### Generate New Key
-    1.  Navigate to the [API Keys Dashboard](https://addisassistant.com/apikeys).
+    1.  Open the [API Keys Dashboard](https://addisassistant.com/apikeys).
     2.  Click **Create API Key**.
 
     ![Addis AI API Keys page with the Create API Key button](/images/api_page.png)
@@ -46,37 +21,22 @@ This guide will take you through the complete lifecycle: testing your ideas visu
     3.  **Name your key** (e.g., `Addis AI App`) in the popup window.
 
     ![Create API Key dialog with the key-name field](/images/api_name.png)
-    
-    ### Copy Secret
+
     <Callout title="Important" type="info">
-      You will see a key starting with `sk_...`. **Copy this now.** 
-      
+      You will see a key starting with `sk_...`. **Copy this now.**
+
       You will not be able to see it again after closing the window.
     </Callout>
 
     ![New Addis AI API key confirmation with the one-time Copy action](/images/secretkey.png)
   </Step>
- 
+
   <Step>
-    ## Configure Endpoints
-    
-    REST API requests use the following production base URL:
+    ## Install the SDK and set your key
 
-    ```bash
-    https://api.addisassistant.com
-    ```
+    Keep the key on your server. The SDK reads it from `ADDIS_API_KEY`.
 
-    Realtime voice uses a separate WebSocket endpoint:
-
-    ```bash
-    wss://relay.addisassistant.com/ws
-    ```
-
-    For Addis Voices 2 text-to-speech streaming, use `wss://api.addisassistant.com/api/v1/realtime/voice` with a scoped session ticket. Follow the [Streaming text-to-speech guide](/docs/capabilities/text-to-speech/streaming) for session creation and SDK release availability.
-
-    Install the official SDK and store your key in `ADDIS_API_KEY`.
-
-    <Tabs items={['Node.js', 'Python']}>
+    <Tabs items={['Node.js', 'Python', 'cURL']}>
       <Tab value="Node.js">
         ```bash
         npm install addisai
@@ -89,306 +49,102 @@ This guide will take you through the complete lifecycle: testing your ideas visu
         export ADDIS_API_KEY="your_api_key"
         ```
       </Tab>
-    </Tabs>
-
-    ### Available Capabilities
-    
-    | Capability | Endpoint | Method |
-    | --- | --- | --- |
-    | Chat and Text Generation | `/api/v1/chat_generate` | `POST` |
-    | Text-to-Speech (Addis Voices 2) | `/api/v1/voice/generations` | `POST` |
-    | Speech-to-Text | `/api/v2/stt` | `POST` |
-    | Translation | `/api/v1/translate` | `POST` |
-    | Multimodal | `/api/v1/chat_generate` | `POST multipart/form-data` |
-    | Realtime Voice | `wss://relay.addisassistant.com/ws` | `WebSocket` |
-
-  </Step>
-
-  <Step>
-    ## Quick Example
-    
-    Choose a capability below to make your first request.
-
-    <Tabs items={['Text Generation', 'Speech-to-Text', 'Translation', 'Multimodal']}>
-      <Tab value="Text Generation">
-        **Endpoint:** `/api/v1/chat_generate`
-        
-        Simple JSON request for chatbots and text analysis.
-
-        <Tabs items={['Node.js', 'Python', 'cURL']}>
-          <Tab value="Node.js">
-            ```ts
-            import AddisAI from "addisai";
-
-            const addis = new AddisAI();
-            const response = await addis.chat.completions.create({
-              messages: [{
-                role: "user",
-                content: "ሰላም፣ ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?",
-              }],
-            });
-
-            console.log(response.choices[0].message.content);
-            ```
-          </Tab>
-          <Tab value="Python">
-            ```python
-            from addisai import AddisAI
-
-            addis = AddisAI()
-            response = addis.chat.completions.create(
-                messages=[{
-                    "role": "user",
-                    "content": "ሰላም፣ ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?",
-                }],
-            )
-
-            print(response["choices"][0]["message"]["content"])
-            ```
-          </Tab>
-          <Tab value="cURL">
-            ```bash
-            curl https://api.addisassistant.com/api/v1/chat_generate \
-              -H "Content-Type: application/json" \
-              -H "x-api-key: $ADDIS_API_KEY" \
-              -d '{
-                "prompt": "ሰላም፣ ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?",
-                "target_language": "am"
-              }'
-            ```
-          </Tab>
-        </Tabs>
-      </Tab>
-      
-      <Tab value="Speech-to-Text">
-        **Endpoint:** `/api/v2/stt`
-        
-        Requires `multipart/form-data`. Note that metadata must be passed as a JSON string inside `request_data`.
-
-        <Tabs items={['Node.js', 'Python', 'cURL']}>
-          <Tab value="Node.js">
-            ```ts
-            import AddisAI, { fileFromPath } from "addisai";
-
-            const addis = new AddisAI();
-            const result = await addis.speech.transcribe({
-              audio: await fileFromPath("audio.wav"),
-              language: "am",
-            });
-
-            console.log(result.text);
-            ```
-          </Tab>
-          <Tab value="Python">
-            ```python
-            from addisai import AddisAI
-
-            addis = AddisAI()
-            with open("audio.wav", "rb") as audio:
-                result = addis.speech.transcribe(audio=audio, language="am")
-
-            print(result["text"])
-            ```
-          </Tab>
-          <Tab value="cURL">
-            ```bash
-            curl --location 'https://api.addisassistant.com/api/v2/stt' \
-              --header "x-api-key: $ADDIS_API_KEY" \
-              --form 'audio=@"audio.wav"' \
-              --form 'request_data="{ \"language_code\": \"am\" }"'
-            ```
-          </Tab>
-        </Tabs>
-      </Tab>
-
-      <Tab value="Translation">
-        **Endpoint:** `/api/v1/translate`
-
-        Translate text between any of the supported languages (`am`, `om`, `en`).
-
-        <Tabs items={['Node.js', 'Python', 'cURL']}>
-          <Tab value="Node.js">
-            ```ts
-            import AddisAI from "addisai";
-
-            const addis = new AddisAI();
-            const result = await addis.translate.create({
-              text: "ገበሬው ማሳውን ዘወትር ይጎበኛል",
-              from: "am",
-              to: "om",
-            });
-
-            console.log(result.text);
-            ```
-          </Tab>
-          <Tab value="Python">
-            ```python
-            from addisai import AddisAI
-
-            addis = AddisAI()
-            result = addis.translate.create(
-                text="ገበሬው ማሳውን ዘወትር ይጎበኛል",
-                source="am",
-                target="om",
-            )
-
-            print(result["text"])
-            ```
-          </Tab>
-          <Tab value="cURL">
-            ```bash
-            curl --location 'https://api.addisassistant.com/api/v1/translate' \
-              --header 'Content-Type: application/json' \
-              --header "x-api-key: $ADDIS_API_KEY" \
-              --data '{
-                "text": "ገበሬው ማሳውን ዘወትር ይጎበኛል",
-                "source_language": "am",
-                "target_language": "om"
-              }'
-            ```
-          </Tab>
-        </Tabs>
-      </Tab>
-
-      <Tab value="Multimodal">
-        **Endpoint:** `/api/v1/chat_generate`
-
-        Upload an image and ask questions about it. Ideal for explaining diagrams, identifying objects, or analyzing screenshots.
-
-        <Tabs items={['Node.js', 'Python', 'cURL']}>
-          <Tab value="Node.js">
-            ```ts
-            import AddisAI, { fileFromPath } from "addisai";
-
-            const addis = new AddisAI();
-            const response = await addis.chat.completions.create({
-              messages: [{ role: "user", content: "Describe this image in Amharic." }],
-              attachments: [{ file: await fileFromPath("market.jpg", "image/jpeg") }],
-            });
-
-            console.log(response.choices[0].message.content);
-            ```
-          </Tab>
-          <Tab value="Python">
-            ```python
-            from addisai import AddisAI
-
-            addis = AddisAI()
-            with open("market.jpg", "rb") as image:
-                response = addis.chat.completions.create(
-                    messages=[{"role": "user", "content": "Describe this image in Amharic."}],
-                    attachments=[image],
-                )
-
-            print(response["choices"][0]["message"]["content"])
-            ```
-          </Tab>
-          <Tab value="cURL">
-            ```bash
-            curl https://api.addisassistant.com/api/v1/chat_generate \
-              -H "x-api-key: $ADDIS_API_KEY" \
-              -F 'attachment_0=@market.jpg;type=image/jpeg' \
-              -F 'request_data={"prompt":"Describe this image in Amharic.","target_language":"am","attachment_field_names":["attachment_0"]}'
-            ```
-          </Tab>
-        </Tabs>
-      </Tab>
-    </Tabs>
-
-    <Cards>
-      <Card href="/docs/capabilities/realtime" icon={<Radio />} title="Realtime API">
-        Build low-latency, interruption-capable voice conversations over WebSockets.
-      </Card>
-    </Cards>
-
-    ### The Response
-    
-    The API structure depends on the endpoint.
-    
-    <Tabs items={['Text Generation', 'Speech-to-Text']}>
-      <Tab value="Text Generation">
-        The SDK exposes this result through `response.choices` and `response.usage`. The JSON below is the native REST response.
-
-        ```json
-        {
-          "response_text": "በአሁኑ ጊዜ በኢትዮጵያ ውስጥ 12 ክልሎች አሉ።...",
-          "finish_reason": "stop",
-          "usage_metadata": {
-            "prompt_token_count": 8,
-            "candidates_token_count": 25,
-            "total_token_count": 33
-          },
-          "modelVersion": "Addis-፩-አሌፍ"
-        }
-        ```
-      </Tab>
-      <Tab value="Speech-to-Text">
-        The SDK returns `text`, `confidence`, and `usage`. The JSON below is the native REST response.
-
-        ```json
-        {
-            "status": "success",
-            "data": {
-                "transcription": "ሊያሳውቁ ይችላሉ ነገር ግን የበለጠ እየታወቁ በመጡ ቁጥር ደግሞ ይበልጥ ይነሳሉ የተረጋገጠ ልብና ነበር ያለው ሰው የሃሳብ የድርጊት ዝም",
-                "usage_metadata": {
-                    "totalBilledDuration": "15s",
-                    "requestId": "69b60667-0000-2a1e-b6d3-d4f547fe6724"
-                }
-            },
-            "confidence": 0.98276204
-        }
+      <Tab value="cURL">
+        ```bash
+        export ADDIS_API_KEY="your_api_key"
         ```
       </Tab>
     </Tabs>
-
   </Step>
 
   <Step>
-    ## Generate your first Addis Voices 2 clip
-
-    Use `am-hamen` for the first Amharic example. For production, query the voice catalog and preview a voice before saving its ID.
+    ## Make your first request
 
     <Tabs items={['Node.js', 'Python', 'cURL']}>
       <Tab value="Node.js">
-        ```ts
-        const clip = await addis.voice.generate({
-          text: "ሰላም፣ እንኳን ደህና መጡ።",
-          voiceId: "am-hamen",
-          language: "am",
-          outputFormat: "mp3_44100",
-          clientRequestId: crypto.randomUUID(),
+        ```ts title="index.mjs"
+        import AddisAI from "addisai";
+
+        const addis = new AddisAI();
+        const response = await addis.chat.completions.create({
+          messages: [{
+            role: "user",
+            content: "ሰላም፣ ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?",
+          }],
         });
 
-        await clip.toFile("welcome.mp3");
+        console.log(response.choices[0].message.content);
+        ```
+
+        ```bash
+        node index.mjs
         ```
       </Tab>
       <Tab value="Python">
-        ```python
-        clip = addis.voice.generate(
-            text="ሰላም፣ እንኳን ደህና መጡ።",
-            voice_id="am-hamen",
-            language="am",
-            output_format="mp3_44100",
-            client_request_id="quickstart-voice-001",
+        ```python title="main.py"
+        from addisai import AddisAI
+
+        addis = AddisAI()
+        response = addis.chat.completions.create(
+            messages=[{
+                "role": "user",
+                "content": "ሰላም፣ ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?",
+            }],
         )
 
-        clip.to_file("welcome.mp3")
+        print(response["choices"][0]["message"]["content"])
+        ```
+
+        ```bash
+        python main.py
         ```
       </Tab>
       <Tab value="cURL">
         ```bash
-        curl https://api.addisassistant.com/api/v1/voice/generations \
+        curl https://api.addisassistant.com/api/v1/chat_generate \
+          -H "Content-Type: application/json" \
           -H "x-api-key: $ADDIS_API_KEY" \
-          -H "content-type: application/json" \
           -d '{
-            "text":"ሰላም፣ እንኳን ደህና መጡ።",
-            "voice_id":"am-hamen",
-            "language":"am",
-            "output_format":"mp3_44100",
-            "client_request_id":"quickstart-voice-001"
+            "prompt": "ሰላም፣ ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?",
+            "target_language": "am"
           }'
         ```
       </Tab>
     </Tabs>
   </Step>
+
+  <Step>
+    ## Check the response
+
+    The SDK prints the model's answer. Wording varies between runs:
+
+    ```text
+    በአሁኑ ጊዜ በኢትዮጵያ ውስጥ 12 ክልሎች አሉ።...
+    ```
+
+    cURL returns the native JSON response, with the answer in `response_text`. See [API overview](/docs/get-started/api-overview#native-rest-responses) for every response shape.
+  </Step>
 </Steps>
+
+## Next steps
+
+<Cards>
+  <Card href="/docs/capabilities/text-generation" title="Text Generation">
+    Multi-turn chat, system instructions, function calling, and streaming.
+  </Card>
+  <Card href="/docs/capabilities/text-to-speech" title="Text-to-Speech">
+    Generate your first Addis Voices 2 clip.
+  </Card>
+  <Card href="/docs/capabilities/speech-to-text" title="Speech-to-Text">
+    Transcribe Amharic and Afaan Oromo audio.
+  </Card>
+  <Card href="/docs/capabilities/translation" title="Translation">
+    Translate between Amharic, Afaan Oromo, and English.
+  </Card>
+  <Card href="/docs/capabilities/realtime" icon={<Radio />} title="Realtime API">
+    Build low-latency, interruption-capable voice conversations over WebSockets.
+  </Card>
+  <Card href="/docs/get-started/sdks" title="SDKs">
+    Configure the Node.js and Python SDKs.
+  </Card>
+</Cards>

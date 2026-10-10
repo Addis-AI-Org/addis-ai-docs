@@ -115,6 +115,7 @@ test('shows responsive social links beside the sidebar theme switcher', () => {
 
 test('preserves original onboarding screenshots and page structures', () => {
   const quickstart = read('content/docs/get-started/quickstart.mdx');
+  const playground = read('content/docs/get-started/playground.mdx');
   const introduction = read('content/docs/get-started/introduction.mdx');
   for (const image of [
     '/images/playgroundchat.png',
@@ -122,16 +123,16 @@ test('preserves original onboarding screenshots and page structures', () => {
     '/images/api_name.png',
     '/images/secretkey.png',
   ]) {
-    assert.ok(quickstart.includes(image), `Quick Start is missing ${image}`);
+    assert.ok((quickstart + playground).includes(image), `Quick Start is missing ${image}`);
     assert.ok(existsSync(join(root, 'public', image)));
   }
 
-  assert.match(quickstart, /https:\/\/addisassistant\.com\/playground/);
-  assert.match(quickstart, /Open the Addis AI Playground/);
+  assert.match(playground, /https:\/\/addisassistant\.com\/playground/);
+  assert.match(playground, /Open the Addis AI Playground/);
   assert.match(quickstart, /https:\/\/addisassistant\.com\/apikeys/);
-  assert.match(quickstart, /The \*\*Voice Lab\*\* experience/);
-  assert.doesNotMatch(quickstart, /Voice Labs/);
-  assert.match(quickstart, /Current Addis AI Playground showing model, language, output, temperature, and token controls/);
+  assert.match(playground, /The \*\*Voice Lab\*\* experience/);
+  assert.doesNotMatch(playground, /Voice Labs/);
+  assert.match(playground, /Current Addis AI Playground showing model, language, output, temperature, and token controls/);
   assert.match(quickstart, /Addis AI API Keys page with the Create API Key button/);
   assert.match(quickstart, /Create API Key dialog with the key-name field/);
   assert.match(quickstart, /one-time Copy action/);
@@ -245,12 +246,15 @@ test('keeps SDK examples primary without removing cURL interoperability', () => 
 
 test('completes Quick Start capability coverage across REST and Realtime', () => {
   const quickstart = read('content/docs/get-started/quickstart.mdx');
+  const overview = read('content/docs/get-started/api-overview.mdx');
+  const translation = read('content/docs/capabilities/translation.mdx');
+  const multimodal = read('content/docs/capabilities/multimodal.mdx');
 
-  assert.match(quickstart, /REST API requests use the following production base URL:/);
-  assert.match(quickstart, /https:\/\/api\.addisassistant\.com/);
-  assert.match(quickstart, /Realtime voice uses a separate WebSocket endpoint:/);
-  assert.match(quickstart, /wss:\/\/relay\.addisassistant\.com\/ws/);
-  assert.doesNotMatch(quickstart, /All API requests should be made to the production Base URL:/);
+  assert.match(overview, /REST API requests use the following production base URL:/);
+  assert.match(overview, /https:\/\/api\.addisassistant\.com/);
+  assert.match(overview, /Realtime voice uses a separate WebSocket endpoint:/);
+  assert.match(overview, /wss:\/\/relay\.addisassistant\.com\/ws/);
+  assert.doesNotMatch(overview, /All API requests should be made to the production Base URL:/);
 
   for (const row of [
     '| Chat and Text Generation | `/api/v1/chat_generate` | `POST` |',
@@ -260,15 +264,23 @@ test('completes Quick Start capability coverage across REST and Realtime', () =>
     '| Multimodal | `/api/v1/chat_generate` | `POST multipart/form-data` |',
     '| Realtime Voice | `wss://relay.addisassistant.com/ws` | `WebSocket` |',
   ]) {
-    assert.ok(quickstart.includes(row), `Quick Start is missing capability row: ${row}`);
+    assert.ok(overview.includes(row), `API overview is missing capability row: ${row}`);
   }
 
-  assert.match(quickstart, /<Tabs items=\{\['Text Generation', 'Speech-to-Text', 'Translation', 'Multimodal'\]\}>/);
-  assert.match(quickstart, /addis\.translate\.create/);
-  assert.match(quickstart, /source_language/);
-  assert.match(quickstart, /attachments: \[\{ file: await fileFromPath\("market\.jpg", "image\/jpeg"\) \}\]/);
-  assert.match(quickstart, /attachment_0=@market\.jpg;type=image\/jpeg/);
+  assert.match(translation, /addis\.translate\.create/);
+  assert.match(translation, /source_language/);
+  assert.match(multimodal, /attachments: \[\{ file: await fileFromPath\("market\.jpg", "image\/jpeg"\) \}\]/);
+  assert.match(multimodal, /attachment_0=@market\.jpg;type=image\/jpeg/);
   assert.match(quickstart, /<Card href="\/docs\/capabilities\/realtime" icon=\{<Radio \/>\} title="Realtime API">/);
+});
+
+test('keeps Quick Start a four-step tutorial with one request and next steps', () => {
+  const quickstart = read('content/docs/get-started/quickstart.mdx');
+  assert.equal((quickstart.match(/<Step>/g) ?? []).length, 4);
+  assert.match(quickstart, /## Next steps/);
+  assert.match(quickstart, /ADDIS_API_KEY/);
+  assert.doesNotMatch(quickstart, /<Tabs items=\{\['Text Generation'/);
+  assert.ok((quickstart.match(/addis\.[a-z]+\.[a-z]+/g) ?? []).every((call) => call.startsWith('addis.chat')));
 });
 
 test('documents the unified SDK capability matrix', () => {

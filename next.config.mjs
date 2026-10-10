@@ -75,7 +75,7 @@ const config = {
       },
       {
         source: '/docs/get-started/playground-guide',
-        destination: '/docs/get-started/quickstart',
+        destination: '/docs/get-started/playground',
         permanent: true,
       },
     ];
