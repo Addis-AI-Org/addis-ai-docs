@@ -666,7 +666,10 @@ test('ships a visible favicon and absolute link-preview URLs in production', () 
     assert.ok(existsSync(join(root, file)), `${file} is missing`);
   }
   assert.match(read('lib/brand-icon.tsx'), /public\/images\/addis-logo\.png/);
-  const appLayout = read('app/layout.tsx');
-  assert.match(appLayout, /'https:\/\/docs\.addisassistant\.com'/);
-  assert.doesNotMatch(appLayout, /NEXT_PUBLIC_SITE_URL \?\? 'http:\/\/localhost:3000'/);
+  // The site URL fallback lives in lib/site.ts, shared by the layout, robots,
+  // sitemap and llms.txt.
+  const siteConfig = read('lib/site.ts');
+  assert.match(siteConfig, /'https:\/\/docs\.addisassistant\.com'/);
+  assert.doesNotMatch(siteConfig, /NEXT_PUBLIC_SITE_URL \?\? 'http:\/\/localhost:3000'/);
+  assert.match(read('app/layout.tsx'), /const siteUrl = SITE_URL;/);
 });
