@@ -41,7 +41,7 @@ This repo's `AGENTS.md` says: *ask instead of assuming on product, content, navi
 | [005](./005-rewrite-quickstart-as-single-path-tutorial.md) | Quick Start as a four-step tutorial | P1 | M | 002, 004 | D7, D14 | DONE (88e77ae reviewed and approved; 34/34 content tests, build + typecheck + lint OK) |
 | [006](./006-restructure-sidebar-navigation.md) | Sidebar: one clear path, no duplicates or emoji | P1 | S–M | 001, 004 (005 optional) | D9 | DONE (bee4199 reviewed and approved; 35/35 content tests, build + typecheck + lint OK; sidebar order verified in built HTML) |
 | [007](./007-split-text-generation-into-overview-guides-reference.md) | Split Text Generation into overview + guides + API reference (pilot) | P1 | L | 004, 006 (001 recommended) | — (D4 follow-up) | DONE (c8bd4f3 reviewed and approved; all 483 original content lines conserved; 35/35 content tests, build + typecheck + lint OK) |
-| [008](./008-ai-readable-docs-and-page-chrome.md) | llms.txt, `.mdx` pages, Copy/Open in AI, last updated, Edit on GitHub, sitemap, 404 | P2 | M | 001 | — | TODO |
+| [008](./008-ai-readable-docs-and-page-chrome.md) | llms.txt, `.mdx` pages, Copy/Open in AI, last updated, Edit on GitHub, sitemap, 404 | P2 | M | 001 | — | DONE (1bf757a, 5620147, 76aec8e reviewed and approved; endpoints re-verified by reviewer on a live build; 36/36 content tests, 51/51 full suite) |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 
@@ -73,6 +73,8 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 5. **CI**: add `.github/workflows/ci.yml` running `pnpm test`, `lint`, `typecheck` and `build` on PRs (F44).
 6. **Writer guide**: replace the boilerplate README and add a content style section to `AGENTS.md` (F45).
 7. **Dead weight**: remove unused components, plugins and the lucide spread (F46).
+9. **Strip MDX `import` lines from the AI-facing Markdown** (found while reviewing 008): `/llms-full.txt` and the per-page `.mdx` output include lines like `import { Tabs } from 'fumadocs-ui/components/tabs'` (46 in llms-full). Harmless but noisy for AI readers; filter them in `getLLMText` (`lib/source.ts`).
+10. **Hosting setting for 008**: set `VERCEL_DEEP_CLONE=true` on Vercel so git-based "Last updated" dates resolve at build time.
 8. **"New" badges on folder pages** (found while executing 006, pre-existing): `lib/source.ts` `newDocUrls` lists `/docs/capabilities/text-to-speech` and `/docs/capabilities/speech-to-text`, but those are folder index pages, and the `transformPageTree.file()` hook never reaches them, so their sidebar badge never renders. Fold into the F34 badge clean-up: drive badges from `isNew` frontmatter, including folder indexes.
 
 ## Findings considered and rejected
