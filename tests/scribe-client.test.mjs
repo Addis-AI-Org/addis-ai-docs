@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 const source = readFileSync(new URL('../lib/scribe-client.ts', import.meta.url), 'utf8');
 const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { authHeaders, pcm16, validateSocketUrl, readTranscriptStream, toSrt, toVtt, wrapCaption, wordsBySegment, segmentAt } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+const { authHeaders, pcm16, validateSocketUrl, readTranscriptStream, toSrt, toVtt, wrapCaption, wordsBySegment, segmentAt, appendLiveSegments, speakerTurns } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 
 test('API keys are header-only and absent credentials fail before network access', () => {
   assert.deepEqual(authHeaders('  customer-key  '), { 'x-api-key': 'customer-key' });
@@ -78,4 +78,39 @@ test('words are grouped under their caption cue and the active cue follows playb
   assert.equal(segmentAt(segments, 18.5), 0);
   assert.equal(segmentAt(segments, 21), -1);
   assert.equal(segmentAt(segments, 23.8), 1);
+});
+
+const speakerVector = [
+  { text: 'ሰላም ወዳጆቻችን', start: 0.6, end: 1.6, speaker: 1 },
+  { text: 'እንዴት ናችሁ', start: 1.7, end: 3.0, speaker: 2 },
+];
+
+test('speaker captions match the shared contract test vector exactly', () => {
+  assert.equal(
+    toSrt({ segments: speakerVector }),
+    '1\n00:00:00,600 --> 00:00:01,600\nSpeaker 1: ሰላም ወዳጆቻችን\n\n2\n00:00:01,700 --> 00:00:03,000\nSpeaker 2: እንዴት ናችሁ\n',
+  );
+  assert.equal(
+    toVtt({ segments: speakerVector }),
+    'WEBVTT\n\n00:00:00.600 --> 00:00:01.600\n<v Speaker 1>ሰላም ወዳጆቻችን\n\n00:00:01.700 --> 00:00:03.000\n<v Speaker 2>እንዴት ናችሁ\n',
+  );
+});
+test('the SRT speaker prefix counts toward wrapping, VTT voice spans do not, and null speakers get no label', () => {
+  const text = `${'a'.repeat(30)} ${'b'.repeat(10)}`; // 41 characters: one line alone, two lines after "Speaker 1: "
+  const segments = [{ text, start: 0, end: 1, speaker: 1 }];
+  assert.equal(toSrt({ segments }), `1\n00:00:00,000 --> 00:00:01,000\nSpeaker 1: ${'a'.repeat(30)}\n${'b'.repeat(10)}\n`);
+  assert.equal(toVtt({ segments }), `WEBVTT\n\n00:00:00.000 --> 00:00:01.000\n<v Speaker 1>${text}\n`);
+  const unattributed = [{ text: 'ነው', start: 0, end: 1, speaker: null }];
+  assert.equal(toSrt({ segments: unattributed }), '1\n00:00:00,000 --> 00:00:01,000\nነው\n');
+  assert.equal(toVtt({ segments: unattributed }), 'WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nነው\n');
+});
+test('live speaker segments append in order and skip replayed events', () => {
+  const first = appendLiveSegments([], { segments: [{ text: 'ሰላም', start: 0.2, end: 1.1, speaker: 1 }] });
+  const second = appendLiveSegments(first, { segments: [{ text: 'እንዴት ነህ', start: 1.6, end: 2.4, speaker: 2 }] });
+  assert.equal(second.length, 2);
+  assert.equal(appendLiveSegments(second, { segments: [{ text: 'እንዴት ነህ', start: 1.6, end: 2.4, speaker: 2 }] }), second);
+  assert.equal(appendLiveSegments(second, {}), second);
+});
+test('speaker turns join consecutive segments from the same speaker', () => {
+  assert.deepEqual(speakerTurns([{ text: 'a', start: 0, end: 1, speaker: 1 }, { text: 'b', start: 1, end: 2, speaker: 1 }, { text: 'c', start: 2, end: 3, speaker: null }, { text: 'd', start: 3, end: 4, speaker: 2 }]), [{ speaker: 1, text: 'a b', start: 0 }, { speaker: null, text: 'c', start: 2 }, { speaker: 2, text: 'd', start: 3 }]);
 });
