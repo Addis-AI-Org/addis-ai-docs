@@ -727,3 +727,11 @@ test('keeps copied shell and server samples runnable', () => {
     assert.doesNotMatch(readFileSync(absolute, 'utf8'), /ADDIS_AI_KEY/, `${path} uses ADDIS_AI_KEY instead of ADDIS_API_KEY`);
   }
 });
+
+test('keeps documentation links unbolded and quietly underlined', () => {
+  assert.match(read('app/global.css'), /\.prose a:not\(\[data-card\]\)/);
+  const offenders = walk('content/docs')
+    .filter((path) => path.endsWith('.mdx') && !path.endsWith('integration/voice-interface.mdx'))
+    .filter((path) => /\*\*\[[^\]]+\]\([^)]+\)/.test(readFileSync(path, 'utf8')));
+  assert.deepEqual(offenders.map((path) => path.slice(root.length + 1)), []);
+});

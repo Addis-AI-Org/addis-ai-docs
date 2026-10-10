@@ -101,3 +101,25 @@
     color: var(--color-fd-muted-foreground);
   }
 }
+
+/*
+ * Prose links: quiet 1px neutral underline that turns brand-coloured on hover.
+ * Unlayered on purpose so it overrides the Fumadocs typography rule, which
+ * underlines every link 1.5px in --color-fd-primary.
+ */
+.prose a:not([data-card]):not(:where(.not-prose, .not-prose *)) {
+  color: var(--color-fd-foreground);
+  font-weight: 500;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: color-mix(in oklab, var(--color-fd-foreground) 28%, transparent);
+  transition:
+    text-decoration-color 150ms ease,
+    color 150ms ease;
+}
+
+.prose a:not([data-card]):not(:where(.not-prose, .not-prose *)):hover {
+  opacity: 1;
+  text-decoration-color: var(--color-fd-primary);
+}

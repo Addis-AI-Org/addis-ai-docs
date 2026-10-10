@@ -170,7 +170,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
             <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Your account</legend>
             <label className="block text-sm font-medium" htmlFor="scribe-credential">API key</label>
             <input id="scribe-credential" type="password" autoComplete="off" spellCheck={false} value={credential} onChange={e => { setCredential(e.target.value); setPricing(null); }} placeholder="Paste your API key" className={control} />
-            <p className="text-xs leading-5 text-fd-muted-foreground">Your API key is not saved. <a href="https://addisassistant.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline">Get an API key</a>.</p>
+            <p className="text-xs leading-5 text-fd-muted-foreground">Your API key is not saved. <a href="https://addisassistant.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline decoration-fd-foreground/30 underline-offset-4 hover:decoration-fd-primary">Get an API key</a>.</p>
             <button type="button" disabled={!credential.trim() || checking} className={`${button} w-full`} onClick={checkWallet}>{checking && <Loader2 className="size-4 animate-spin" />}Check balance and rate</button>
             {pricing && <p className="text-sm tabular-nums">Balance <strong>{pricing.balance.toFixed(4)} ETB</strong><br /><span className="text-fd-muted-foreground">{pricing.pricing.price_per_1000_characters} ETB / 1,000 transcribed characters</span></p>}
           </fieldset>

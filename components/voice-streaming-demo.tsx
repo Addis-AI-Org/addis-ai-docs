@@ -187,7 +187,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
             <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Your account</legend>
             <label htmlFor="voice-stream-credential" className="block text-sm font-medium">API key</label>
             <input id="voice-stream-credential" type="password" autoComplete="off" spellCheck={false} value={credential} onChange={e => { setCredential(e.target.value); resetAccount(); }} placeholder="Paste your API key" className={control} />
-            <p className="text-xs leading-5 text-fd-muted-foreground">Your API key is not saved. <a href="https://addisassistant.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline">Get an API key</a>.</p>
+            <p className="text-xs leading-5 text-fd-muted-foreground">Your API key is not saved. <a href="https://addisassistant.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline decoration-fd-foreground/30 underline-offset-4 hover:decoration-fd-primary">Get an API key</a>.</p>
             <button type="button" className={`${button} w-full`} disabled={!credential.trim()} onClick={checkWallet}>{checking && <Loader2 className="size-4 animate-spin" />}Check balance and rate</button>
             {wallet && <p className="text-sm tabular-nums">Balance <strong>{wallet.balance.toFixed(4)} ETB</strong><br /><span className="text-fd-muted-foreground">{wallet.pricing.price_per_minute} ETB / minute of generated audio</span></p>}
           </fieldset>
