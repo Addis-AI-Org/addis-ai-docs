@@ -39,7 +39,7 @@ This repo's `AGENTS.md` says: *ask instead of assuming on product, content, navi
 | [003](./003-calm-link-styling.md) | Quiet hairline link underlines; unbold links | P2 | S | — | — | DONE (31212c2 reviewed and approved; 32/32 content tests, build OK, rule verified unlayered in built CSS; visual QA pending in preview) |
 | [004](./004-turn-preservation-tests-into-invariants.md) | Tests guard invariants, not decoration/copy | P1 | M | (001 recommended) | D8 | DONE (5b5344a, 0ef26ec reviewed and approved; preservation 31/31 + invariants 2/2; test diff is deletions only) |
 | [005](./005-rewrite-quickstart-as-single-path-tutorial.md) | Quick Start as a four-step tutorial | P1 | M | 002, 004 | D7, D14 | DONE (88e77ae reviewed and approved; 34/34 content tests, build + typecheck + lint OK) |
-| [006](./006-restructure-sidebar-navigation.md) | Sidebar: one clear path, no duplicates or emoji | P1 | S–M | 001, 004 (005 optional) | D9 | TODO |
+| [006](./006-restructure-sidebar-navigation.md) | Sidebar: one clear path, no duplicates or emoji | P1 | S–M | 001, 004 (005 optional) | D9 | DONE (bee4199 reviewed and approved; 35/35 content tests, build + typecheck + lint OK; sidebar order verified in built HTML) |
 | [007](./007-split-text-generation-into-overview-guides-reference.md) | Split Text Generation into overview + guides + API reference (pilot) | P1 | L | 004, 006 (001 recommended) | — (D4 follow-up) | TODO |
 | [008](./008-ai-readable-docs-and-page-chrome.md) | llms.txt, `.mdx` pages, Copy/Open in AI, last updated, Edit on GitHub, sitemap, 404 | P2 | M | 001 | — | TODO |
 
@@ -73,6 +73,7 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 5. **CI**: add `.github/workflows/ci.yml` running `pnpm test`, `lint`, `typecheck` and `build` on PRs (F44).
 6. **Writer guide**: replace the boilerplate README and add a content style section to `AGENTS.md` (F45).
 7. **Dead weight**: remove unused components, plugins and the lucide spread (F46).
+8. **"New" badges on folder pages** (found while executing 006, pre-existing): `lib/source.ts` `newDocUrls` lists `/docs/capabilities/text-to-speech` and `/docs/capabilities/speech-to-text`, but those are folder index pages, and the `transformPageTree.file()` hook never reaches them, so their sidebar badge never renders. Fold into the F34 badge clean-up: drive badges from `isNew` frontmatter, including folder indexes.
 
 ## Findings considered and rejected
 
