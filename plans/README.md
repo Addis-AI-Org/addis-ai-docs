@@ -35,7 +35,7 @@ This repo's `AGENTS.md` says: *ask instead of assuming on product, content, navi
 | Plan | Title | Priority | Effort | Depends on | Decisions | Status |
 |---|---|---|---|---|---|---|
 | [001](./001-remove-placeholder-and-dead-pages.md) | Remove placeholder, template and unreachable pages | P1 | S | — | D1, D2 | DONE (edc86ab reviewed and approved; 30/30 content tests, build OK) |
-| [002](./002-fix-copy-paste-breaking-code-samples.md) | Fix copy-paste-breaking cURL, Go and web samples | P1 | S | — | — | TODO |
+| [002](./002-fix-copy-paste-breaking-code-samples.md) | Fix copy-paste-breaking cURL, Go and web samples | P1 | S | — | — | DONE (6b34963 reviewed and approved; 31/31 content tests) |
 | [003](./003-calm-link-styling.md) | Quiet hairline link underlines; unbold links | P2 | S | — | — | TODO |
 | [004](./004-turn-preservation-tests-into-invariants.md) | Tests guard invariants, not decoration/copy | P1 | M | (001 recommended) | D8 | TODO |
 | [005](./005-rewrite-quickstart-as-single-path-tutorial.md) | Quick Start as a four-step tutorial | P1 | M | 002, 004 | D7, D14 | TODO |
