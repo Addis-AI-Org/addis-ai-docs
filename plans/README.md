@@ -15,20 +15,20 @@ This repo's `AGENTS.md` says: *ask instead of assuming on product, content, navi
 
 | ID | Question | Recommended | Status | Answer |
 |---|---|---|---|---|
-| D1 | Delete the Fumadocs template (`get-started/quick-start.mdx`), the 5 "goes here" stubs and `content/docs/test.x`? | Yes, with redirects for the stub URLs | PENDING | |
-| D2 | `content/docs/index.mdx` (unreachable old landing page): delete, or make it the `/docs` landing? | Delete; Introduction stays the landing page | PENDING | |
-| D3 | Does the Realtime relay support anything besides `?apiKey=` (e.g. one-use tickets)? Is the JWT/Bearer mode public? | Tickets if available; otherwise label `?apiKey=` server-side/testing only | PENDING | |
-| D4 | What does `POST /api/v1/chat_generate` really return (flat vs `{status,data}`), with which `finish_reason` casing, multipart field names and `conversation_history` shape? | Verify with a live request, then document once | PENDING | |
-| D5 | Are Free/Pro/Team/Enterprise tiers real, or is billing pay-as-you-go only? What are the true per-service limits? | Document what's true on Pricing + Rate limits | PENDING | |
-| D6 | Which model IDs are real API values (`Addis-፩-አሌፍ`, `አሌፍ-Audio-AM/OM`, `addis-whisper`, `አሌፍ-1.2-realtime-audio`)? | A Models page lists only accepted IDs | PENDING | |
-| D7 | Canonical SDK install commands and minimum version? | `npm install addisai` / `pip install addisai`, `>=0.5.0` | PENDING | |
-| D8 | May tests stop pinning exact sentences, emoji, CSS classes and absolute URLs, and assert structural invariants instead? | Yes | PENDING | |
-| D9 | Heading convention? | Sentence case | PENDING | |
-| D10 | Logo target (docs home vs marketing site); status page (hosted provider vs static MDX)? | Logo → `/docs`; hosted status provider | PENDING | |
-| D11 | Is `/api/v2/stt` (`speech.transcribe`) legacy now that Scribe exists? Does Scribe support Afaan Oromo? | Move v2 to Legacy if so | PENDING | |
-| D12 | Is Tigrinya (`ti`) a supported TTS language? | State it once on a Languages page | PENDING | |
-| D13 | Rename one of the two "realtime" surfaces (TTS sessions vs relay conversations)? | At least in the docs | PENDING | |
-| D14 | May Quick Start drop its STT, Translation and Multimodal example tabs and the Voices 2 step? They already exist on the capability pages; Quick Start links to them under "Next steps". | Yes | PENDING | |
+| D1 | Delete the Fumadocs template (`get-started/quick-start.mdx`), the 5 "goes here" stubs and `content/docs/test.x`? | Yes, with redirects for the stub URLs | APPROVED | Approved by owner 2026-10-10 (recommended answer) |
+| D2 | `content/docs/index.mdx` (unreachable old landing page): delete, or make it the `/docs` landing? | Delete; Introduction stays the landing page | APPROVED | Approved by owner 2026-10-10 (recommended answer) |
+| D3 | Does the Realtime relay support anything besides `?apiKey=` (e.g. one-use tickets)? Is the JWT/Bearer mode public? | Tickets if available; otherwise label `?apiKey=` server-side/testing only | APPROVED | Approved by owner 2026-10-10 (recommended answer); approach approved, the underlying facts must still be confirmed before the dependent plan runs |
+| D4 | What does `POST /api/v1/chat_generate` really return (flat vs `{status,data}`), with which `finish_reason` casing, multipart field names and `conversation_history` shape? | Verify with a live request, then document once | APPROVED | Approved by owner 2026-10-10 (recommended answer); approach approved, the underlying facts must still be confirmed before the dependent plan runs |
+| D5 | Are Free/Pro/Team/Enterprise tiers real, or is billing pay-as-you-go only? What are the true per-service limits? | Document what's true on Pricing + Rate limits | APPROVED | Approved by owner 2026-10-10 (recommended answer); approach approved, the underlying facts must still be confirmed before the dependent plan runs |
+| D6 | Which model IDs are real API values (`Addis-፩-አሌፍ`, `አሌፍ-Audio-AM/OM`, `addis-whisper`, `አሌፍ-1.2-realtime-audio`)? | A Models page lists only accepted IDs | APPROVED | Approved by owner 2026-10-10 (recommended answer); approach approved, the underlying facts must still be confirmed before the dependent plan runs |
+| D7 | Canonical SDK install commands and minimum version? | `npm install addisai` / `pip install addisai`, `>=0.5.0` | APPROVED | Approved by owner 2026-10-10 (recommended answer) |
+| D8 | May tests stop pinning exact sentences, emoji, CSS classes and absolute URLs, and assert structural invariants instead? | Yes | APPROVED | Approved by owner 2026-10-10 (recommended answer) |
+| D9 | Heading convention? | Sentence case | APPROVED | Approved by owner 2026-10-10 (recommended answer) |
+| D10 | Logo target (docs home vs marketing site); status page (hosted provider vs static MDX)? | Logo → `/docs`; hosted status provider | APPROVED | Approved by owner 2026-10-10 (recommended answer) |
+| D11 | Is `/api/v2/stt` (`speech.transcribe`) legacy now that Scribe exists? Does Scribe support Afaan Oromo? | Move v2 to Legacy if so | APPROVED | Approved by owner 2026-10-10 (recommended answer); approach approved, the underlying facts must still be confirmed before the dependent plan runs |
+| D12 | Is Tigrinya (`ti`) a supported TTS language? | State it once on a Languages page | APPROVED | Approved by owner 2026-10-10 (recommended answer); approach approved, the underlying facts must still be confirmed before the dependent plan runs |
+| D13 | Rename one of the two "realtime" surfaces (TTS sessions vs relay conversations)? | At least in the docs | APPROVED | Approved by owner 2026-10-10 (recommended answer) |
+| D14 | May Quick Start drop its STT, Translation and Multimodal example tabs and the Voices 2 step? They already exist on the capability pages; Quick Start links to them under "Next steps". | Yes | APPROVED | Approved by owner 2026-10-10 (recommended answer) |
 
 ## Execution order & status
 
