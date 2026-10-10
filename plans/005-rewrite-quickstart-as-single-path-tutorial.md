@@ -90,7 +90,7 @@ Conventions:
 
 ## Git workflow
 
-- Branch: `advisor/005-quickstart-tutorial`
+- Branch: `advisor/005-quickstart-tutorial`. Base it on the branch of the previous plan in `plans/README.md` order (stacked branches), or on `main` once that plan has merged. Plans 001-003 each append a test to the same file, so unstacked branches conflict.
 - One commit: `Rewrite Quick Start as a single four-step tutorial`
 - Do NOT push or open a PR unless instructed.
 

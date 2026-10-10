@@ -8,9 +8,10 @@
 > maintain the index.
 >
 > **Drift check (run first)**: `git diff --stat eaf808b..HEAD -- content/docs tests/documentation-preservation.test.mjs`
-> If any in-scope file changed since this plan was written, compare the
-> "Current state" excerpts against the live files before proceeding; on a
-> mismatch, treat it as a STOP condition.
+> If plan 001 already ran, its deletions and its new test appear in this diff;
+> that is expected. For any other change, compare the "Current state" excerpts
+> against the live files before proceeding; on a mismatch, treat it as a STOP
+> condition.
 
 ## Status
 
@@ -120,7 +121,7 @@ The canonical name is `ADDIS_API_KEY` (`get-started/quickstart.mdx:77,83`, `get-
 
 ## Git workflow
 
-- Branch: `advisor/002-fix-code-samples`
+- Branch: `advisor/002-fix-code-samples`. Base it on the branch of the previous plan in `plans/README.md` order (stacked branches), or on `main` once that plan has merged. Plans 001-003 each append a test to the same file, so unstacked branches conflict.
 - Commit message style (from `git log`): plain imperative sentence, e.g. `Fix copy-paste-breaking cURL, Go and web proxy samples`
 - Do NOT push or open a PR unless the operator instructed it.
 
@@ -134,7 +135,7 @@ In each in-scope `.mdx` file, replace a trailing ` \\` (space, two backslashes, 
 for f in content/docs/capabilities/text-generation.mdx content/docs/capabilities/multimodal.mdx \
          content/docs/capabilities/translation.mdx content/docs/capabilities/speech-to-text/index.mdx \
          content/docs/capabilities/text-to-speech-legacy.mdx content/docs/index.mdx; do
-  [ -f "$f" ] && sed -i -E 's/ \\\\[[:space:]]*$/ \\/' "$f"
+  if [ -f "$f" ]; then sed -i -E 's/ \\\\[[:space:]]*$/ \\/' "$f"; fi
 done
 ```
 
@@ -222,7 +223,7 @@ test('keeps copied shell and server samples runnable', () => {
 
 ### Step 7: Negative check
 
-Temporarily change one fixed line back to ` \\` and re-run the test file. It must fail with `ends a code line with a double backslash`. Revert with `git checkout -p` or by hand, then re-run → `# fail 0`.
+Temporarily change one fixed line back to ` \\` and re-run the test file. It must fail with `ends a code line with a double backslash`. Revert that one line by hand (or re-run the Step 1 `sed` on that file; do **not** use `git checkout`, which would discard all your fixes), then re-run → `# fail 0`.
 
 ## Test plan
 
@@ -238,7 +239,7 @@ Temporarily change one fixed line back to ` \\` and re-run the test file. It mus
 - [ ] `grep -n "Error handling omitted" content/docs/integration/server.mdx` → no output
 - [ ] `grep -n "api/proxy" content/docs/integration/web.mdx` → no output
 - [ ] `node --test tests/documentation-preservation.test.mjs` → `# fail 0`
-- [ ] `git status --short` lists only in-scope files
+- [ ] `git status --short` lists only in-scope files (plus `plans/README.md`)
 - [ ] `plans/README.md` status row for 002 updated
 
 ## STOP conditions

@@ -42,7 +42,7 @@ We keep *an* underline, because link text is the same colour as body text and an
 
 ## Current state
 
-- `app/global.css` (104 lines) imports the theme and defines brand tokens. It has **no** link override:
+- `app/global.css` (103 lines) imports the theme and defines brand tokens. It has **no** link override:
   ```css
   @import 'tailwindcss';
   @import 'fumadocs-ui/css/neutral.css';
@@ -65,7 +65,7 @@ We keep *an* underline, because link text is the same colour as body text and an
   - `content/docs/get-started/introduction.mdx:104-105,109-114,118-121,124-125`: 14 bullets of the form `*   **[Text Generation](https://docs.addisassistant.com/docs/capabilities/text-generation):** Build chat, …`
 - **Test locks you must respect** (`tests/documentation-preservation.test.mjs`):
   - Line 376 requires the *bold* link in `integration/voice-interface.mdx:187` (`use the \*\*\[Realtime API\]…\*\* instead`). **Leave that line alone.**
-  - Lines 134-141 require quickstart strings such as `Open the Addis AI Playground` and `https://addisassistant.com/apikeys`. Removing `**` keeps them matching.
+  - Lines 133-141 require quickstart strings such as `Open the Addis AI Playground` and `https://addisassistant.com/apikeys`. Removing `**` keeps them matching.
   - Line 232 requires `[Playground Guide](https://docs.addisassistant.com/docs/get-started/quickstart)`, a substring that still matches after `**` is removed.
   - Lines 452-456 require `components/docs.tsx` to still contain `text-fd-primary`, `flex flex-wrap items-center gap-2`, `addis-offset-shell`. Those strings exist elsewhere in the file and are unaffected.
 
@@ -94,12 +94,12 @@ Do **not** install a browser or Playwright. The repo's `AGENTS.md` forbids it. V
 **Out of scope**:
 - `content/docs/integration/voice-interface.mdx:187`: its bold link is locked by a test.
 - Brand colour tokens (`--color-fd-primary*`): don't change the brand.
-- Absolute `https://docs.addisassistant.com` URLs in introduction.mdx. They are locked by tests and handled in plan 006.
+- Absolute `https://docs.addisassistant.com` URLs in introduction.mdx. They are locked by tests and made relative in plan 004.
 - Emoji headings, card styling, code-block theme. These are separate findings (F32, F35, F38 in `plans/REVIEW.md`).
 
 ## Git workflow
 
-- Branch: `advisor/003-calm-link-styling`
+- Branch: `advisor/003-calm-link-styling`. Base it on the branch of the previous plan in `plans/README.md` order (stacked branches), or on `main` once that plan has merged. Plans 001-003 each append a test to the same file, so unstacked branches conflict.
 - Commit message, matching `git log` style: `Use a neutral hairline underline for documentation links`
 - Do NOT push or open a PR unless the operator instructed it.
 
@@ -193,7 +193,7 @@ If plan 001 has not run yet, `quick-start.mdx` will trip this guard. In that cas
 - [ ] `node --test tests/documentation-preservation.test.mjs` → `# fail 0`
 - [ ] `pnpm build` exits 0 (or the report states deps could not be installed)
 - [ ] The report lists the Step 5 pages for preview QA
-- [ ] `git status --short` lists only in-scope files
+- [ ] `git status --short` lists only in-scope files (plus `plans/README.md`)
 - [ ] `plans/README.md` status row for 003 updated
 
 ## STOP conditions

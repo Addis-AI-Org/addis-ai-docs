@@ -100,7 +100,7 @@ The docs site (Fumadocs on Next.js) compiles every `.mdx` file under `content/do
 
 ## Git workflow
 
-- Branch: `advisor/001-remove-placeholder-pages`
+- Branch: `advisor/001-remove-placeholder-pages`, based on `main` (this is the first plan; later plans stack on it).
 - One commit. Message style matches `git log` (plain imperative sentence, no prefix), e.g. `Remove placeholder, template and unreachable docs pages`
 - Do NOT push or open a PR unless the operator instructed it.
 
@@ -214,7 +214,7 @@ test('publishes no placeholder, template, or orphaned documentation pages', () =
 
 ### Step 5: Negative check (prove the new test bites)
 
-Temporarily create `content/docs/tmp-check.mdx` containing `---\ntitle: X\n---\n\nContent for X goes here.` and re-run the test.
+Temporarily create a placeholder page with `printf '---\ntitle: X\n---\n\nContent for X goes here.\n' > content/docs/tmp-check.mdx` and re-run the test.
 
 **Verify**: `node --test tests/documentation-preservation.test.mjs` → fails with `content/docs/tmp-check.mdx is a placeholder page`. Then `rm content/docs/tmp-check.mdx` and re-run → `# fail 0`.
 
@@ -234,7 +234,7 @@ Temporarily create `content/docs/tmp-check.mdx` containing `---\ntitle: X\n---\n
 - [ ] `find content/docs -name '*.mdx' | xargs grep -l "goes here"` → no output
 - [ ] `test ! -e content/docs/index.mdx && test ! -e content/docs/get-started/quick-start.mdx && test ! -d content/docs/api-reference` → exit 0
 - [ ] `grep -c "source: '/docs" next.config.mjs` → `13`
-- [ ] `git status --short` shows only the in-scope paths
+- [ ] `git status --short` shows only the in-scope paths (plus `plans/README.md` for the status row)
 - [ ] `plans/README.md` status row for 001 updated
 
 ## STOP conditions

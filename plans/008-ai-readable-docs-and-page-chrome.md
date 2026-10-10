@@ -153,7 +153,7 @@ Use `curl` against `pnpm start` for verification. **Do not install a browser or 
 
 ## Git workflow
 
-- Branch: `advisor/008-ai-readable-docs`
+- Branch: `advisor/008-ai-readable-docs`. Base it on the branch of the previous plan in `plans/README.md` order (stacked branches), or on `main` once that plan has merged. Plans 001-003 each append a test to the same file, so unstacked branches conflict.
 - Commits, one per Step group, plain imperative style, e.g. `Add llms.txt and per-page Markdown routes`, `Show last updated and Edit on GitHub on docs pages`, `Add sitemap, robots, canonical URLs, and a docs 404`
 - Do NOT push or open a PR unless instructed.
 

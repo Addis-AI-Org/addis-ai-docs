@@ -140,7 +140,7 @@ Tests that constrain this plan (`tests/documentation-preservation.test.mjs`):
 
 ## Git workflow
 
-- Branch: `advisor/006-sidebar-structure`
+- Branch: `advisor/006-sidebar-structure`. Base it on the branch of the previous plan in `plans/README.md` order (stacked branches), or on `main` once that plan has merged. Plans 001-003 each append a test to the same file, so unstacked branches conflict.
 - One commit: `Reorganize the docs sidebar and remove duplicate labels`
 - Do NOT push or open a PR unless instructed.
 

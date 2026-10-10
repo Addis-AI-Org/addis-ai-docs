@@ -8,8 +8,8 @@
 > maintain the index.
 >
 > **Drift check (run first)**: `git diff --stat eaf808b..HEAD -- tests/ content/docs/get-started/introduction.mdx`
-> Plans 001–003 may already have appended tests to `tests/documentation-preservation.test.mjs`
-> and removed one list entry. That is expected. Any *other* change to the
+> Plans 001–003 may already have appended tests to `tests/documentation-preservation.test.mjs`,
+> removed one list entry, and unbolded links in `introduction.mdx` (plan 003). That is expected. Any *other* change to the
 > assertions quoted below is drift: compare them against the live file, and
 > on a mismatch treat it as a STOP condition.
 
@@ -54,7 +54,7 @@ Page-specific content locks (e.g. Quick Start table rows) stay for now. Each lat
   - line 14: `href="https://docs.addisassistant.com/docs/capabilities/text-to-speech"`
   - lines 104, 109-114: `](https://docs.addisassistant.com/docs/...)`
 - The approved site description (`lib/metadata.ts`, and asserted by the test at line 83-86) is: `Build with Addis AI APIs and official Node.js and Python SDKs for text generation, speech-to-text, Addis Voices 2, translation, multimodal reasoning, and realtime voice in Amharic and Afaan Oromo.` Reuse it verbatim. Do not write new copy.
-- The existing link checker (`test('resolves local documentation links and image assets', …)`, starting at line 587) checks only sidebar pages plus three named hidden pages, and only Markdown-syntax links. It misses JSX `href="/docs/…"` (26 occurrences in content) and absolute self-links.
+- The existing link checker (`test('resolves local documentation links and image assets', …)`, starting at line 587) checks only sidebar pages plus three named hidden pages, and only Markdown-syntax links. It misses JSX `href="/docs/…"` (25 occurrences in content; 20 once plan 001 deletes `index.mdx`) and absolute self-links.
 
 ### Assertions to delete (identify by text, not line number; numbers are as of `eaf808b`)
 
@@ -67,7 +67,7 @@ Page-specific content locks (e.g. Quick Start table rows) stay for now. Each lat
 | `applies the second-round Introduction and chat-control refinements` | every `assert.match(introduction, …)` *positive* assertion (lines 220-241, 22 lines), plus `/System Instructions and Personas <NewBadge/` and `/Function Calling <NewBadge/` (lines 248-249) | Exact marketing sentences, emoji headings, absolute URLs, a growth number, badges in headings. **Keep** the four `assert.doesNotMatch(introduction, …)` lines (216-219) and the text-generation `persona`/`system`/safeguards assertions (243-247, 250) |
 | `renders announcements as a release feed with in-card cyan New labels` | `/<AnnouncementHero date="2026-10-08">/`, the `<AnnouncementItem` count `7`, and the `isNew` count `3` (lines 448-450) | Adding a release would fail CI |
 | `uses the shared cyan New badge for page, section, and announcement titles` | `assert.match(components, /border-fd-primary\/35 bg-fd-primary\/10/);` (line 466) | CSS class |
-| `uses one reversible visual system across custom documentation surfaces` | the whole `for (const path of [ 'content/docs/index.mdx', …, 'content/docs/platform/errors.mdx', ]) { assert.match(read(path), /addis-(?:offset-shell\|panel\|grid)/, … ); }` loop (lines 480-500) | Forces raw CSS-class markup into 17 pages and blocks replacing it with components. **Keep** the utilities loop above it and the `bg-gradient` ban below it |
+| `uses one reversible visual system across custom documentation surfaces` | the whole `for (const path of [ 'content/docs/index.mdx', …, 'content/docs/platform/errors.mdx', ]) {` (plan 001 already removed the `'content/docs/index.mdx'` entry, so the list may start with `'content/docs/get-started/introduction.mdx'`) assert.match(read(path), /addis-(?:offset-shell\|panel\|grid)/, … ); }` loop (lines 480-500) | Forces raw CSS-class markup into 17 pages and blocks replacing it with components. **Keep** the utilities loop above it and the `bg-gradient` ban below it |
 | `animates the voice pipeline as sequential nodes and connections` | everything **except** `aria-live="polite"` and `prefers-reduced-motion: reduce` (delete lines 513-517 and 520) | Keep the accessibility guarantees; drop class and step internals |
 | `uses the same sequential motion system for server-side integration` | everything **except** `aria-live="polite"` and `prefers-reduced-motion: reduce` (delete lines 526-531) | Same |
 | `resolves local documentation links and image assets` | **the whole test** (lines 587-623) | Superseded by the broader check in the new file |
@@ -103,7 +103,7 @@ Do **not** touch any other test. In particular, these encode product decisions t
 
 ## Git workflow
 
-- Branch: `advisor/004-docs-invariant-tests`
+- Branch: `advisor/004-docs-invariant-tests`. Base it on the branch of the previous plan in `plans/README.md` order (stacked branches), or on `main` once that plan has merged. Plans 001-003 each append a test to the same file, so unstacked branches conflict.
 - Two commits, plain imperative style as in `git log`:
   1. `Add documentation invariant tests and relative Introduction links`
   2. `Stop pinning decoration and marketing copy in preservation tests`
@@ -192,7 +192,7 @@ test('documentation links are relative and resolve to a page, app route, or redi
 });
 ```
 
-**Verify**: `node --test tests/docs-invariants.test.mjs` → **fails**, with exactly these two messages and no others: `content/docs/get-started/introduction.mdx has no description` and `content/docs/get-started/introduction.mdx links to the production docs host`. If plan 001 has *not* run yet, the stub pages also report "has no description". In that case STOP and run plan 001 first.
+**Verify**: `node --test tests/docs-invariants.test.mjs` → **fails**, with exactly these two messages and no others: `content/docs/get-started/introduction.mdx has no description` and `content/docs/get-started/introduction.mdx links to the production docs host`. If plan 001 has *not* run yet, the description test instead reports a stub (e.g. `api-reference/chat-endpoint.mdx has no description`), because a test stops at its first failed assertion. In that case STOP and run plan 001 first.
 
 ### Step 3: Fix the Introduction so the invariants pass
 
@@ -200,7 +200,7 @@ test('documentation links are relative and resolve to a page, app route, or redi
    `description: Build with Addis AI APIs and official Node.js and Python SDKs for text generation, speech-to-text, Addis Voices 2, translation, multimodal reasoning, and realtime voice in Amharic and Afaan Oromo.`
 2. Make the self-links relative: `sed -i 's#https://docs\.addisassistant\.com/docs/#/docs/#g' content/docs/get-started/introduction.mdx`
 
-**Verify**: `grep -c "docs.addisassistant.com" content/docs/get-started/introduction.mdx` → `0`. `node --test tests/docs-invariants.test.mjs` → `# fail 0`. `node --test tests/documentation-preservation.test.mjs` → **2 failures**, both in `applies the second-round Introduction…` (the absolute-URL assertions at lines 222 and 232). This is expected and fixed in Step 4.
+**Verify**: `grep -c "docs.addisassistant.com" content/docs/get-started/introduction.mdx` → `0`. `node --test tests/docs-invariants.test.mjs` → `# fail 0`. `node --test tests/documentation-preservation.test.mjs` → `# fail 1`: the test `applies the second-round Introduction…` fails at its first absolute-URL assertion (line 222; a test stops at its first failed assertion). This is expected and fixed in Step 4.
 
 Commit 1 now.
 
@@ -213,7 +213,7 @@ Delete exactly the assertions in the "Assertions to delete" table. Work one test
 - `grep -n "🚀\|⚡\|🧩\|⚙️" tests/documentation-preservation.test.mjs`
 - `grep -n "INITIAL_VISIBLE_VOICES = 6" tests/documentation-preservation.test.mjs`
 - `grep -n "resolves local documentation links" tests/documentation-preservation.test.mjs`
-- `grep -n "docs\\\\.addisassistant\\\\.com" tests/documentation-preservation.test.mjs`
+- `grep -n 'addisassistant\\.com\\/docs' tests/documentation-preservation.test.mjs` (the favicon test's `docs\.addisassistant\.com` metadataBase assertion is **kept**; this grep only targets the removed `/docs` self-link asserts)
 
 These must still return a match:
 - `grep -n "prefers-reduced-motion" tests/documentation-preservation.test.mjs` (2 matches)
@@ -242,7 +242,7 @@ Commit 2.
 - [ ] `node --test tests/documentation-preservation.test.mjs` → `# fail 0`
 - [ ] All greps in Step 4 return the stated results
 - [ ] `grep -c "^description:" content/docs/get-started/introduction.mdx` → `1`
-- [ ] `git diff --stat` touches only the 3 in-scope files
+- [ ] `git diff --stat` touches only the 3 in-scope files (plus `plans/README.md`)
 - [ ] `plans/README.md` status row for 004 updated
 
 ## STOP conditions

@@ -46,6 +46,8 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 
 ## Dependency notes
 
+**Branching:** run plans in the order of the table and stack the branches (each plan branches from the previous plan's branch), or wait for each to merge to `main`. Several plans append tests to the same file, so parallel branches off `main` will conflict.
+
 ```
 001 ──┬──────────────► 006 ──► 007
       │                 ▲
@@ -55,7 +57,7 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 003 (independent)
 ```
 
-- **Start with 001, 002 and 003 in parallel.** They are small and independent, and they fix the most visible trust problems: template pages, broken copy-paste, underlines.
+- **Start with 001, 002 and 003.** They are small and fix the most visible trust problems: template pages, broken copy-paste, underlines. Their *content* is independent, but they append tests to the same file, so stack their branches as described above.
 - **004 before 005, 006 and 007.** Those plans rewrite pages that the current tests pin word-for-word.
 - **001 before 008.** Otherwise the new `llms.txt` and `.mdx` endpoints would publish the Fumadocs template and the stubs to AI assistants.
 - **006 before 007.** 007 adds an "API reference" group to the sidebar that 006 restructures.
