@@ -68,3 +68,24 @@ test('documentation links are relative and resolve to a page, app route, or redi
     }
   }
 });
+
+test('sidebar starts with Get started and has no duplicate labels or emoji headings', () => {
+  const meta = JSON.parse(read('content/docs/meta.json'));
+  const firstEntry = meta.pages.find((entry) => entry.trim() !== '');
+  assert.match(firstEntry, /^--- Get started ---$/i, 'The sidebar must open with the Get started group');
+  assert.ok(meta.pages.includes('platform/limits'), 'Rate limits must be reachable from the sidebar');
+
+  const titles = pages.map((path) => read(path).match(/^title: (.+)$/m)?.[1]).filter(Boolean);
+  const linkLabels = meta.pages.map((entry) => entry.match(/^\[([^\]]+)\]/)?.[1]).filter(Boolean);
+  const labels = [...titles, ...linkLabels].map((label) => label.toLowerCase());
+  const duplicates = labels.filter((label, index) => labels.indexOf(label) !== index);
+  assert.deepEqual(duplicates, [], `Duplicate sidebar labels: ${duplicates.join(', ')}`);
+
+  for (const path of pages) {
+    read(path).split('\n').forEach((line, index) => {
+      if (/^#{1,6} /.test(line)) {
+        assert.doesNotMatch(line, /\p{Extended_Pictographic}/u, `${path}:${index + 1} has an emoji in a heading`);
+      }
+    });
+  }
+});
