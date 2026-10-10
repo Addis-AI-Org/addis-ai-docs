@@ -10,6 +10,7 @@ import { getMDXComponents } from "@/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { NewBadge } from "@/components/docs";
+import { PageActions } from "@/components/page-actions";
 import {
   DEFAULT_METADATA_DESCRIPTION,
   DOCUMENTATION_SITE_NAME,
@@ -44,6 +45,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
         {page.data.isNew ? <NewBadge /> : null}
       </div>
       <DocsDescription>{page.data.description}</DocsDescription>
+      <PageActions markdownUrl={`${page.url}.mdx`} />
       <DocsBody>
         <MDX
           components={getMDXComponents({
