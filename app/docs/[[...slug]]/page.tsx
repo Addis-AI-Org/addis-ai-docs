@@ -39,6 +39,13 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
         single: false,
       }}
       full={page.data.full}
+      lastUpdate={page.data.lastModified}
+      editOnGithub={{
+        owner: "Addis-AI-Org",
+        repo: "addis-ai-docs",
+        sha: "main",
+        path: `content/docs/${page.path}`,
+      }}
     >
       <div className="flex flex-wrap items-center gap-2">
         <DocsTitle>{page.data.title}</DocsTitle>
@@ -75,6 +82,7 @@ export async function generateMetadata(
   return {
     title: page.data.title,
     description,
+    alternates: { canonical: page.url },
     openGraph: {
       title,
       description,

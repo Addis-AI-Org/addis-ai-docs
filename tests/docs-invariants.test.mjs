@@ -89,3 +89,23 @@ test('sidebar starts with Get started and has no duplicate labels or emoji headi
     });
   }
 });
+
+test('publishes AI-readable docs and page chrome', () => {
+  for (const path of [
+    'app/llms.txt/route.ts',
+    'app/llms.mdx/[[...slug]]/route.ts',
+    'app/sitemap.ts',
+    'app/robots.ts',
+    'app/docs/not-found.tsx',
+    'components/page-actions.tsx',
+  ]) {
+    assert.ok(read(path).length > 0, `${path} is missing`);
+  }
+  const page = read('app/docs/[[...slug]]/page.tsx');
+  assert.match(page, /editOnGithub=/);
+  assert.match(page, /lastUpdate=/);
+  assert.match(page, /<PageActions /);
+  assert.match(page, /canonical: page\.url/);
+  assert.match(read('next.config.mjs'), /source: '\/docs\/:path\*\.mdx'/);
+  assert.match(read('app/llms-full.txt/route.ts'), /charset=utf-8/);
+});
