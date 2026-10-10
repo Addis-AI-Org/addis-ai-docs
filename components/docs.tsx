@@ -120,7 +120,7 @@ export function AnnouncementItem({
           </h2>
           {isNew ? <NewBadge /> : null}
         </div>
-        <div className="mt-3 space-y-3 text-sm leading-6 text-fd-muted-foreground [&_a]:font-medium [&_a]:text-fd-foreground [&_a]:underline [&_a]:decoration-fd-primary/50 [&_a]:underline-offset-4 [&_a:hover]:text-fd-primary [&_li]:pl-1 [&_p]:m-0 [&_ul]:my-0 [&_ul]:space-y-1 [&_ul]:pl-5">
+        <div className="mt-3 space-y-3 text-sm leading-6 text-fd-muted-foreground [&_a]:font-medium [&_a]:text-fd-foreground [&_a]:underline [&_a]:decoration-fd-foreground/30 [&_a]:underline-offset-4 [&_a:hover]:decoration-fd-primary [&_li]:pl-1 [&_p]:m-0 [&_ul]:my-0 [&_ul]:space-y-1 [&_ul]:pl-5">
           {children}
         </div>
       </div>

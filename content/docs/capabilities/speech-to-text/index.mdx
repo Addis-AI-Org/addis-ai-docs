@@ -447,9 +447,9 @@ Upload an audio file to get the text transcription.
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl --location 'https://api.addisassistant.com/api/v2/stt' \\
-      --header 'x-api-key: $ADDIS_API_KEY' \\
-      --form 'audio=@"audio.wav"' \\
+    curl --location 'https://api.addisassistant.com/api/v2/stt' \
+      --header "x-api-key: $ADDIS_API_KEY" \
+      --form 'audio=@"audio.wav"' \
       --form 'request_data="{ \"language_code\": \"am\" }"'
     ```
   </Tab>

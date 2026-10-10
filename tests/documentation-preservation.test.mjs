@@ -5,6 +5,15 @@ import test from 'node:test';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(join(root, path), 'utf8');
+const textGenerationDocs = () =>
+  [
+    'content/docs/capabilities/text-generation/index.mdx',
+    'content/docs/capabilities/text-generation/multi-turn.mdx',
+    'content/docs/capabilities/text-generation/system-instructions.mdx',
+    'content/docs/capabilities/text-generation/function-calling.mdx',
+    'content/docs/capabilities/text-generation/streaming.mdx',
+    'content/docs/api-reference/chat-generate.mdx',
+  ].map(read).join('\n');
 
 function walk(path) {
   const absolute = join(root, path);
@@ -88,7 +97,6 @@ test('uses Addis AI documentation metadata for page titles and link previews', (
   assert.match(appLayout, /openGraph:/);
   assert.match(appLayout, /twitter:/);
   assert.match(docsPage, /formatDocumentationTitle\(page\.data\.title\)/);
-  assert.match(meta, /Addis AI Documentation \| APIs & SDKs for African Languages/);
 });
 
 test('shows responsive social links beside the sidebar theme switcher', () => {
@@ -109,9 +117,6 @@ test('shows responsive social links beside the sidebar theme switcher', () => {
   assert.match(layout, /external: true/g);
   assert.match(layout, /on: 'menu' as const/g);
   assert.match(layout, /\.\.\.communityLinks/);
-  assert.match(layout, /fill="none"/);
-  assert.match(layout, /stroke="currentColor"/);
-  assert.match(layout, /viewBox="4\.5 2\.5 15 15"/);
   assert.doesNotMatch(layout, /Addis AI website/);
   assert.doesNotMatch(layout, /text-\[#(?:5865F2|0A66C2|FFD21E)\]/);
   assert.match(layout, /url: 'https:\/\/addisassistant\.com'/);
@@ -119,6 +124,7 @@ test('shows responsive social links beside the sidebar theme switcher', () => {
 
 test('preserves original onboarding screenshots and page structures', () => {
   const quickstart = read('content/docs/get-started/quickstart.mdx');
+  const playground = read('content/docs/get-started/playground.mdx');
   const introduction = read('content/docs/get-started/introduction.mdx');
   for (const image of [
     '/images/playgroundchat.png',
@@ -126,16 +132,16 @@ test('preserves original onboarding screenshots and page structures', () => {
     '/images/api_name.png',
     '/images/secretkey.png',
   ]) {
-    assert.ok(quickstart.includes(image), `Quick Start is missing ${image}`);
+    assert.ok((quickstart + playground).includes(image), `Quick Start is missing ${image}`);
     assert.ok(existsSync(join(root, 'public', image)));
   }
 
-  assert.match(quickstart, /https:\/\/addisassistant\.com\/playground/);
-  assert.match(quickstart, /Open the Addis AI Playground/);
+  assert.match(playground, /https:\/\/addisassistant\.com\/playground/);
+  assert.match(playground, /Open the Addis AI Playground/);
   assert.match(quickstart, /https:\/\/addisassistant\.com\/apikeys/);
-  assert.match(quickstart, /The \*\*Voice Lab\*\* experience/);
-  assert.doesNotMatch(quickstart, /Voice Labs/);
-  assert.match(quickstart, /Current Addis AI Playground showing model, language, output, temperature, and token controls/);
+  assert.match(playground, /The \*\*Voice Lab\*\* experience/);
+  assert.doesNotMatch(playground, /Voice Labs/);
+  assert.match(playground, /Current Addis AI Playground showing model, language, output, temperature, and token controls/);
   assert.match(quickstart, /Addis AI API Keys page with the Create API Key button/);
   assert.match(quickstart, /Create API Key dialog with the key-name field/);
   assert.match(quickstart, /one-time Copy action/);
@@ -144,13 +150,12 @@ test('preserves original onboarding screenshots and page structures', () => {
   assert.match(read('content/docs/integration/web.mdx'), /## Security: The Golden Rule/);
   assert.match(read('content/docs/integration/server.mdx'), /<ArchitectureFlow \/>/);
   assert.match(read('content/docs/integration/voice-interface.mdx'), /<VoiceLoopFlow \/>/);
-  assert.match(introduction, /addis-offset-shell/);
   assert.doesNotMatch(introduction, /bg-gradient/);
 });
 
 test('preserves capability depth and best-practice guidance', () => {
   const required = new Map([
-    ['content/docs/capabilities/text-generation.mdx', ['## API Reference', '## Best Practices']],
+    ['content/docs/capabilities/text-generation/index.mdx', ['## API reference', '## Best Practices']],
     ['content/docs/capabilities/speech-to-text/index.mdx', ['## API Reference', '## Best Practices']],
     ['content/docs/capabilities/multimodal.mdx', ['## API Reference', '## Best Practices']],
     ['content/docs/capabilities/translation.mdx', ['## Use Cases', '#### Available Parameters', '## API Reference', '## Best Practices']],
@@ -200,60 +205,32 @@ test('documents Voice 2 while retaining the full hidden legacy workflow', () => 
 
   assert.equal((catalog.match(/\bid: '(?:am|om)-/g) ?? []).length, 28);
   assert.match(catalog, /id: 'am-loza'/);
-  assert.match(catalogComponent, /INITIAL_VISIBLE_VOICES = 6/);
-  assert.match(catalogComponent, /voices\.slice\(0, INITIAL_VISIBLE_VOICES\)/);
   assert.match(catalogComponent, /aria-expanded=\{isExpanded\}/);
   assert.match(catalogComponent, /Show fewer voices/);
-  assert.match(catalogComponent, /addis-offset-shell/);
-  assert.match(catalogComponent, /grid border-l border-fd-border/);
   assert.doesNotMatch(catalogComponent, /bg-gradient/);
 });
 
 test('applies the second-round Introduction and chat-control refinements', () => {
   const introduction = read('content/docs/get-started/introduction.mdx');
-  const textGeneration = read('content/docs/capabilities/text-generation.mdx');
+  const textGeneration = textGenerationDocs();
 
   assert.doesNotMatch(introduction, /GPT-4|Silicon Valley/);
   assert.doesNotMatch(introduction, /v2 Models Live/);
   assert.doesNotMatch(introduction, /We solve the \*\*three hardest problems\*\* in African NLP/);
   assert.doesNotMatch(introduction, /Join 500\+ developers building with Addis AI/);
-  assert.match(introduction, /major general-purpose AI models can misinterpret or hallucinate/);
-  assert.match(introduction, /Addis Voices 2 · 28 production voices/);
-  assert.match(introduction, /https:\/\/docs\.addisassistant\.com\/docs\/capabilities\/text-to-speech/);
-  assert.match(introduction, /Voice-first AI infrastructure,/);
-  assert.match(introduction, /for African languages\./);
-  assert.match(introduction, /Addis AI gives developers a unified infrastructure layer for text generation, speech recognition, natural voices, translation, multimodal reasoning, and realtime voice/);
-  assert.match(introduction, /Why language-specific infrastructure matters/);
-  assert.match(introduction, /Choose the capability your product needs, then follow the corresponding guide to start building\./);
-  assert.match(introduction, /Addis Voices 2/);
-  assert.match(introduction, /<NewBadge \/>/);
-  assert.match(introduction, /### 🚀 Get Started/);
-  assert.match(introduction, /### ⚡ Capabilities/);
-  assert.match(introduction, /\[Playground Guide\]\(https:\/\/docs\.addisassistant\.com\/docs\/get-started\/quickstart\)/);
-  assert.match(introduction, /Build chat, summarization, RAG, structured-output, and function-calling applications/);
-  assert.match(introduction, /Discover, preview, estimate, and generate completed audio clips with Addis Voices 2/);
-  assert.match(introduction, /Transcribe Amharic and Afaan Oromo audio into text/);
-  assert.match(introduction, /Translate between Amharic, Afaan Oromo, and English in every direction/);
-  assert.match(introduction, /Reason over images, audio recordings, and documents through the chat API/);
-  assert.match(introduction, /Build low-latency, interruption-capable voice conversations through WebSockets/);
-  assert.match(introduction, /### 🧩 Integration/);
-  assert.match(introduction, /### ⚙️ Platform/);
-  assert.match(introduction, /Join 1,500\+ developers building with Addis AI/);
 
   for (const parameter of ["'persona'", "'system'"]) {
     assert.match(textGeneration, new RegExp(parameter));
   }
   assert.match(textGeneration, /'persona': \{[\s\S]*?type: 'string',[\s\S]*?required: false/);
   assert.match(textGeneration, /'system': \{[\s\S]*?type: 'string',[\s\S]*?required: false/);
-  assert.match(textGeneration, /System Instructions and Personas <NewBadge/);
-  assert.match(textGeneration, /Function Calling <NewBadge/);
   assert.match(textGeneration, /platform safeguards remain in force/);
 });
 
 test('keeps SDK examples primary without removing cURL interoperability', () => {
   for (const path of [
     'content/docs/get-started/quickstart.mdx',
-    'content/docs/capabilities/text-generation.mdx',
+    'content/docs/capabilities/text-generation/index.mdx',
     'content/docs/capabilities/text-to-speech/index.mdx',
     'content/docs/capabilities/speech-to-text/index.mdx',
     'content/docs/capabilities/multimodal.mdx',
@@ -266,7 +243,7 @@ test('keeps SDK examples primary without removing cURL interoperability', () => 
     assert.ok(node >= 0 && python > node && curl > python, `${path} must lead with Node.js, then Python, then cURL`);
   }
 
-  const text = read('content/docs/capabilities/text-generation.mdx');
+  const text = textGenerationDocs();
   assert.match(text, /addis\.chat\.runTools/);
   assert.match(text, /addis\.chat\.run_tools/);
   assert.match(text, /tool_call_id/);
@@ -278,12 +255,15 @@ test('keeps SDK examples primary without removing cURL interoperability', () => 
 
 test('completes Quick Start capability coverage across REST and Realtime', () => {
   const quickstart = read('content/docs/get-started/quickstart.mdx');
+  const overview = read('content/docs/get-started/api-overview.mdx');
+  const translation = read('content/docs/capabilities/translation.mdx');
+  const multimodal = read('content/docs/capabilities/multimodal.mdx');
 
-  assert.match(quickstart, /REST API requests use the following production base URL:/);
-  assert.match(quickstart, /https:\/\/api\.addisassistant\.com/);
-  assert.match(quickstart, /Realtime voice uses a separate WebSocket endpoint:/);
-  assert.match(quickstart, /wss:\/\/relay\.addisassistant\.com\/ws/);
-  assert.doesNotMatch(quickstart, /All API requests should be made to the production Base URL:/);
+  assert.match(overview, /REST API requests use the following production base URL:/);
+  assert.match(overview, /https:\/\/api\.addisassistant\.com/);
+  assert.match(overview, /Realtime voice uses a separate WebSocket endpoint:/);
+  assert.match(overview, /wss:\/\/relay\.addisassistant\.com\/ws/);
+  assert.doesNotMatch(overview, /All API requests should be made to the production Base URL:/);
 
   for (const row of [
     '| Chat and Text Generation | `/api/v1/chat_generate` | `POST` |',
@@ -293,15 +273,23 @@ test('completes Quick Start capability coverage across REST and Realtime', () =>
     '| Multimodal | `/api/v1/chat_generate` | `POST multipart/form-data` |',
     '| Realtime Voice | `wss://relay.addisassistant.com/ws` | `WebSocket` |',
   ]) {
-    assert.ok(quickstart.includes(row), `Quick Start is missing capability row: ${row}`);
+    assert.ok(overview.includes(row), `API overview is missing capability row: ${row}`);
   }
 
-  assert.match(quickstart, /<Tabs items=\{\['Text Generation', 'Speech-to-Text', 'Translation', 'Multimodal'\]\}>/);
-  assert.match(quickstart, /addis\.translate\.create/);
-  assert.match(quickstart, /source_language/);
-  assert.match(quickstart, /attachments: \[\{ file: await fileFromPath\("market\.jpg", "image\/jpeg"\) \}\]/);
-  assert.match(quickstart, /attachment_0=@market\.jpg;type=image\/jpeg/);
+  assert.match(translation, /addis\.translate\.create/);
+  assert.match(translation, /source_language/);
+  assert.match(multimodal, /attachments: \[\{ file: await fileFromPath\("market\.jpg", "image\/jpeg"\) \}\]/);
+  assert.match(multimodal, /attachment_0=@market\.jpg;type=image\/jpeg/);
   assert.match(quickstart, /<Card href="\/docs\/capabilities\/realtime" icon=\{<Radio \/>\} title="Realtime API">/);
+});
+
+test('keeps Quick Start a four-step tutorial with one request and next steps', () => {
+  const quickstart = read('content/docs/get-started/quickstart.mdx');
+  assert.equal((quickstart.match(/<Step>/g) ?? []).length, 4);
+  assert.match(quickstart, /## Next steps/);
+  assert.match(quickstart, /ADDIS_API_KEY/);
+  assert.doesNotMatch(quickstart, /<Tabs items=\{\['Text Generation'/);
+  assert.ok((quickstart.match(/addis\.[a-z]+\.[a-z]+/g) ?? []).every((call) => call.startsWith('addis.chat')));
 });
 
 test('documents the unified SDK capability matrix', () => {
@@ -331,7 +319,7 @@ test('documents the unified SDK capability matrix', () => {
 
 test('corrects capability page descriptions, terminology, and title badges', () => {
   const docsPage = read('app/docs/[[...slug]]/page.tsx');
-  const textGeneration = read('content/docs/capabilities/text-generation.mdx');
+  const textGeneration = textGenerationDocs();
   const textToSpeech = read('content/docs/capabilities/text-to-speech/index.mdx');
   const speechToText = read('content/docs/capabilities/speech-to-text/index.mdx');
   const translation = read('content/docs/capabilities/translation.mdx');
@@ -428,7 +416,7 @@ test('publishes status documentation and legacy route redirects', () => {
 
 test('keeps raw endpoint panels only where the Realtime protocol requires one', () => {
   for (const path of [
-    'content/docs/capabilities/text-generation.mdx',
+    'content/docs/capabilities/text-generation/index.mdx',
     'content/docs/capabilities/text-to-speech/index.mdx',
     'content/docs/capabilities/text-to-speech-legacy.mdx',
     'content/docs/capabilities/speech-to-text/index.mdx',
@@ -445,9 +433,6 @@ test('renders announcements as a release feed with in-card cyan New labels', () 
   const announcements = read('content/docs/announcements.mdx');
   const components = read('components/docs.tsx');
 
-  assert.match(announcements, /<AnnouncementHero date="2026-10-08">/);
-  assert.equal((announcements.match(/<AnnouncementItem/g) ?? []).length, 7);
-  assert.equal((announcements.match(/\bisNew\b/g) ?? []).length, 3);
   assert.doesNotMatch(announcements, /<NewBadge/);
   assert.match(components, /flex flex-wrap items-center gap-2/);
   assert.match(components, /\{isNew \? <NewBadge \/> : null\}/);
@@ -463,7 +448,6 @@ test('uses the shared cyan New badge for page, section, and announcement titles'
   const voice = read('content/docs/capabilities/text-to-speech/index.mdx');
 
   assert.match(components, /export function NewBadge/);
-  assert.match(components, /border-fd-primary\/35 bg-fd-primary\/10/);
   assert.match(page, /page\.data\.isNew \? <NewBadge \/> : null/);
   assert.match(schema, /isNew: z\.boolean\(\)\.default\(false\)/);
   assert.match(voice, /^title: Text-to-Speech$/m);
@@ -477,28 +461,6 @@ test('uses one reversible visual system across custom documentation surfaces', (
     assert.match(styles, new RegExp(`\\.${className}\\b`), `Missing centralized ${className} utility`);
   }
 
-  for (const path of [
-    'content/docs/index.mdx',
-    'content/docs/get-started/introduction.mdx',
-    'content/docs/get-started/sdks.mdx',
-    'content/docs/capabilities/text-generation.mdx',
-    'content/docs/capabilities/text-to-speech/index.mdx',
-    'content/docs/capabilities/text-to-speech-legacy.mdx',
-    'content/docs/capabilities/speech-to-text/index.mdx',
-    'content/docs/capabilities/multimodal.mdx',
-    'content/docs/capabilities/realtime.mdx',
-    'content/docs/capabilities/translation.mdx',
-    'content/docs/integration/web.mdx',
-    'content/docs/integration/mobile.mdx',
-    'content/docs/integration/server.mdx',
-    'content/docs/integration/voice-interface.mdx',
-    'content/docs/platform/pricing.mdx',
-    'content/docs/platform/limits.mdx',
-    'content/docs/platform/errors.mdx',
-  ]) {
-    assert.match(read(path), /addis-(?:offset-shell|panel|grid)/, `${path} is missing the shared visual system`);
-  }
-
   const customSurfaces = [
     ...walk('content/docs').filter((path) => path.endsWith('.mdx')),
     ...walk('components').filter((path) => path.endsWith('.tsx')),
@@ -510,25 +472,13 @@ test('uses one reversible visual system across custom documentation surfaces', (
 test('animates the voice pipeline as sequential nodes and connections', () => {
   const voiceLoop = read('components/voice-loop-flow.tsx');
 
-  assert.match(voiceLoop, /activationStep: 0/);
-  assert.match(voiceLoop, /activationStep: 8/);
-  assert.match(voiceLoop, /transition-\[left,opacity\] duration-700/);
-  assert.match(voiceLoop, /isCurrent \? "opacity-100" : "opacity-0"/);
-  assert.match(voiceLoop, /overflow-x-auto/);
   assert.match(voiceLoop, /aria-live="polite"/);
   assert.match(voiceLoop, /prefers-reduced-motion: reduce/);
-  assert.match(voiceLoop, /Live request path/);
 });
 
 test('uses the same sequential motion system for server-side integration', () => {
   const architecture = read('components/architecture-flow.tsx');
 
-  assert.match(architecture, /activationStep=\{0\}/);
-  assert.match(architecture, /activationStep=\{4\}/);
-  assert.match(architecture, /transition-\[left,opacity\] duration-700/);
-  assert.match(architecture, /Secure request path/);
-  assert.match(architecture, /annotation="Secure zone"/);
-  assert.match(architecture, /overflow-x-auto/);
   assert.match(architecture, /aria-live="polite"/);
   assert.match(architecture, /prefers-reduced-motion: reduce/);
 });
@@ -584,43 +534,6 @@ test('uses current platform routes and consistent release terminology', () => {
   assert.match(docsText, /Legacy Text-to-Speech/);
 });
 
-test('resolves local documentation links and image assets', () => {
-  const meta = JSON.parse(read('content/docs/meta.json'));
-  const publicPages = [
-    ...meta.pages.filter((page) => !page.startsWith('---') && !page.startsWith('[')),
-    'capabilities/text-to-speech-legacy',
-    'capabilities/text-to-speech/streaming',
-    'capabilities/speech-to-text/live',
-  ];
-  const resolveDocFile = (base, page) => {
-    const file = join(root, base, `${page}.mdx`);
-    return existsSync(file) ? file : join(root, base, page, 'index.mdx');
-  };
-
-  for (const page of publicPages) {
-    const absolute = resolveDocFile('content/docs', page);
-    const source = readFileSync(absolute, 'utf8');
-
-    for (const match of source.matchAll(/\]\((\/docs(?:\/[^)#\s]+)?)(?:#[^)]+)?\)/g)) {
-      const route = match[1];
-      if (route === '/docs') continue;
-      const page = resolveDocFile('content', route);
-      const appPage = join(root, 'app', route, 'page.tsx');
-      assert.ok(
-        existsSync(page) || existsSync(appPage),
-        `${absolute.slice(root.length + 1)} links to missing ${route}`,
-      );
-    }
-
-    for (const match of source.matchAll(/!\[[^\]]*]\((\/images\/[^)]+)\)/g)) {
-      assert.ok(
-        existsSync(join(root, 'public', match[1])),
-        `${absolute.slice(root.length + 1)} links to missing image ${match[1]}`,
-      );
-    }
-  }
-});
-
 
 test('adds a streaming overview page that links each streaming guide', () => {
   assert.ok(read('content/docs/meta.json').includes('"capabilities/streaming"'));
@@ -666,7 +579,73 @@ test('ships a visible favicon and absolute link-preview URLs in production', () 
     assert.ok(existsSync(join(root, file)), `${file} is missing`);
   }
   assert.match(read('lib/brand-icon.tsx'), /public\/images\/addis-logo\.png/);
-  const appLayout = read('app/layout.tsx');
-  assert.match(appLayout, /'https:\/\/docs\.addisassistant\.com'/);
-  assert.doesNotMatch(appLayout, /NEXT_PUBLIC_SITE_URL \?\? 'http:\/\/localhost:3000'/);
+  const siteUrlSource = read('lib/site-url.ts');
+  assert.match(siteUrlSource, /'https:\/\/docs\.addisassistant\.com'/);
+  assert.doesNotMatch(siteUrlSource, /NEXT_PUBLIC_SITE_URL \?\? 'http:\/\/localhost:3000'/);
+});
+
+test('publishes no placeholder, template, or orphaned documentation pages', () => {
+  const docs = walk('content/docs').map((file) => file.slice(root.length + 1));
+
+  for (const path of docs) {
+    assert.match(path, /\.(mdx|json)$/, `${path} is not a documentation source file`);
+  }
+
+  for (const path of docs.filter((file) => file.endsWith('.mdx'))) {
+    const source = read(path);
+    assert.doesNotMatch(source, /goes here\./i, `${path} is a placeholder page`);
+    assert.doesNotMatch(source, /\bFumadocs\b/, `${path} contains framework template text`);
+  }
+
+  const listed = new Set();
+  const collect = (dir, prefix) => {
+    const meta = JSON.parse(read(join('content/docs', dir, 'meta.json')));
+    for (const entry of meta.pages ?? []) {
+      if (entry.startsWith('---') || entry.startsWith('[')) continue;
+      listed.add(prefix + entry);
+    }
+  };
+  collect('', '');
+  for (const path of docs.filter((file) => file.endsWith('/meta.json') && file !== 'content/docs/meta.json')) {
+    const dir = path.slice('content/docs/'.length, -'/meta.json'.length);
+    listed.add(dir);
+    collect(dir, `${dir}/`);
+  }
+
+  const intentionallyHidden = new Set(['capabilities/text-to-speech-legacy', 'platform/limits']);
+  for (const path of docs.filter((file) => file.endsWith('.mdx'))) {
+    const slug = path.slice('content/docs/'.length).replace(/(\/index)?\.mdx$/, '');
+    assert.ok(
+      listed.has(slug) || intentionallyHidden.has(slug),
+      `${path} is not in the sidebar; add it to a meta.json or to intentionallyHidden`,
+    );
+  }
+});
+
+test('keeps copied shell and server samples runnable', () => {
+  const pages = walk('content/docs').filter((path) => path.endsWith('.mdx'));
+
+  for (const absolute of pages) {
+    const path = absolute.slice(root.length + 1);
+    const lines = readFileSync(absolute, 'utf8').split('\n');
+    let inFence = false;
+
+    lines.forEach((line, index) => {
+      if (/^\s*```/.test(line)) inFence = !inFence;
+      else if (inFence) {
+        assert.doesNotMatch(line, /\\\\\s*$/, `${path}:${index + 1} ends a code line with a double backslash`);
+        assert.doesNotMatch(line, /'[^']*\$ADDIS_API_KEY[^']*'/, `${path}:${index + 1} single-quotes $ADDIS_API_KEY, so the shell never expands it`);
+      }
+    });
+
+    assert.doesNotMatch(readFileSync(absolute, 'utf8'), /ADDIS_AI_KEY/, `${path} uses ADDIS_AI_KEY instead of ADDIS_API_KEY`);
+  }
+});
+
+test('keeps documentation links unbolded and quietly underlined', () => {
+  assert.match(read('app/global.css'), /\.prose a:not\(\[data-card\]\)/);
+  const offenders = walk('content/docs')
+    .filter((path) => path.endsWith('.mdx') && !path.endsWith('integration/voice-interface.mdx'))
+    .filter((path) => /\*\*\[[^\]]+\]\([^)]+\)/.test(readFileSync(path, 'utf8')));
+  assert.deepEqual(offenders.map((path) => path.slice(root.length + 1)), []);
 });

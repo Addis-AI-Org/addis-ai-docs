@@ -11,6 +11,14 @@ const config = {
   turbopack: {
     root: __dirname,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/docs/:path*.mdx',
+        destination: '/llms.mdx/:path*',
+      },
+    ];
+  },
   async redirects() {
     return [
       {
@@ -51,6 +59,31 @@ const config = {
       {
         source: '/docs/faq',
         destination: '/docs/platform/faq',
+        permanent: true,
+      },
+      {
+        source: '/docs/capabilities/vision',
+        destination: '/docs/capabilities/multimodal',
+        permanent: true,
+      },
+      {
+        source: '/docs/capabilities/conversation',
+        destination: '/docs/capabilities/text-generation',
+        permanent: true,
+      },
+      {
+        source: '/docs/api-reference/chat-endpoint',
+        destination: '/docs/api-reference/chat-generate',
+        permanent: true,
+      },
+      {
+        source: '/docs/api-reference/schemas',
+        destination: '/docs/api-reference/chat-generate',
+        permanent: true,
+      },
+      {
+        source: '/docs/get-started/playground-guide',
+        destination: '/docs/get-started/playground',
         permanent: true,
       },
     ];

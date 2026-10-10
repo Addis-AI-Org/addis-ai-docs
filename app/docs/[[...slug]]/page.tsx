@@ -10,6 +10,7 @@ import { getMDXComponents } from "@/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { NewBadge } from "@/components/docs";
+import { PageActions } from "@/components/page-actions";
 import {
   DEFAULT_METADATA_DESCRIPTION,
   DOCUMENTATION_SITE_NAME,
@@ -38,12 +39,20 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
         single: false,
       }}
       full={page.data.full}
+      lastUpdate={page.data.lastModified}
+      editOnGithub={{
+        owner: "Addis-AI-Org",
+        repo: "addis-ai-docs",
+        sha: "main",
+        path: `content/docs/${page.path}`,
+      }}
     >
       <div className="flex flex-wrap items-center gap-2">
         <DocsTitle>{page.data.title}</DocsTitle>
         {page.data.isNew ? <NewBadge /> : null}
       </div>
       <DocsDescription>{page.data.description}</DocsDescription>
+      <PageActions markdownUrl={`${page.url}.mdx`} />
       <DocsBody>
         <MDX
           components={getMDXComponents({
@@ -73,6 +82,7 @@ export async function generateMetadata(
   return {
     title: page.data.title,
     description,
+    alternates: { canonical: page.url },
     openGraph: {
       title,
       description,

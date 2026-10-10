@@ -54,9 +54,9 @@ Generate audio from a simple text string.
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl -X POST https://api.addisassistant.com/api/v1/audio \\
-      -H "Content-Type: application/json" \\
-      -H "X-API-Key: $ADDIS_API_KEY" \\
+    curl -X POST https://api.addisassistant.com/api/v1/audio \
+      -H "Content-Type: application/json" \
+      -H "X-API-Key: $ADDIS_API_KEY" \
       -d '{
         "text": "ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።",
         "language": "am"
@@ -168,9 +168,9 @@ The API will send chunks of audio immediately as they are generated, allowing yo
     **Best for:** testing the legacy stream from a terminal.
 
     ```bash
-    curl -X POST https://api.addisassistant.com/api/v1/audio \\
-      -H "Content-Type: application/json" \\
-      -H "X-API-Key: $ADDIS_API_KEY" \\
+    curl -X POST https://api.addisassistant.com/api/v1/audio \
+      -H "Content-Type: application/json" \
+      -H "X-API-Key: $ADDIS_API_KEY" \
       -d '{
         "text": "ይህ ረጅም ጽሑፍ ነው።",
         "language": "am",
