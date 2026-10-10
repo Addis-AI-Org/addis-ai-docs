@@ -246,6 +246,6 @@ Temporarily create a placeholder page with `printf '---\ntitle: X\n---\n\nConten
 
 ## Maintenance notes
 
-- When the API reference section is built (plan 007), the `api-reference/*` redirects added here must be removed in the same change, or they will shadow the new pages.
+- When the API reference section is built (plan 007), it retargets the `api-reference/chat-endpoint` and `api-reference/schemas` redirects added here to `/docs/api-reference/chat-generate`. New API reference pages must not reuse those two slugs.
 - `intentionallyHidden` is the deliberate escape hatch for hidden-but-real pages. Each addition should be justified in review.
 - Follow-up (not in this plan): the search index uses `language: 'english'` over Ethiopic content. Evaluate search quality for Amharic queries separately.

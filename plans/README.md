@@ -28,6 +28,7 @@ This repo's `AGENTS.md` says: *ask instead of assuming on product, content, navi
 | D11 | Is `/api/v2/stt` (`speech.transcribe`) legacy now that Scribe exists? Does Scribe support Afaan Oromo? | Move v2 to Legacy if so | PENDING | |
 | D12 | Is Tigrinya (`ti`) a supported TTS language? | State it once on a Languages page | PENDING | |
 | D13 | Rename one of the two "realtime" surfaces (TTS sessions vs relay conversations)? | At least in the docs | PENDING | |
+| D14 | May Quick Start drop its STT, Translation and Multimodal example tabs and the Voices 2 step? They already exist on the capability pages; Quick Start links to them under "Next steps". | Yes | PENDING | |
 
 ## Execution order & status
 
@@ -37,7 +38,7 @@ This repo's `AGENTS.md` says: *ask instead of assuming on product, content, navi
 | [002](./002-fix-copy-paste-breaking-code-samples.md) | Fix copy-paste-breaking cURL, Go and web samples | P1 | S | — | — | TODO |
 | [003](./003-calm-link-styling.md) | Quiet hairline link underlines; unbold links | P2 | S | — | — | TODO |
 | [004](./004-turn-preservation-tests-into-invariants.md) | Tests guard invariants, not decoration/copy | P1 | M | (001 recommended) | D8 | TODO |
-| [005](./005-rewrite-quickstart-as-single-path-tutorial.md) | Quick Start as a four-step tutorial | P1 | M | 002, 004 | D7 | TODO |
+| [005](./005-rewrite-quickstart-as-single-path-tutorial.md) | Quick Start as a four-step tutorial | P1 | M | 002, 004 | D7, D14 | TODO |
 | [006](./006-restructure-sidebar-navigation.md) | Sidebar: one clear path, no duplicates or emoji | P1 | S–M | 001, 004 (005 optional) | D9 | TODO |
 | [007](./007-split-text-generation-into-overview-guides-reference.md) | Split Text Generation into overview + guides + API reference (pilot) | P1 | L | 004, 006 (001 recommended) | — (D4 follow-up) | TODO |
 | [008](./008-ai-readable-docs-and-page-chrome.md) | llms.txt, `.mdx` pages, Copy/Open in AI, last updated, Edit on GitHub, sitemap, 404 | P2 | M | 001 | — | TODO |

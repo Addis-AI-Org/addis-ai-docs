@@ -134,7 +134,7 @@ The URL `/docs/capabilities/text-generation` keeps working, because `index.mdx` 
 
 ### Step 2: Create the four guide pages (cut from index)
 
-For each row below, **cut** the section from `index.mdx` (from its heading up to, but not including, the next `---` line or next `###` section heading) and paste it into the new file under the given frontmatter. Then apply these changes:
+For each row below, **cut** the section from `index.mdx`, from its heading up to, but not including, the next line that is exactly `---` or matches `^### [0-9]` (a numbered section heading; `#### Let the SDK run the tool loop` does **not** end a section) and paste it into the new file under the given frontmatter. Then apply these changes:
 - Delete the section's original heading line. The page title replaces it.
 - Promote `####` sub-headings to `##` (function calling only: "Let the SDK run the tool loop", "Or orchestrate each round yourself").
 - Add only the imports the moved content uses, chosen from the four import lines in "Current state". `NewBadge` is no longer needed.
@@ -177,10 +177,10 @@ Add this as the first body line, before `## Request parameters`:
 Use this endpoint for chat, summarization, extraction, RAG, structured output, and function calling. The SDKs wrap it as `addis.chat.completions.create`; see the [Text Generation guides](/docs/capabilities/text-generation).
 ```
 
-In `content/docs/meta.json`, insert these two lines immediately before `"--- Platform ---"`:
+In `content/docs/meta.json`, insert these two lines immediately before `"--- Platform ---"`. The `...` prefix places the folder's pages directly under the separator (fumadocs-core `resolveFolderItem`), so the label doesn't appear twice:
 ```json
     "--- API reference ---",
-    "api-reference",
+    "...api-reference",
 ```
 
 **Verify**: `grep -c "^## " content/docs/api-reference/chat-generate.mdx` → `3`. `grep -c "## API Reference" content/docs/capabilities/text-generation/index.mdx` → `0`.
@@ -190,7 +190,7 @@ In `content/docs/meta.json`, insert these two lines immediately before `"--- Pla
 In `index.mdx`:
 1. Change `### 1. Basic Request` to `## Basic request`.
 2. Delete the `## Usage Guide` heading line. Keep the sentence under it.
-3. Remove any `---` line left directly before `## Best Practices`, and remove the `NewBadge` import.
+3. Delete all three remaining standalone `---` lines (originally lines 123, 390 and 500). Remove the `NewBadge`, `TypeTable` and `Callout` imports; index no longer uses them (verify: `grep -c "<Callout\|<TypeTable" content/docs/capabilities/text-generation/index.mdx` → `0`).
 4. Insert this block directly before `## Best Practices`:
 
 ```mdx

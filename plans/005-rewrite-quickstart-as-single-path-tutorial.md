@@ -16,11 +16,11 @@
 
 - **Priority**: P1
 - **Effort**: M
-- **Risk**: LOW (content moves, nothing is deleted)
+- **Risk**: LOW. Content moves; the only sections that leave Quick Start are snippets that already exist on capability pages, and D14 approves that.
 - **Depends on**:
   - `plans/002-fix-copy-paste-breaking-code-samples.md` (fixed quoting)
   - `plans/004-turn-preservation-tests-into-invariants.md` (test approach)
-  - **Precondition:** decision **D7** (canonical SDK install command) in `plans/README.md` reads `APPROVED` with a command recorded.
+  - **Preconditions:** decisions **D7** (canonical SDK install command) and **D14** (approve moving the STT/Translation/Multimodal tabs and the Voices 2 step out of Quick Start) in `plans/README.md` both read `APPROVED`.
 - **Category**: docs
 - **Planned at**: commit `eaf808b`, 2026-10-10
 
@@ -98,7 +98,7 @@ Conventions:
 
 ### Step 1: Confirm D7 and read the install command
 
-**Verify**: `grep -E '^\| D7 ' plans/README.md` → contains `APPROVED` and states the Node and Python install commands. Use those commands verbatim wherever this plan says `<NODE_INSTALL>` / `<PYTHON_INSTALL>`. If D7 is not approved, STOP.
+**Verify**: `grep -E '^\| D(7|14) ' plans/README.md` → both rows contain `APPROVED`, and D7 states the Node and Python install commands. Use those commands verbatim wherever this plan says `<NODE_INSTALL>` / `<PYTHON_INSTALL>`. If either is not approved, STOP.
 
 ### Step 2: Create `content/docs/get-started/playground.mdx` (moved content)
 
@@ -107,7 +107,7 @@ Frontmatter:
 ---
 title: Playground guide
 description: Try prompts, languages, and settings in the Addis AI Playground before you write code.
-icon: PlayCircle
+icon: CirclePlay
 ---
 ```
 Body: move **verbatim** from quickstart lines 16-32 (everything inside the first `<Step>` after its `## Prototype in Playground` heading): the "Before writing code…" sentence, the `### Test your Parameters` block with the screenshot, the 4-item list, the Voice Lab sentence, and the closing sentence. Change `### Test your Parameters` to `## Test your parameters`, and de-indent the moved lines by 4 spaces (they were inside `<Step>`). End the page with:
@@ -323,7 +323,7 @@ In `tests/documentation-preservation.test.mjs`:
    - `Open the Addis AI Playground` was a bold link in quickstart line 19 and is now inside the moved block. If plan 003 unbolded it, the regex still matches.
 2. In `completes Quick Start capability coverage across REST and Realtime`:
    - Add `const overview = read('content/docs/get-started/api-overview.mdx');`.
-   - Point the base-URL sentence asserts and the 6-row loop at `overview`.
+   - Point all five assertions above the row loop at `overview`: `REST API requests…`, `https:\/\/api\.addisassistant\.com`, `Realtime voice uses…`, `wss:\/\/relay…`, and the `doesNotMatch` for `All API requests…`. Point the 6-row loop at `overview` too. The new quickstart has no `wss://` URL.
    - Delete the `<Tabs items={['Text Generation', 'Speech-to-Text', 'Translation', 'Multimodal']}>` assert.
    - Replace the four `quickstart` asserts for `addis\.translate\.create`, `source_language`, the multimodal `attachments` line and `attachment_0=@market\.jpg` with the same regexes run against `read('content/docs/capabilities/translation.mdx')` and `read('content/docs/capabilities/multimodal.mdx')` respectively.
    - Keep the Realtime `<Card …>` assert on `quickstart`. The card is still there.
@@ -344,7 +344,7 @@ test('keeps Quick Start a four-step tutorial with one request and next steps', (
 
 ### Step 7: Build
 
-**Verify**: `pnpm install && pnpm build` → exit 0. If the build fails on `Network` (lucide icon name) or `PlayCircle`, replace it with an icon that exists in `lucide-react` (check `node_modules/lucide-react/dist/lucide-react.d.ts`) and note it in your report.
+**Verify**: `pnpm install && pnpm build` → exit 0. Sidebar icon names must be **canonical** lucide names. Aliases such as `PlayCircle` are listed in the `.d.ts` but are missing from the `icons` object the Fumadocs icon plugin reads, and an unknown name breaks rendering of every page in the sidebar without naming the icon. Before building, confirm both names: `grep -cE 'as (CirclePlay|Network) ' node_modules/lucide-react/dist/esm/icons/index.js` → `2`.
 
 ## Test plan
 

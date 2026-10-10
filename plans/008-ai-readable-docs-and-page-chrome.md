@@ -8,10 +8,10 @@
 > maintain the index.
 >
 > **Drift check (run first)**: `git diff --stat eaf808b..HEAD -- app/ lib/source.ts source.config.ts next.config.mjs proxy.ts components/`
-> Plans 001 and 003 may have touched `next.config.mjs` and `components/`.
-> Compare `app/docs/[[...slug]]/page.tsx`, `app/llms-full.txt/route.ts`,
-> `lib/source.ts` and `proxy.ts` against the excerpts below; on a mismatch,
-> STOP.
+> Expected changes from earlier plans: 001/005/007 (`next.config.mjs` redirects),
+> 003 (`components/`), 006 (`lib/source.ts` announcements block). Compare only
+> the excerpted code (`app/docs/[[...slug]]/page.tsx`, `app/llms-full.txt/route.ts`,
+> `getLLMText` in `lib/source.ts`, `proxy.ts`); on a mismatch, STOP.
 
 ## Status
 
@@ -208,7 +208,7 @@ export function GET() {
   return new Response(body, { headers: { 'Content-Type': 'text/markdown; charset=utf-8' } });
 }
 ```
-The blockquote sentence is the approved site description from `lib/metadata.ts` (`DEFAULT_METADATA_DESCRIPTION`) without its leading "Build with". Import that constant and use it rather than re-typing, if you prefer.
+The blockquote sentence is the approved site description from `lib/metadata.ts` without its leading "Build with". Use the literal text shown.
 
 In `app/llms-full.txt/route.ts`, change `return new Response(scanned.join('\n\n'));` to `return new Response(scanned.join('\n\n'), { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });`.
 
@@ -265,7 +265,7 @@ Leave the existing status-host logic below it unchanged.
 - `curl -s -H 'Accept: text/markdown' localhost:3000/docs/get-started/quickstart | head -1` → the same heading
 - `curl -s localhost:3000/docs/get-started/quickstart | grep -c "<html"` → `1` (HTML still served to browsers)
 
-If the `/docs/*path` pattern syntax is rejected at build time, use `/docs{/*path}` (path-to-regexp v8 syntax). Note which one worked in the report.
+`rewritePath` uses path-to-regexp v8, where `/docs/*path` is the correct wildcard syntax.
 
 ### Step 4: Copy page / Open in AI buttons
 
@@ -275,6 +275,7 @@ Create `components/page-actions.tsx`. Match the tone of the existing small clien
 
 import { useState } from 'react';
 import { Check, Copy, ExternalLink } from 'lucide-react';
+import { siteUrl } from '@/lib/site-url';
 
 const action =
   'inline-flex items-center gap-1.5 rounded-md border border-fd-border px-2.5 py-1 text-xs font-medium text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-foreground focus-visible:outline-2 focus-visible:outline-fd-primary';
@@ -293,7 +294,9 @@ export function PageActions({ markdownUrl }: { markdownUrl: string }) {
     }
   }
 
-  const absolute = typeof window === 'undefined' ? markdownUrl : new URL(markdownUrl, window.location.origin).href;
+  // Same value on server and client: a window-based URL would cause a hydration
+  // mismatch that React 19 does not patch, leaving relative links for the AI tools.
+  const absolute = new URL(markdownUrl, siteUrl).href;
   const prompt = encodeURIComponent(`Read ${absolute} so I can ask questions about it.`);
 
   return (

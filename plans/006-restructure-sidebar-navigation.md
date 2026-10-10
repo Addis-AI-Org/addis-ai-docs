@@ -10,7 +10,9 @@
 > **Drift check (run first)**: `git diff --stat eaf808b..HEAD -- content/docs/meta.json content/docs/capabilities/streaming.mdx content/docs/capabilities/text-to-speech/streaming.mdx content/docs/get-started/introduction.mdx lib/source.ts tests/`
 > Plans 001, 004 and 005 are expected to have touched some of these. Compare
 > `content/docs/meta.json` against the "Current state" excerpt; any difference
-> other than plan 005's two added pages is a STOP condition.
+> other than plan 005's two added pages is a STOP condition. Edits by plans
+> 003/004 to `introduction.mdx` (unbolded links, `description`, relative URLs)
+> are expected.
 
 ## Status
 

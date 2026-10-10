@@ -204,6 +204,7 @@ Page-scope rules that should go into `AGENTS.md` and be enforced by tests:
 | D11 | Is `/api/v2/stt` (`speech.transcribe`) legacy now that Scribe exists? Does Scribe support Afaan Oromo? | If legacy: move it to Legacy and point Quickstart at Scribe | F09 |
 | D12 | Is Tigrinya (`ti`, `ti-berhane`) a supported TTS language? (FAQ calls it beta; the streaming page lists a production voice.) | State it once on the Languages page | F30 |
 | D13 | Rename one of the two "realtime" surfaces (e.g. TTS sessions → "speech sessions", SDK `voice.connect`)? | At least rename it in the docs. The SDK namespace is a product call | F21 |
+| D14 | May Quick Start drop its STT, Translation and Multimodal tabs and the Voices 2 step? They remain on the capability pages and are linked from "Next steps" | Yes | 005 |
 
 ---
 
