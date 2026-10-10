@@ -478,7 +478,6 @@ test('uses one reversible visual system across custom documentation surfaces', (
   }
 
   for (const path of [
-    'content/docs/index.mdx',
     'content/docs/get-started/introduction.mdx',
     'content/docs/get-started/sdks.mdx',
     'content/docs/capabilities/text-generation.mdx',
@@ -669,4 +668,42 @@ test('ships a visible favicon and absolute link-preview URLs in production', () 
   const appLayout = read('app/layout.tsx');
   assert.match(appLayout, /'https:\/\/docs\.addisassistant\.com'/);
   assert.doesNotMatch(appLayout, /NEXT_PUBLIC_SITE_URL \?\? 'http:\/\/localhost:3000'/);
+});
+
+test('publishes no placeholder, template, or orphaned documentation pages', () => {
+  const docs = walk('content/docs').map((file) => file.slice(root.length + 1));
+
+  for (const path of docs) {
+    assert.match(path, /\.(mdx|json)$/, `${path} is not a documentation source file`);
+  }
+
+  for (const path of docs.filter((file) => file.endsWith('.mdx'))) {
+    const source = read(path);
+    assert.doesNotMatch(source, /goes here\./i, `${path} is a placeholder page`);
+    assert.doesNotMatch(source, /\bFumadocs\b/, `${path} contains framework template text`);
+  }
+
+  const listed = new Set();
+  const collect = (dir, prefix) => {
+    const meta = JSON.parse(read(join('content/docs', dir, 'meta.json')));
+    for (const entry of meta.pages ?? []) {
+      if (entry.startsWith('---') || entry.startsWith('[')) continue;
+      listed.add(prefix + entry);
+    }
+  };
+  collect('', '');
+  for (const path of docs.filter((file) => file.endsWith('/meta.json') && file !== 'content/docs/meta.json')) {
+    const dir = path.slice('content/docs/'.length, -'/meta.json'.length);
+    listed.add(dir);
+    collect(dir, `${dir}/`);
+  }
+
+  const intentionallyHidden = new Set(['capabilities/text-to-speech-legacy', 'platform/limits']);
+  for (const path of docs.filter((file) => file.endsWith('.mdx'))) {
+    const slug = path.slice('content/docs/'.length).replace(/(\/index)?\.mdx$/, '');
+    assert.ok(
+      listed.has(slug) || intentionallyHidden.has(slug),
+      `${path} is not in the sidebar; add it to a meta.json or to intentionallyHidden`,
+    );
+  }
 });

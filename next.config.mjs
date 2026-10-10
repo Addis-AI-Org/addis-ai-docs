@@ -53,6 +53,31 @@ const config = {
         destination: '/docs/platform/faq',
         permanent: true,
       },
+      {
+        source: '/docs/capabilities/vision',
+        destination: '/docs/capabilities/multimodal',
+        permanent: true,
+      },
+      {
+        source: '/docs/capabilities/conversation',
+        destination: '/docs/capabilities/text-generation',
+        permanent: true,
+      },
+      {
+        source: '/docs/api-reference/chat-endpoint',
+        destination: '/docs/capabilities/text-generation',
+        permanent: true,
+      },
+      {
+        source: '/docs/api-reference/schemas',
+        destination: '/docs/capabilities/text-generation',
+        permanent: true,
+      },
+      {
+        source: '/docs/get-started/playground-guide',
+        destination: '/docs/get-started/quickstart',
+        permanent: true,
+      },
     ];
   },
 };
