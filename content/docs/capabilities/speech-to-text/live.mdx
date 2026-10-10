@@ -92,10 +92,10 @@ Add `"speakers": true` to the session body to label who is speaking as you recor
 `session.created` then includes `"speakers": true`. After each pause in speech (0.5 s of quiet after at least 1 s of speech, or every 5 s at most), the session sends a `transcript.segment` event with the words and caption segments committed since the last one:
 
 ```json
-{"type":"transcript.segment","request_id":"my-live-transcript-2","words":[{"text":"ሰላም","start":0.32,"end":0.81,"speaker":1},{"text":"እንዴት","start":1.62,"end":2.05,"speaker":2},{"text":"ነህ","start":2.05,"end":2.4,"speaker":2}],"segments":[{"text":"ሰላም","start":0.32,"end":0.81,"speaker":1},{"text":"እንዴት ነህ","start":1.62,"end":2.4,"speaker":2}],"speakers":2}
+{"type":"transcript.segment","request_id":"my-live-transcript-2","words":[{"text":"ሰላም","start":0.32,"end":0.81,"speaker":1},{"text":"እንዴት","start":1.62,"end":2.05,"speaker":2},{"text":"ነህ","start":2.05,"end":2.4,"speaker":2}],"segments":[{"text":"ሰላም","start":0.32,"end":0.81,"speaker":1},{"text":"እንዴት ነህ","start":1.62,"end":2.4,"speaker":2}],"speakers":2,"uncommitted":""}
 ```
 
-Times are seconds from the start of the session. `speaker` is numbered from 1 in the order people first talk, not named, and is `null` when a word cannot be attributed. Labels already sent never change, and later segments keep the same numbering. `speakers` counts the distinct speakers so far. `transcript.partial` events still arrive with the unlabelled running text of the current stretch.
+Times are seconds from the start of the session. `speaker` is numbered from 1 in the order people first talk, not named, and is `null` when a word cannot be attributed. Labels already sent never change, and later segments keep the same numbering. `speakers` counts the distinct speakers so far. `transcript.partial` events still carry the whole running text in `text`. With speakers, both events also carry `uncommitted`: only the text not yet in a labelled segment, so you can show labelled lines plus this tail without repeating anything. Text stays in `uncommitted` until its labelled segment arrives; after a long stretch without a pause, the last word can briefly appear in both.
 
 `transcript.completed` includes `data.words`, `data.segments` (with `speaker`) and `data.speakers`, like an upload with `speakers=true`, so you can build SRT or VTT captions from it. Its `data.text` is the joined words.
 
@@ -105,9 +105,9 @@ socket.onmessage = ({ data }) => {
   const event = JSON.parse(data);
   if (event.type === "transcript.segment") {
     for (const s of event.segments) lines.push(`${s.speaker ? `Speaker ${s.speaker}` : "Unattributed"}: ${s.text}`);
-    render(lines, ""); // committed, labelled lines
+    render(lines, event.uncommitted); // labelled lines + text not yet labelled
   }
-  if (event.type === "transcript.partial") render(lines, event.text); // unlabelled, may change
+  if (event.type === "transcript.partial") render(lines, event.uncommitted); // unlabelled tail, may change
   if (event.type === "transcript.completed") console.log(event.data.segments, event.data.speakers);
 };
 ```
