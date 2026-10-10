@@ -7,7 +7,7 @@ icon: AudioLines
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Callout } from 'fumadocs-ui/components/callout';
 
-The [Voice Interface](/docs/integration/voice-interface) guide handles one audio file per request. This guide removes most of the waiting by overlapping the three stages: [live transcription](/docs/capabilities/speech-to-text/live) shows words while the person speaks, a [streamed chat reply](/docs/capabilities/text-generation#5-streaming-and-attachments) starts as soon as the transcript is final, and [streaming speech](/docs/capabilities/text-to-speech/streaming) turns each finished sentence into audio on one WebSocket connection.
+The [Voice Interface](/docs/integration/voice-interface) guide handles one audio file per request. This guide removes most of the waiting by overlapping the three stages: [live transcription](/docs/capabilities/speech-to-text/live) shows words while the person speaks, a [streamed chat reply](/docs/capabilities/text-generation/streaming) starts as soon as the transcript is final, and [streaming speech](/docs/capabilities/text-to-speech/streaming) turns each finished sentence into audio on one WebSocket connection.
 
 <Callout type="warn" title="Validate before production">
 The examples below combine three billed services. Run them end to end against your own account and wallet before you ship, and adapt the error handling to your application. See [Streaming](/docs/capabilities/streaming) for how the individual APIs compare.

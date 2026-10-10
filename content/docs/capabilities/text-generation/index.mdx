@@ -1,0 +1,156 @@
+---
+title: Text Generation
+description: Chat, summarization, RAG, structured output, and function calling for African languages.
+icon: MessageSquareText
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+The Text Generation API is powered by **`Addis-፩-አሌፍ`**, our flagship large language model.
+
+Use it when your application needs chat, summarization, extraction, classification, RAG, structured output, function calling, or multi-turn conversation in African-language workflows.
+
+Use Text Generation for chat, summarization, extraction, classification, RAG, structured output, and multi-turn conversations. Use the dedicated Translation API for direct language-to-language translation.
+
+## Basic request
+Send a prompt and a target language to get an immediate response.
+
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```ts
+    import AddisAI from "addisai";
+
+    const addis = new AddisAI();
+    const response = await addis.chat.completions.create({
+      messages: [{
+        role: "user",
+        content: "የአድዋ ጦርነት ታሪክ በአጭሩ",
+      }],
+      temperature: 0.7,
+      max_tokens: 500,
+    });
+
+    console.log(response.choices[0].message.content);
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from addisai import AddisAI
+
+    addis = AddisAI()
+    response = addis.chat.completions.create(
+        messages=[{
+            "role": "user",
+            "content": "የአድዋ ጦርነት ታሪክ በአጭሩ",
+        }],
+        temperature=0.7,
+        max_tokens=500,
+    )
+
+    print(response["choices"][0]["message"]["content"])
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "Content-Type: application/json" \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -d '{
+        "prompt": "የአድዋ ጦርነት ታሪክ በአጭሩ",
+        "target_language": "am",
+        "generation_config": {
+          "temperature": 0.7,
+          "maxOutputTokens": 500
+        }
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+## Guides
+
+<Cards>
+  <Card href="/docs/capabilities/text-generation/multi-turn" title="Multi-turn chat">Keep context across turns.</Card>
+  <Card href="/docs/capabilities/text-generation/system-instructions" title="System instructions and personas">Control identity and behavior.</Card>
+  <Card href="/docs/capabilities/text-generation/function-calling" title="Function calling">Let the model request your actions.</Card>
+  <Card href="/docs/capabilities/text-generation/streaming" title="Stream chat responses">Show replies as they are written.</Card>
+</Cards>
+
+## API reference
+
+Every request field, generation setting, and response field is documented in [POST /api/v1/chat_generate](/docs/api-reference/chat-generate).
+
+## Best Practices
+
+Follow these architectural patterns to ensure production readiness.
+
+<div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-2 mt-10">
+
+  {/* Temperature Card */}
+  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+    <div className="flex items-center gap-2.5 mb-4">
+      <Thermometer className="w-4 h-4 text-blue-500" />
+      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Temperature</h3>
+    </div>
+    <div className="space-y-3 text-sm text-fd-muted-foreground">
+      <div className="grid grid-cols-[85px_1fr] items-start gap-2">
+        <code className="text-xs bg-fd-secondary px-1.5 py-0.5 rounded text-fd-foreground text-center border border-fd-border">0.1 - 0.3</code>
+        <span>**Factual.** Extraction, classification, and historical data.</span>
+      </div>
+      <div className="grid grid-cols-[85px_1fr] items-start gap-2">
+        <code className="text-xs bg-fd-secondary px-1.5 py-0.5 rounded text-fd-foreground text-center border border-fd-border">0.7 - 0.9</code>
+        <span>**Creative.** Storytelling, brainstorming, and casual chat.</span>
+      </div>
+    </div>
+  </div>
+
+  {/* Language Card */}
+  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+    <div className="flex items-center gap-2.5 mb-4">
+      <Languages className="w-4 h-4 text-green-500" />
+      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Localization</h3>
+    </div>
+    <div className="space-y-3 text-sm text-fd-muted-foreground">
+      <div>
+        <strong className="text-fd-foreground">Native Script:</strong> Models perform significantly better with Ge'ez input (e.g., "ሰላም") than Latin ("Selam").
+      </div>
+      <div>
+        <strong className="text-fd-foreground">Explicit Mode:</strong> Always set the <code>target_language</code> param to <code>"am"</code> or <code>"om"</code> to force the correct tokenizer.
+      </div>
+    </div>
+  </div>
+
+  {/* Token Card */}
+  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+    <div className="flex items-center gap-2.5 mb-4">
+      <Coins className="w-4 h-4 text-orange-500" />
+      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Economy</h3>
+    </div>
+    <div className="space-y-3 text-sm text-fd-muted-foreground">
+      <div className="flex items-center justify-between gap-3 p-2 rounded bg-fd-secondary/40 border border-fd-border/50">
+        <span className="text-xs font-medium">Exact count</span>
+        <code className="text-xs text-fd-foreground">usage_metadata</code>
+      </div>
+      <div>
+        Token counts vary by language, script, punctuation, and input structure. For Amharic, one word typically uses around 1.5 to 1.8 tokens. For the exact count, use usage_metadata returned in the REST API response or the corresponding usage value returned by the official SDK.
+      </div>
+    </div>
+  </div>
+
+  {/* Reliability Card */}
+  <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
+    <div className="flex items-center gap-2.5 mb-4">
+      <ShieldAlert className="w-4 h-4 text-red-500" />
+      <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Robustness</h3>
+    </div>
+    <div className="space-y-3 text-sm text-fd-muted-foreground">
+      <div>
+        <strong className="text-fd-foreground">Retries:</strong> Implement exponential backoff for <code>500</code> or <code>429</code> status codes.
+      </div>
+      <div>
+        <strong className="text-fd-foreground">Safety:</strong> Handle <code>finish_reason: "safety"</code> gracefully in your UI if the model refuses a prompt.
+      </div>
+    </div>
+  </div>
+
+</div>

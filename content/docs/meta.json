@@ -31,6 +31,9 @@
     "[Speech-to-text playground](/docs/playground/speech-to-text)",
     "[Text-to-speech playground](/docs/playground/text-to-speech)",
 
+    "--- API reference ---",
+    "...api-reference",
+
     "--- Platform ---",
     "platform/pricing",
     "platform/limits",

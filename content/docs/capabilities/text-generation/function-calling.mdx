@@ -1,0 +1,209 @@
+---
+title: Function calling
+description: Let the model request actions your application runs, safely.
+isNew: true
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Function calling lets the model request an action that your application owns. The model never executes the function itself. Validate arguments, authorize the current user, run the function with a timeout, return the result, and cap the number of tool rounds.
+
+## Let the SDK run the tool loop
+
+`runTools` and `run_tools` send the tool definitions, execute the matching local function, return its result to the model, and stop when the model produces a final answer.
+
+<Tabs items={['Node.js', 'Python']}>
+  <Tab value="Node.js">
+    ```ts
+    import AddisAI from "addisai";
+
+    const addis = new AddisAI();
+
+    const final = await addis.chat.runTools({
+      messages: [{ role: "user", content: "Check order 123 and summarize it." }],
+      tools: [{
+        type: "function",
+        function: {
+          name: "get_order_status",
+          description: "Fetch an order by ID.",
+          parameters: {
+            type: "object",
+            properties: { order_id: { type: "string" } },
+            required: ["order_id"],
+            additionalProperties: false,
+          },
+          function: async ({ order_id }) => {
+            const input = orderIdSchema.parse(order_id);
+            await authorize(currentUser, "read_order", input);
+            return getOrderWithTimeout(input, 5_000);
+          },
+        },
+      }],
+      maxToolRoundtrips: 5,
+    });
+
+    console.log(final.choices[0].message.content);
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from addisai import AddisAI
+
+    addis = AddisAI()
+
+    def get_order_status(args):
+        order_id = validate_order_id(args["order_id"])
+        authorize(current_user, "read_order", order_id)
+        return get_order_with_timeout(order_id, timeout_seconds=5)
+
+    final = addis.chat.run_tools(
+        messages=[{
+            "role": "user",
+            "content": "Check order 123 and summarize it.",
+        }],
+        tools=[{
+            "type": "function",
+            "function": {
+                "name": "get_order_status",
+                "description": "Fetch an order by ID.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"order_id": {"type": "string"}},
+                    "required": ["order_id"],
+                    "additionalProperties": False,
+                },
+                "callable": get_order_status,
+            },
+        }],
+        max_tool_roundtrips=5,
+    )
+
+    print(final["choices"][0]["message"]["content"])
+    ```
+  </Tab>
+</Tabs>
+
+## Or orchestrate each round yourself
+
+Use the manual flow when an action needs an approval screen, a durable job, or application-specific retry logic.
+
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```ts
+    const messages = [
+      { role: "user" as const, content: "Check order 123." },
+    ];
+    const tools = [{
+      type: "function" as const,
+      function: {
+        name: "get_order_status",
+        parameters: {
+          type: "object",
+          properties: { order_id: { type: "string" } },
+          required: ["order_id"],
+          additionalProperties: false,
+        },
+      },
+    }];
+
+    const first = await addis.chat.completions.create({
+      messages,
+      tools,
+      tool_choice: "auto",
+    });
+
+    const call = first.choices[0].message.tool_calls?.[0];
+    if (!call) throw new Error("The model did not request a tool.");
+
+    const args = orderArgsSchema.parse(JSON.parse(call.function.arguments));
+    await authorize(currentUser, call.function.name, args);
+    const result = await getOrderWithTimeout(args.order_id, 5_000);
+
+    const final = await addis.chat.completions.create({
+      tools,
+      messages: [
+        ...messages,
+        first.choices[0].message,
+        {
+          role: "tool",
+          tool_call_id: call.id,
+          name: call.function.name,
+          content: JSON.stringify(result),
+        },
+      ],
+    });
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    import json
+
+    messages = [{"role": "user", "content": "Check order 123."}]
+    tools = [{
+        "type": "function",
+        "function": {
+            "name": "get_order_status",
+            "parameters": {
+                "type": "object",
+                "properties": {"order_id": {"type": "string"}},
+                "required": ["order_id"],
+                "additionalProperties": False,
+            },
+        },
+    }]
+
+    first = addis.chat.completions.create(
+        messages=messages,
+        tools=tools,
+        tool_choice="auto",
+    )
+    call = first["choices"][0]["message"]["tool_calls"][0]
+    args = validate_order_args(json.loads(call["function"]["arguments"]))
+    authorize(current_user, call["function"]["name"], args)
+    result = get_order_with_timeout(args["order_id"], timeout_seconds=5)
+
+    final = addis.chat.completions.create(
+        tools=tools,
+        messages=[
+            *messages,
+            first["choices"][0]["message"],
+            {
+                "role": "tool",
+                "tool_call_id": call["id"],
+                "name": call["function"]["name"],
+                "content": json.dumps(result),
+            },
+        ],
+    )
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "Content-Type: application/json" \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -d '{
+        "prompt": "Check order 123.",
+        "target_language": "am",
+        "tools": [{
+          "type": "function",
+          "function": {
+            "name": "get_order_status",
+            "parameters": {
+              "type": "object",
+              "properties": {"order_id": {"type": "string"}},
+              "required": ["order_id"],
+              "additionalProperties": false
+            }
+          }
+        }],
+        "tool_choice": "auto"
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+<Callout type="warn" title="Treat tool calls as untrusted input">
+Require approval for consequential actions, use idempotency for side effects, reject unknown functions and fields, set timeouts, cap tool rounds, and never expose secrets in tool results. Tool calling is currently non-streaming.
+</Callout>

@@ -65,12 +65,12 @@ const config = {
       },
       {
         source: '/docs/api-reference/chat-endpoint',
-        destination: '/docs/capabilities/text-generation',
+        destination: '/docs/api-reference/chat-generate',
         permanent: true,
       },
       {
         source: '/docs/api-reference/schemas',
-        destination: '/docs/capabilities/text-generation',
+        destination: '/docs/api-reference/chat-generate',
         permanent: true,
       },
       {

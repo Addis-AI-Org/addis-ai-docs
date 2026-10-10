@@ -5,6 +5,15 @@ import test from 'node:test';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (path) => readFileSync(join(root, path), 'utf8');
+const textGenerationDocs = () =>
+  [
+    'content/docs/capabilities/text-generation/index.mdx',
+    'content/docs/capabilities/text-generation/multi-turn.mdx',
+    'content/docs/capabilities/text-generation/system-instructions.mdx',
+    'content/docs/capabilities/text-generation/function-calling.mdx',
+    'content/docs/capabilities/text-generation/streaming.mdx',
+    'content/docs/api-reference/chat-generate.mdx',
+  ].map(read).join('\n');
 
 function walk(path) {
   const absolute = join(root, path);
@@ -146,7 +155,7 @@ test('preserves original onboarding screenshots and page structures', () => {
 
 test('preserves capability depth and best-practice guidance', () => {
   const required = new Map([
-    ['content/docs/capabilities/text-generation.mdx', ['## API Reference', '## Best Practices']],
+    ['content/docs/capabilities/text-generation/index.mdx', ['## API reference', '## Best Practices']],
     ['content/docs/capabilities/speech-to-text/index.mdx', ['## API Reference', '## Best Practices']],
     ['content/docs/capabilities/multimodal.mdx', ['## API Reference', '## Best Practices']],
     ['content/docs/capabilities/translation.mdx', ['## Use Cases', '#### Available Parameters', '## API Reference', '## Best Practices']],
@@ -203,7 +212,7 @@ test('documents Voice 2 while retaining the full hidden legacy workflow', () => 
 
 test('applies the second-round Introduction and chat-control refinements', () => {
   const introduction = read('content/docs/get-started/introduction.mdx');
-  const textGeneration = read('content/docs/capabilities/text-generation.mdx');
+  const textGeneration = textGenerationDocs();
 
   assert.doesNotMatch(introduction, /GPT-4|Silicon Valley/);
   assert.doesNotMatch(introduction, /v2 Models Live/);
@@ -221,7 +230,7 @@ test('applies the second-round Introduction and chat-control refinements', () =>
 test('keeps SDK examples primary without removing cURL interoperability', () => {
   for (const path of [
     'content/docs/get-started/quickstart.mdx',
-    'content/docs/capabilities/text-generation.mdx',
+    'content/docs/capabilities/text-generation/index.mdx',
     'content/docs/capabilities/text-to-speech/index.mdx',
     'content/docs/capabilities/speech-to-text/index.mdx',
     'content/docs/capabilities/multimodal.mdx',
@@ -234,7 +243,7 @@ test('keeps SDK examples primary without removing cURL interoperability', () => 
     assert.ok(node >= 0 && python > node && curl > python, `${path} must lead with Node.js, then Python, then cURL`);
   }
 
-  const text = read('content/docs/capabilities/text-generation.mdx');
+  const text = textGenerationDocs();
   assert.match(text, /addis\.chat\.runTools/);
   assert.match(text, /addis\.chat\.run_tools/);
   assert.match(text, /tool_call_id/);
@@ -310,7 +319,7 @@ test('documents the unified SDK capability matrix', () => {
 
 test('corrects capability page descriptions, terminology, and title badges', () => {
   const docsPage = read('app/docs/[[...slug]]/page.tsx');
-  const textGeneration = read('content/docs/capabilities/text-generation.mdx');
+  const textGeneration = textGenerationDocs();
   const textToSpeech = read('content/docs/capabilities/text-to-speech/index.mdx');
   const speechToText = read('content/docs/capabilities/speech-to-text/index.mdx');
   const translation = read('content/docs/capabilities/translation.mdx');
@@ -407,7 +416,7 @@ test('publishes status documentation and legacy route redirects', () => {
 
 test('keeps raw endpoint panels only where the Realtime protocol requires one', () => {
   for (const path of [
-    'content/docs/capabilities/text-generation.mdx',
+    'content/docs/capabilities/text-generation/index.mdx',
     'content/docs/capabilities/text-to-speech/index.mdx',
     'content/docs/capabilities/text-to-speech-legacy.mdx',
     'content/docs/capabilities/speech-to-text/index.mdx',
