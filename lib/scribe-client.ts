@@ -14,7 +14,8 @@ export type ScribeResult = {
 export type ScribeWord = { text: string; start: number; end: number; speaker?: number | null };
 export type ScribeSegment = { text: string; start: number; end: number; speaker?: number | null };
 /** Live `transcript.segment` event (sessions created with `speakers: true`): committed after each pause. Times are seconds from session start; labels already sent never change. */
-export type ScribeLiveSegment = { type: 'transcript.segment'; request_id: string; words: ScribeWord[]; segments: ScribeSegment[]; speakers: number };
+/** `uncommitted` (also on `transcript.partial` with speakers) is the live text not yet in a labelled segment. */
+export type ScribeLiveSegment = { type: 'transcript.segment'; request_id: string; words: ScribeWord[]; segments: ScribeSegment[]; speakers: number; uncommitted?: string };
 
 export const CAPTION_LINE_LENGTH = 42;
 
