@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 const source = readFileSync(new URL('../lib/scribe-client.ts', import.meta.url), 'utf8');
 const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { authHeaders, pcm16, validateSocketUrl, readTranscriptStream, toSrt, toVtt, wrapCaption, wordsBySegment, segmentAt } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+const { authHeaders, pcm16, validateSocketUrl, readTranscriptStream, toSrt, toVtt, wrapCaption, wordsBySegment, segmentAt, appendLiveSegments, speakerTurns } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 
 test('API keys are header-only and absent credentials fail before network access', () => {
   assert.deepEqual(authHeaders('  customer-key  '), { 'x-api-key': 'customer-key' });
@@ -103,4 +103,14 @@ test('the SRT speaker prefix counts toward wrapping, VTT voice spans do not, and
   const unattributed = [{ text: 'ነው', start: 0, end: 1, speaker: null }];
   assert.equal(toSrt({ segments: unattributed }), '1\n00:00:00,000 --> 00:00:01,000\nነው\n');
   assert.equal(toVtt({ segments: unattributed }), 'WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nነው\n');
+});
+test('live speaker segments append in order and skip replayed events', () => {
+  const first = appendLiveSegments([], { segments: [{ text: 'ሰላም', start: 0.2, end: 1.1, speaker: 1 }] });
+  const second = appendLiveSegments(first, { segments: [{ text: 'እንዴት ነህ', start: 1.6, end: 2.4, speaker: 2 }] });
+  assert.equal(second.length, 2);
+  assert.equal(appendLiveSegments(second, { segments: [{ text: 'እንዴት ነህ', start: 1.6, end: 2.4, speaker: 2 }] }), second);
+  assert.equal(appendLiveSegments(second, {}), second);
+});
+test('speaker turns join consecutive segments from the same speaker', () => {
+  assert.deepEqual(speakerTurns([{ text: 'a', start: 0, end: 1, speaker: 1 }, { text: 'b', start: 1, end: 2, speaker: 1 }, { text: 'c', start: 2, end: 3, speaker: null }, { text: 'd', start: 3, end: 4, speaker: 2 }]), [{ speaker: 1, text: 'a b', start: 0 }, { speaker: null, text: 'c', start: 2 }, { speaker: 2, text: 'd', start: 3 }]);
 });
