@@ -383,19 +383,9 @@ test('publishes status documentation and legacy route redirects', () => {
   const status = read('content/docs/platform/status.mdx');
   const errors = read('content/docs/platform/errors.mdx');
   const config = read('next.config.mjs');
-  const proxy = read('proxy.ts');
 
   assert.match(status, /^title: Status$/m);
   assert.match(status, /^description: Current availability, incidents, and uptime history for Addis AI services\.$/m);
-  for (const service of [
-    'REST API',
-    'Realtime API',
-    'Developer platform and API Keys',
-    'Playground',
-    'Voice Lab',
-  ]) {
-    assert.match(status, new RegExp(service.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  }
   for (const label of [
     'Operational',
     'Degraded Performance',
@@ -405,12 +395,13 @@ test('publishes status documentation and legacy route redirects', () => {
   ]) {
     assert.match(status, new RegExp(label));
   }
-  assert.match(status, /## Current incidents/);
-  assert.match(status, /## Resolved incidents/);
-  assert.match(status, /## Recent uptime history/);
+  assert.match(status, /import \{ LiveStatus \} from '@\/components\/live-status';/);
+  assert.match(status, /<LiveStatus \/>/);
+  assert.match(status, /https:\/\/status\.addisassistant\.com/);
+  assert.match(status, /## Support escalation/);
+  assert.doesNotMatch(status, /## Current status|## Current incidents|## Recent uptime history|manually maintained/);
   assert.match(errors, /https:\/\/status\.addisassistant\.com/);
-  assert.match(proxy, /status\.addisassistant\.com/);
-  assert.match(proxy, /\/docs\/platform\/status/);
+  assert.equal(existsSync(join(root, 'proxy.ts')), false);
 
   for (const [source, destination] of [
     ['/docs/get-started/quick-start', '/docs/get-started/quickstart'],
