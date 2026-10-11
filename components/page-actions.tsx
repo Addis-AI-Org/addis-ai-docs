@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Check, Copy, ExternalLink } from 'lucide-react';
-import { siteUrl } from '@/lib/site-url';
+import { SITE_URL as siteUrl } from '@/lib/site';
 
 const action =
   'inline-flex items-center gap-1.5 rounded-md border border-fd-border px-2.5 py-1 text-xs font-medium text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-foreground focus-visible:outline-2 focus-visible:outline-fd-primary';

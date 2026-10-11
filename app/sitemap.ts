@@ -1,11 +1,11 @@
 import type { MetadataRoute } from 'next';
-import { source } from '@/lib/source';
-import { siteUrl } from '@/lib/site-url';
+import { getIndexablePages } from '@/lib/source';
+import { SITE_URL } from '@/lib/site';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const pages = source.getPages().map((page) => ({ url: `${siteUrl}${page.url}` }));
-  const playgrounds = ['/docs/playground/speech-to-text', '/docs/playground/text-to-speech'].map((path) => ({
-    url: `${siteUrl}${path}`,
+  return getIndexablePages().map((page) => ({
+    url: `${SITE_URL}${page.url}`,
+    changeFrequency: 'weekly',
+    priority: page.url === '/docs' ? 1 : 0.7,
   }));
-  return [...pages, ...playgrounds];
 }
