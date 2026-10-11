@@ -40,12 +40,12 @@ const nodes = [
 
 const statusMessages = [
   "Waiting for a client request...",
-  "1. Client sends the payload to your backend...",
-  "2. Your backend validates the request...",
-  "3. Your backend adds the API key and forwards the request...",
-  "4. Addis AI processes the authenticated request...",
-  "5. Addis AI returns the response to your backend...",
-  "6. Your backend returns the response to the client...",
+  "Client sends the payload to your backend...",
+  "Your backend validates the request...",
+  "Your backend adds the API key and forwards the request...",
+  "Addis AI processes the authenticated request...",
+  "Addis AI returns the response to your backend...",
+  "Your backend returns the response to the client...",
   "Request path complete — the API key never left your backend.",
 ];
 

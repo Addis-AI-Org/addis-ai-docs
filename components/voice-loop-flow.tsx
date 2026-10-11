@@ -46,14 +46,14 @@ const connections = [
 
 const statusMessages = [
   "Listening for user input...",
-  "1. Sending audio to speech-to-text...",
-  "2. Transcription ready.",
-  "3. Forwarding the transcript to the language model...",
-  "4. Generating the response...",
-  "5. Sending the response to speech synthesis...",
-  "6. Generating speech with Addis Voices 2...",
-  "7. Delivering the completed audio...",
-  "8. Playing the voice response.",
+  "Sending audio to speech-to-text...",
+  "Transcription ready.",
+  "Forwarding the transcript to the language model...",
+  "Generating the response...",
+  "Sending the response to speech synthesis...",
+  "Generating speech with Addis Voices 2...",
+  "Delivering the completed audio...",
+  "Playing the voice response.",
   "Voice loop complete — ready for the next request.",
 ];
 
