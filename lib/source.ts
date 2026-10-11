@@ -53,6 +53,21 @@ export const source = loader({
   plugins: [lucideIconsPlugin(), navigationLabelsPlugin],
 });
 
+/**
+ * Pages kept out of search indexes, the sitemap and llms.txt. The quick-start
+ * page is leftover Fumadocs scaffolding ("Getting Started with Fumadocs") and
+ * describes the docs framework, not Addis AI.
+ */
+const unindexedDocUrls = new Set(['/docs/get-started/quick-start']);
+
+export function isIndexable(page: InferPageType<typeof source>) {
+  return !unindexedDocUrls.has(page.url);
+}
+
+export function getIndexablePages() {
+  return source.getPages().filter(isIndexable);
+}
+
 export function getPageImage(page: InferPageType<typeof source>) {
   const segments = [...page.slugs, 'image.png'];
 

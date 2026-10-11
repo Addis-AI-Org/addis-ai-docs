@@ -1,4 +1,4 @@
-import { getPageImage, source } from "@/lib/source";
+import { getPageImage, isIndexable, source } from "@/lib/source";
 import {
   DocsBody,
   DocsDescription,
@@ -73,6 +73,10 @@ export async function generateMetadata(
   return {
     title: page.data.title,
     description,
+    // The docs are also served on status.addisassistant.com; the canonical
+    // (resolved against metadataBase) keeps search engines on the docs host.
+    alternates: { canonical: page.url },
+    ...(isIndexable(page) ? {} : { robots: { index: false, follow: true } }),
     openGraph: {
       title,
       description,
