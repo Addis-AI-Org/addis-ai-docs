@@ -155,8 +155,8 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
         try {
           const data = JSON.parse(event.data);
           if (data.type === 'error') { fail(data.error?.message ?? 'Transcription failed.'); return; }
-          if (data.type === 'transcript.partial') { setText(data.text); return; }
-          if (data.type === 'transcript.segment') { const segment = data as ScribeLiveSegment; setLiveSegments(prev => appendLiveSegments(prev ?? [], segment)); setText(''); return; }
+          if (data.type === 'transcript.partial') { setText(data.uncommitted ?? data.text); return; }
+          if (data.type === 'transcript.segment') { const segment = data as ScribeLiveSegment; setLiveSegments(prev => appendLiveSegments(prev ?? [], segment)); setText(segment.uncommitted ?? ''); return; }
           if (data.type === 'transcript.completed') { complete(data.data); cleanup(rt); return; }
           if (data.type !== 'session.created') return;
           if (!rt.context || !rt.stream) throw new Error('Microphone was closed.');
