@@ -1,0 +1,1 @@
+{ "title": "Text Generation", "icon": "MessageSquareText", "defaultOpen": true, "pages": ["multi-turn", "system-instructions", "function-calling", "streaming"] }

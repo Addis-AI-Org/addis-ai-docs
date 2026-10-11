@@ -1,0 +1,62 @@
+---
+title: Multi-turn chat
+description: Keep conversation context by sending prior turns with every request.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+The API is **stateless**. This means the model does not "remember" what you said in the previous request. 
+
+To build a chatbot that maintains context, you must append the conversation history to the `conversation_history` array in every new request.
+
+The SDK accepts the same turns as `messages` and maps them to the native conversation history for you.
+
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```ts
+    import AddisAI from "addisai";
+
+    const addis = new AddisAI();
+
+    const messages = [
+      { role: "user" as const, content: "ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?" },
+      { role: "assistant" as const, content: "በአሁኑ ጊዜ 12 ክልሎች አሉ።" },
+      { role: "user" as const, content: "የሁለተኛው ክልል ስም ማን ነው?" },
+    ];
+
+    const response = await addis.chat.completions.create({ messages });
+    console.log(response.choices[0].message.content);
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from addisai import AddisAI
+
+    addis = AddisAI()
+
+    messages = [
+        {"role": "user", "content": "ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?"},
+        {"role": "assistant", "content": "በአሁኑ ጊዜ 12 ክልሎች አሉ።"},
+        {"role": "user", "content": "የሁለተኛው ክልል ስም ማን ነው?"},
+    ]
+
+    response = addis.chat.completions.create(messages=messages)
+    print(response["choices"][0]["message"]["content"])
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "Content-Type: application/json" \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -d '{
+        "prompt": "የሁለተኛው ክልል ስም ማን ነው?",
+        "target_language": "am",
+        "conversation_history": [
+          {"role":"user","content":"ኢትዮጵያ ውስጥ ስንት ክልሎች አሉ?"},
+          {"role":"assistant","content":"በአሁኑ ጊዜ 12 ክልሎች አሉ።"}
+        ]
+      }'
+    ```
+  </Tab>
+</Tabs>

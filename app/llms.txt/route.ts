@@ -11,7 +11,7 @@ export function GET() {
       const description = page.data.description
         ? `: ${page.data.description}`
         : '';
-      return `- [${page.data.title}](${SITE_URL}${page.url})${description}`;
+      return `- [${page.data.title}](${SITE_URL}${page.url}.mdx)${description}`;
     })
     .join('\n');
 

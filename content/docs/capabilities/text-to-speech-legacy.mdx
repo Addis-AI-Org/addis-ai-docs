@@ -54,9 +54,9 @@ Generate audio from a simple text string.
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl -X POST https://api.addisassistant.com/api/v1/audio \\
-      -H "Content-Type: application/json" \\
-      -H "X-API-Key: $ADDIS_API_KEY" \\
+    curl -X POST https://api.addisassistant.com/api/v1/audio \
+      -H "Content-Type: application/json" \
+      -H "X-API-Key: $ADDIS_API_KEY" \
       -d '{
         "text": "ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።",
         "language": "am"
@@ -168,9 +168,9 @@ The API will send chunks of audio immediately as they are generated, allowing yo
     **Best for:** testing the legacy stream from a terminal.
 
     ```bash
-    curl -X POST https://api.addisassistant.com/api/v1/audio \\
-      -H "Content-Type: application/json" \\
-      -H "X-API-Key: $ADDIS_API_KEY" \\
+    curl -X POST https://api.addisassistant.com/api/v1/audio \
+      -H "Content-Type: application/json" \
+      -H "X-API-Key: $ADDIS_API_KEY" \
       -d '{
         "text": "ይህ ረጅም ጽሑፍ ነው።",
         "language": "am",
@@ -322,7 +322,7 @@ Ensure high-quality voice output with these guidelines.
   {/* Script Card */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <Languages className="w-4 h-4 text-blue-500" />
+      <Languages className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Script & Punctuation</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -338,7 +338,7 @@ Ensure high-quality voice output with these guidelines.
   {/* Latency Card */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <Zap className="w-4 h-4 text-orange-500" />
+      <Zap className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Latency Optimization</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -355,7 +355,7 @@ Ensure high-quality voice output with these guidelines.
   {/* Caching Card */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <Database className="w-4 h-4 text-purple-500" />
+      <Database className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Efficiency</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -368,7 +368,7 @@ Ensure high-quality voice output with these guidelines.
   {/* Audio Output Card */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <FileAudio className="w-4 h-4 text-green-500" />
+      <FileAudio className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Output Format</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">

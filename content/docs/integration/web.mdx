@@ -29,7 +29,7 @@ You can build powerful web applications from customer support chatbots to voice-
     Do <strong>NOT</strong> use your `sk_` key directly in client-side code (React Components, HTML scripts). Malicious users can steal your key and drain your credits.
   </div>
   <div className="text-sm font-medium flex items-center gap-2 text-fd-foreground">
-    <CheckCircle2 className="w-4 h-4 text-green-500" />
+    <CheckCircle2 className="w-4 h-4 text-fd-muted-foreground" />
     <span><strong>Solution:</strong> Always create a backend proxy to handle the request.</span>
   </div>
 </div>
@@ -65,7 +65,7 @@ Your frontend (React, Vue, Blade) should call your **own** backend, which then c
           usage: response.usage,
         });
       } catch (error) {
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: { message: "Internal Server Error" } }, { status: 500 });
       }
     }
     ```
@@ -82,12 +82,12 @@ Your frontend (React, Vue, Blade) should call your **own** backend, which then c
     app.use(express.json());
     const addis = new AddisAI();
 
-    app.post('/api/proxy', async (req, res) => {
-      const { prompt } = req.body;
+    app.post('/api/chat', async (req, res) => {
+      const { message } = req.body;
 
       try {
         const response = await addis.chat.completions.create({
-          messages: [{ role: "user", content: prompt }],
+          messages: [{ role: "user", content: message }],
           language: "am",
         });
 
@@ -96,7 +96,7 @@ Your frontend (React, Vue, Blade) should call your **own** backend, which then c
           usage: response.usage,
         });
       } catch (error) {
-        res.status(500).json({ error: "Proxy Connection Failed" });
+        res.status(500).json({ error: { message: "Proxy Connection Failed" } });
       }
     });
     ```
@@ -113,7 +113,7 @@ Your frontend (React, Vue, Blade) should call your **own** backend, which then c
     Route::post('/chat', function (Request $request) {
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-            'X-API-Key' => env('ADDIS_AI_KEY'),
+            'X-API-Key' => env('ADDIS_API_KEY'),
         ])->post('https://api.addisassistant.com/api/v1/chat_generate', [
             'prompt' => $request->input('message'),
             'target_language' => 'am',
@@ -272,7 +272,7 @@ If an error occurs, the API returns:
 <div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-2 mt-8">
 <div className="p-4 border border-fd-border rounded-lg bg-fd-card">
 <h3 className="font-bold flex items-center gap-2 mb-2 text-fd-foreground">
-<Globe className="w-4 h-4 text-blue-500" />
+<Globe className="w-4 h-4 text-fd-muted-foreground" />
 CORS Handling
 </h3>
 <div className="text-sm text-fd-muted-foreground">
@@ -281,7 +281,7 @@ The Addis AI API does not allow calls directly from browsers (to protect your ke
 </div>
 <div className="p-4 border border-fd-border rounded-lg bg-fd-card">
 <h3 className="font-bold flex items-center gap-2 mb-2 text-fd-foreground">
-<AlertTriangle className="w-4 h-4 text-orange-500" />
+<AlertTriangle className="w-4 h-4 text-fd-muted-foreground" />
 Timeouts
 </h3>
 <div className="text-sm text-fd-muted-foreground">

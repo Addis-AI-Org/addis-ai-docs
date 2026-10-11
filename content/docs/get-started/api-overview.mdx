@@ -1,0 +1,78 @@
+---
+title: API overview
+description: Base URLs, authentication, endpoints, and native REST response shapes for the Addis AI API.
+icon: Network
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+## Authentication
+
+Authentication is handled via a secret `x-api-key` header.
+
+## Base URLs
+
+REST API requests use the following production base URL:
+
+```bash
+https://api.addisassistant.com
+```
+
+Realtime voice uses a separate WebSocket endpoint:
+
+```bash
+wss://relay.addisassistant.com/ws
+```
+
+For Addis Voices 2 text-to-speech streaming, use `wss://api.addisassistant.com/api/v1/realtime/voice` with a scoped session ticket. Follow the [Streaming text-to-speech guide](/docs/capabilities/text-to-speech/streaming) for session creation and SDK release availability.
+
+## Endpoints
+
+| Capability | Endpoint | Method |
+| --- | --- | --- |
+| Chat and Text Generation | `/api/v1/chat_generate` | `POST` |
+| Text-to-Speech (Addis Voices 2) | `/api/v1/voice/generations` | `POST` |
+| Speech-to-Text | `/api/v2/stt` | `POST` |
+| Translation | `/api/v1/translate` | `POST` |
+| Multimodal | `/api/v1/chat_generate` | `POST multipart/form-data` |
+| Realtime Voice | `wss://relay.addisassistant.com/ws` | `WebSocket` |
+
+## Native REST responses
+
+The API structure depends on the endpoint.
+
+<Tabs items={['Text Generation', 'Speech-to-Text']}>
+  <Tab value="Text Generation">
+    The SDK exposes this result through `response.choices` and `response.usage`. The JSON below is the native REST response.
+
+    ```json
+    {
+      "response_text": "በአሁኑ ጊዜ በኢትዮጵያ ውስጥ 12 ክልሎች አሉ።...",
+      "finish_reason": "stop",
+      "usage_metadata": {
+        "prompt_token_count": 8,
+        "candidates_token_count": 25,
+        "total_token_count": 33
+      },
+      "modelVersion": "Addis-፩-አሌፍ"
+    }
+    ```
+  </Tab>
+  <Tab value="Speech-to-Text">
+    The SDK returns `text`, `confidence`, and `usage`. The JSON below is the native REST response.
+
+    ```json
+    {
+        "status": "success",
+        "data": {
+            "transcription": "ሊያሳውቁ ይችላሉ ነገር ግን የበለጠ እየታወቁ በመጡ ቁጥር ደግሞ ይበልጥ ይነሳሉ የተረጋገጠ ልብና ነበር ያለው ሰው የሃሳብ የድርጊት ዝም",
+            "usage_metadata": {
+                "totalBilledDuration": "15s",
+                "requestId": "69b60667-0000-2a1e-b6d3-d4f547fe6724"
+            }
+        },
+        "confidence": 0.98276204
+    }
+    ```
+  </Tab>
+</Tabs>

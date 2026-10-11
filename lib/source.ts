@@ -16,13 +16,6 @@ const newDocUrls = new Set([
 const navigationLabelsPlugin = {
   transformPageTree: {
     file(node: PageTree.Item): PageTree.Item {
-      if (node.url === '/docs/announcements') {
-        return {
-          ...node,
-          name: createElement('strong', null, node.name),
-        };
-      }
-
       if (!newDocUrls.has(node.url)) return node;
 
       return {

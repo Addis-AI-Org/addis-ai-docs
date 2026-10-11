@@ -2,36 +2,44 @@
   "title": "Addis AI Documentation | APIs & SDKs for African Languages",
   "root": true,
   "pages": [
-    "announcements",
-    "--- Get Started ---",
+    "--- Get started ---",
     "get-started/introduction",
     "get-started/quickstart",
+    "get-started/playground",
+    "get-started/api-overview",
     "get-started/sdks",
 
     "--- Capabilities ---",
     "capabilities/text-generation",
     "capabilities/text-to-speech",
     "capabilities/speech-to-text",
-    "capabilities/streaming",
+    "capabilities/translation",
     "capabilities/multimodal",
     "capabilities/realtime",
-    "capabilities/translation",
-    "--- Playgrounds ---",
-    "[Speech-to-Text](/docs/playground/speech-to-text)",
-    "[Text-to-Speech Streaming](/docs/playground/text-to-speech)",
-    
+    "capabilities/streaming",
 
-    "--- Integration ---",
-    "integration/web",
-    "integration/mobile",
-    "integration/server",
+    "--- Voice agents ---",
     "integration/voice-interface",
     "integration/streaming-voice-agent",
 
+    "--- Integrate ---",
+    "integration/web",
+    "integration/mobile",
+    "integration/server",
+
+    "--- Playgrounds ---",
+    "[Speech-to-text playground](/docs/playground/speech-to-text)",
+    "[Text-to-speech playground](/docs/playground/text-to-speech)",
+
+    "--- API reference ---",
+    "...api-reference",
+
     "--- Platform ---",
     "platform/pricing",
+    "platform/limits",
     "platform/errors",
     "platform/status",
-    "platform/faq"
+    "platform/faq",
+    "announcements"
   ]
 }

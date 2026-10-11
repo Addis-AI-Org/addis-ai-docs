@@ -1,5 +1,5 @@
 ---
-title: Voice Interface (VUI)
+title: Voice pipeline (STT → LLM → TTS)
 description: Orchestrate STT, LLM, and TTS to build full voice conversational agents.
 icon: Mic
 ---
@@ -167,7 +167,7 @@ The "Request-Response" model adds up latency (STT time + LLM time + TTS time). T
 
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <Timer className="w-4 h-4 text-orange-500" />
+      <Timer className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Parallel Execution</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -179,7 +179,7 @@ The "Request-Response" model adds up latency (STT time + LLM time + TTS time). T
 
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <Zap className="w-4 h-4 text-blue-500" />
+      <Zap className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Realtime API</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -191,7 +191,7 @@ The "Request-Response" model adds up latency (STT time + LLM time + TTS time). T
 
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <Activity className="w-4 h-4 text-green-500" />
+      <Activity className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">VAD (Voice Activity)</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -203,7 +203,7 @@ The "Request-Response" model adds up latency (STT time + LLM time + TTS time). T
 
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <Layers className="w-4 h-4 text-purple-500" />
+      <Layers className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Context</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">

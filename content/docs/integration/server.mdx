@@ -144,7 +144,7 @@ Use this for chatbots, translation, or simple text generation where waiting 2-3 
 
     func main() {
     	r := gin.Default()
-    	apiKey := os.Getenv("ADDIS_AI_KEY")
+    	apiKey := os.Getenv("ADDIS_API_KEY")
 
     	r.POST("/api/chat", func(c *gin.Context) {
     		var input struct {
@@ -159,13 +159,20 @@ Use this for chatbots, translation, or simple text generation where waiting 2-3 
     		}
     		jsonValue, _ := json.Marshal(payload)
 
-    		req, _ := http.NewRequest("POST", "https://api.addisassistant.com/api/v1/chat_generate", bytes.NewBuffer(jsonValue))
+    		req, err := http.NewRequest("POST", "https://api.addisassistant.com/api/v1/chat_generate", bytes.NewBuffer(jsonValue))
+    		if err != nil {
+    			c.JSON(http.StatusInternalServerError, gin.H{"error": gin.H{"message": "Could not build the request"}})
+    			return
+    		}
     		req.Header.Set("Content-Type", "application/json")
     		req.Header.Set("X-API-Key", apiKey)
 
     		client := &http.Client{}
     		resp, err := client.Do(req)
-            // Error handling omitted for brevity
+    		if err != nil {
+    			c.JSON(http.StatusBadGateway, gin.H{"error": gin.H{"message": "Could not reach Addis AI"}})
+    			return
+    		}
     		defer resp.Body.Close()
 
     		var result map[string]interface{}
@@ -184,7 +191,7 @@ Use this for chatbots, translation, or simple text generation where waiting 2-3 
 
     Route::post('/api/chat', function (Request $request) {
         $response = Http::withHeaders([
-            'X-API-Key' => env('ADDIS_AI_KEY'),
+            'X-API-Key' => env('ADDIS_API_KEY'),
             'Content-Type' => 'application/json',
         ])->post('https://api.addisassistant.com/api/v1/chat_generate', [
             'model' => 'Addis-፩-አሌፍ',
@@ -303,7 +310,7 @@ Moving from localhost to production requires handling security, scalability, and
   {/* API Key Security */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <Lock className="w-4 h-4 text-blue-500" />
+      <Lock className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">API Key Security</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -319,7 +326,7 @@ Moving from localhost to production requires handling security, scalability, and
   {/* Request Validation */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <ShieldCheck className="w-4 h-4 text-green-500" />
+      <ShieldCheck className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Input Validation</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -332,7 +339,7 @@ Moving from localhost to production requires handling security, scalability, and
   {/* Rate Limiting */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <Server className="w-4 h-4 text-orange-500" />
+      <Server className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Rate Limiting</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -345,7 +352,7 @@ Moving from localhost to production requires handling security, scalability, and
   {/* Error Handling */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <AlertTriangle className="w-4 h-4 text-red-500" />
+      <AlertTriangle className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Error Handling</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">

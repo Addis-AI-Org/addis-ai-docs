@@ -5,6 +5,7 @@ import {
   frontmatterSchema,
   metaSchema,
 } from 'fumadocs-mdx/config';
+import lastModified from 'fumadocs-mdx/plugins/last-modified';
 import { transformerTwoslash } from 'fumadocs-twoslash';
 import { createFileSystemTypesCache } from 'fumadocs-twoslash/cache-fs';
 import remarkMath from 'remark-math';
@@ -54,6 +55,7 @@ export const blog = defineCollections({
 });
 
 export default defineConfig({
+  plugins: [lastModified()],
   mdxOptions: {
     rehypeCodeOptions: {
       lazy: true,

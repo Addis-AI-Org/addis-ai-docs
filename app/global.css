@@ -1,25 +1,12 @@
 @import 'tailwindcss';
-@import 'fumadocs-ui/css/neutral.css';
+/*
+ * Monochrome theme (black on white, white on black), the same base Better Auth
+ * uses. --color-fd-primary comes from the theme, so links, the active sidebar
+ * item, the "On this page" highlight and New badges stay black and white.
+ * Colour is reserved for meaning: callouts, errors, status, and code.
+ */
+@import 'fumadocs-ui/css/black.css';
 @import 'fumadocs-ui/css/preset.css';
-
-:root {
-  /* keep originals as reference */
-  --color-fd-primary-original: #27cdfe;
-  --color-fd-primary-light-original: #245efe;
-  --color-fd-primary-dark-original: #121291;
-
-  /* For light mode (default), use the "light" variant as the primary color */
-  --color-fd-primary: var(--color-fd-primary-light-original);
-  --color-fd-primary-light: var(--color-fd-primary-original);
-  --color-fd-primary-dark: var(--color-fd-primary-dark-original);
-}
-
-/* When the .dark class is present, swap back so primary uses the original primary */
-.dark {
-  --color-fd-primary: var(--color-fd-primary-original);
-  --color-fd-primary-light: var(--color-fd-primary-light-original);
-  --color-fd-primary-dark: var(--color-fd-primary-dark-original);
-}
 
 @layer components {
   /*
@@ -100,4 +87,154 @@
     text-transform: uppercase;
     color: var(--color-fd-muted-foreground);
   }
+}
+
+/*
+ * Prose links: quiet 1px neutral underline that turns brand-coloured on hover.
+ * Unlayered on purpose so it overrides the Fumadocs typography rule, which
+ * underlines every link 1.5px in --color-fd-primary.
+ */
+.prose a:not([data-card]):not(:where(.not-prose, .not-prose *)) {
+  color: var(--color-fd-foreground);
+  font-weight: 500;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: color-mix(in oklab, var(--color-fd-foreground) 28%, transparent);
+  transition:
+    text-decoration-color 150ms ease,
+    color 150ms ease;
+}
+
+.prose a:not([data-card]):not(:where(.not-prose, .not-prose *)):hover {
+  opacity: 1;
+  text-decoration-color: var(--color-fd-primary);
+}
+
+/*
+ * Isometric glow diagrams (components/iso-diagram.tsx, VoiceLoopFlow,
+ * ArchitectureFlow). Hairline structure comes from the theme tokens; teal is
+ * the only accent and appears only on what is live. Motion touches transform
+ * and opacity only.
+ */
+.iso-diagram {
+  --iso-accent: #27cdfe;
+  /* Darker variant for accent strokes and text on light panels. */
+  --iso-ink: #0b87b3;
+  --iso-glow: 0.2;
+  --iso-haze: 0.07;
+  --iso-top: color-mix(in oklab, var(--color-fd-foreground) 3%, var(--color-fd-background));
+  --iso-front: color-mix(in oklab, var(--color-fd-foreground) 7%, var(--color-fd-background));
+  --iso-side: color-mix(in oklab, var(--color-fd-foreground) 11%, var(--color-fd-background));
+  --iso-recess: color-mix(in oklab, var(--color-fd-foreground) 13%, var(--color-fd-background));
+  --iso-line: color-mix(in oklab, var(--color-fd-foreground) 42%, var(--color-fd-background));
+  --iso-detail: color-mix(in oklab, var(--color-fd-foreground) 22%, var(--color-fd-background));
+  --iso-print: color-mix(in oklab, var(--color-fd-foreground) 52%, var(--color-fd-background));
+}
+
+.dark .iso-diagram {
+  --iso-ink: #27cdfe;
+  --iso-glow: 0.42;
+  --iso-haze: 0.11;
+}
+
+.iso-stage :where(polygon, line, polyline, path, rect, circle, ellipse) {
+  vector-effect: non-scaling-stroke;
+}
+
+.iso-box polygon {
+  stroke: var(--iso-line);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.iso-top { fill: var(--iso-top); }
+.iso-front { fill: var(--iso-front); }
+.iso-side { fill: var(--iso-side); }
+
+.iso-box-lit polygon { stroke: var(--iso-ink); }
+.iso-box-lit .iso-top { fill: color-mix(in oklab, var(--iso-accent) 64%, var(--color-fd-background)); }
+.iso-box-lit .iso-front { fill: color-mix(in oklab, var(--iso-accent) 40%, var(--color-fd-background)); }
+.iso-box-lit .iso-side { fill: color-mix(in oklab, var(--iso-accent) 26%, var(--color-fd-background)); }
+
+.iso-outline,
+.iso-detail,
+.iso-wire,
+.iso-lit,
+.iso-lit-glow {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.iso-outline { stroke: var(--iso-line); stroke-width: 1; }
+.iso-detail { stroke: var(--iso-detail); stroke-width: 1; }
+.iso-wire { stroke: var(--iso-detail); stroke-width: 1.25; }
+.iso-dashed { stroke-dasharray: 3 3; }
+.iso-recess { fill: var(--iso-recess); stroke: var(--iso-line); stroke-width: 1; }
+
+.iso-lit { stroke: var(--iso-ink); stroke-width: 1.5; }
+.iso-lit-glow { stroke: var(--iso-accent); stroke-width: 7; stroke-opacity: var(--iso-glow); }
+.iso-lit-fill {
+  fill: color-mix(in oklab, var(--iso-accent) 48%, var(--color-fd-background));
+  stroke: var(--iso-ink);
+  stroke-width: 1;
+}
+.iso-accent { fill: var(--iso-accent); }
+.iso-halo { opacity: var(--iso-glow); }
+.iso-haze { opacity: var(--iso-haze); }
+
+.iso-print {
+  fill: var(--iso-print);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.iso-print-lit { fill: var(--iso-ink); }
+
+.iso-index {
+  fill: var(--color-fd-muted-foreground);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+}
+
+.iso-label {
+  fill: var(--color-fd-foreground);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.iso-status-dot {
+  background: var(--iso-accent);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--iso-accent) 18%, transparent);
+}
+
+.iso-layer {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity;
+}
+
+.iso-layer[data-on="true"] { opacity: 1; }
+.iso-pulse { will-change: transform, opacity; }
+
+.iso-ring { will-change: transform, opacity; }
+.iso-ring[data-on="true"] {
+  animation: iso-ring 1.8s cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
+}
+.iso-diagram[data-paused="true"] .iso-ring { animation-play-state: paused; }
+
+@keyframes iso-ring {
+  0% { opacity: 0; transform: scale(0.6); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.35); }
+}
+
+/* Reduced motion: the components hold the final, fully lit frame. */
+@media (prefers-reduced-motion: reduce) {
+  .iso-layer { transition: none; }
+  .iso-ring[data-on="true"] { animation: none; opacity: 0.6; }
 }

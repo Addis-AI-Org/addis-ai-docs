@@ -1,0 +1,53 @@
+---
+title: System instructions and personas
+description: Set the assistant's identity and behavior with persona and system fields.
+isNew: true
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+Use a **persona** for the assistant's identity and a **system instruction** for behavior, constraints, language, or output format. Conversation turns remain in `messages`.
+
+Both fields are optional plain strings. `persona` defines who the assistant is; `system` defines how it should behave. The current user message supplies the task or input. System instructions are higher-level guidance than user messages, while Addis AI's platform safeguards remain in force if any instruction conflicts with them. Keep identity and behavioral rules consistent instead of asking the persona and system instruction to pull in different directions.
+
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```ts
+    import AddisAI from "addisai";
+
+    const addis = new AddisAI();
+
+    const response = await addis.chat.completions.create({
+      persona: "You are a patient Ethiopian language tutor.",
+      system: "Answer in Amharic, then include one short English gloss.",
+      messages: [{ role: "user", content: "Explain the word እንኳን." }],
+    });
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from addisai import AddisAI
+
+    addis = AddisAI()
+
+    response = addis.chat.completions.create(
+        persona="You are a patient Ethiopian language tutor.",
+        system="Answer in Amharic, then include one short English gloss.",
+        messages=[{"role": "user", "content": "Explain the word እንኳን."}],
+    )
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "Content-Type: application/json" \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -d '{
+        "persona":"You are a patient Ethiopian language tutor.",
+        "system":"Answer in Amharic, then include one short English gloss.",
+        "prompt":"Explain the word እንኳን.",
+        "target_language":"am"
+      }'
+    ```
+  </Tab>
+</Tabs>

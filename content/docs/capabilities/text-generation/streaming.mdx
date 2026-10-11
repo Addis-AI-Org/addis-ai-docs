@@ -1,0 +1,42 @@
+---
+title: Stream chat responses
+description: Show a chat reply as it is generated.
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+Set `stream: true` for incremental text. Use the SDK file helpers for images, documents, and audio; see [Multimodal](/docs/capabilities/multimodal) for the original upload, OCR, history, and schema guidance. Streaming cannot be combined with tools, attachments, or audio input.
+
+<Tabs items={['Node.js', 'Python']}>
+  <Tab value="Node.js">
+    ```ts
+    import AddisAI from "addisai";
+
+    const addis = new AddisAI();
+
+    const stream = await addis.chat.completions.create({
+      messages: [{ role: "user", content: "Tell me a short story." }],
+      stream: true,
+    });
+
+    for await (const chunk of stream) {
+      process.stdout.write(chunk.choices[0].delta.content ?? "");
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from addisai import AddisAI
+
+    addis = AddisAI()
+
+    stream = addis.chat.completions.create(
+        messages=[{"role": "user", "content": "Tell me a short story."}],
+        stream=True,
+    )
+
+    for chunk in stream:
+        print(chunk["choices"][0]["delta"].get("content", ""), end="")
+    ```
+  </Tab>
+</Tabs>

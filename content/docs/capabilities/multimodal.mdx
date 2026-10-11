@@ -56,9 +56,9 @@ Upload an image and ask questions about it. Ideal for explaining diagrams, ident
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl https://api.addisassistant.com/api/v1/chat_generate \\
-      -H "x-api-key: $ADDIS_API_KEY" \\
-      -F 'attachment_0=@market.jpg;type=image/jpeg' \\
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'attachment_0=@market.jpg;type=image/jpeg' \
       -F 'request_data={"prompt":"Describe this image in Amharic.","target_language":"am","attachment_field_names":["attachment_0"]}'
     ```
   </Tab>
@@ -101,9 +101,9 @@ Upload an audio file (e.g., a voice note or meeting recording) and ask the model
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl https://api.addisassistant.com/api/v1/chat_generate \\
-      -H "x-api-key: $ADDIS_API_KEY" \\
-      -F 'chat_audio_input=@command.wav;type=audio/wav' \\
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'chat_audio_input=@command.wav;type=audio/wav' \
       -F 'request_data={"prompt":"Follow the instruction in this recording.","target_language":"am"}'
     ```
   </Tab>
@@ -146,9 +146,9 @@ Use the vision model to extract text from scanned African documents, ID cards, o
   </Tab>
   <Tab value="cURL">
     ```bash
-    curl https://api.addisassistant.com/api/v1/chat_generate \\
-      -H "x-api-key: $ADDIS_API_KEY" \\
-      -F 'attachment_0=@document.png;type=image/png' \\
+    curl https://api.addisassistant.com/api/v1/chat_generate \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'attachment_0=@document.png;type=image/png' \
       -F 'request_data={"prompt":"Extract every visible line exactly as written.","target_language":"am","attachment_field_names":["attachment_0"]}'
     ```
   </Tab>
@@ -197,7 +197,7 @@ The SDK examples retrieve the reusable attachment metadata from the first upload
     ```bash
     curl --location 'https://api.addisassistant.com/api/v1/chat_generate' \
       --header 'Content-Type: application/json' \
-      --header 'X-API-Key: $ADDIS_API_KEY' \
+      --header "X-API-Key: $ADDIS_API_KEY" \
       --data '{
         "prompt": "What was the document talking about in detail?",
         "target_language": "am",
@@ -389,7 +389,7 @@ Optimize your multimodal integration with these architectural patterns.
   {/* Context Strategy */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <History className="w-4 h-4 text-blue-500" />
+      <History className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Context Management</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -405,7 +405,7 @@ Optimize your multimodal integration with these architectural patterns.
   {/* Document Prep */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <FileText className="w-4 h-4 text-green-500" />
+      <FileText className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Document Prep</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -421,7 +421,7 @@ Optimize your multimodal integration with these architectural patterns.
   {/* Prompting */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <ScanText className="w-4 h-4 text-orange-500" />
+      <ScanText className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Visual Prompting</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
@@ -437,7 +437,7 @@ Optimize your multimodal integration with these architectural patterns.
   {/* Constraints */}
   <div className="flex flex-col p-5 rounded-lg border border-fd-border bg-fd-card shadow-sm transition-all hover:border-fd-primary/30">
     <div className="flex items-center gap-2.5 mb-4">
-      <Zap className="w-4 h-4 text-purple-500" />
+      <Zap className="w-4 h-4 text-fd-muted-foreground" />
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Constraints</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
