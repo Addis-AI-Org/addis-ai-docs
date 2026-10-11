@@ -109,3 +109,17 @@ test('publishes AI-readable docs and page chrome', () => {
   assert.match(read('next.config.mjs'), /source: '\/docs\/:path\*\.mdx'/);
   assert.match(read('app/llms-full.txt/route.ts'), /charset=utf-8/);
 });
+
+test('keeps the docs theme black and white like Better Auth', () => {
+  const css = read('app/global.css');
+  assert.match(css, /@import 'fumadocs-ui\/css\/black\.css';/);
+  assert.doesNotMatch(css, /--color-fd-primary\s*:/, 'Do not override the theme primary with a brand colour');
+
+  for (const path of pages) {
+    assert.doesNotMatch(
+      read(path),
+      /(w-4 h-4|w-5 h-5) text-(blue|green|orange|purple|pink|yellow)-\d{3}/,
+      `${path} colours a decorative icon; use text-fd-muted-foreground`,
+    );
+  }
+});

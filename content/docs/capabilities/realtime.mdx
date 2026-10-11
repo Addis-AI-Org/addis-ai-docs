@@ -21,7 +21,7 @@ For text-to-speech over HTTP or a persistent WebSocket, see [Streaming text-to-s
 ## Endpoint
 
 <div className="addis-panel flex items-center gap-2 p-3 font-mono text-sm my-6">
-  <span className="bg-orange-500 text-white px-2 py-0.5 rounded text-xs font-bold">WSS</span>
+  <span className="bg-fd-primary text-fd-primary-foreground px-2 py-0.5 rounded text-xs font-bold">WSS</span>
   <span className="text-fd-foreground">wss://relay.addisassistant.com/ws</span>
 </div>
 
@@ -42,7 +42,7 @@ Our Realtime model is already deployed across key African sectors. You can test 
 <div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-3 mt-8">
   <div className="p-4 border border-fd-border rounded-lg bg-fd-card">
     <div className="flex items-center gap-2 mb-2 font-bold text-fd-foreground">
-      <Phone className="w-4 h-4 text-blue-500" /> Telecom Assistant
+      <Phone className="w-4 h-4 text-fd-muted-foreground" /> Telecom Assistant
     </div>
     <div className="text-xs text-fd-muted-foreground">
       Automated customer support for balance checks, package purchasing, and troubleshooting in Amharic.
@@ -51,7 +51,7 @@ Our Realtime model is already deployed across key African sectors. You can test 
   
   <div className="p-4 border border-fd-border rounded-lg bg-fd-card">
     <div className="flex items-center gap-2 mb-2 font-bold text-fd-foreground">
-      <Car className="w-4 h-4 text-orange-500" /> Ride Hailing
+      <Car className="w-4 h-4 text-fd-muted-foreground" /> Ride Hailing
     </div>
     <div className="text-xs text-fd-muted-foreground">
       Voice-first driver negotiation and location finding. "Where are you?" "I'm at Bole near the bank."
@@ -60,7 +60,7 @@ Our Realtime model is already deployed across key African sectors. You can test 
 
   <div className="p-4 border border-fd-border rounded-lg bg-fd-card">
     <div className="flex items-center gap-2 mb-2 font-bold text-fd-foreground">
-      <Tractor className="w-4 h-4 text-green-500" /> Farmer's Assistant
+      <Tractor className="w-4 h-4 text-fd-muted-foreground" /> Farmer's Assistant
     </div>
     <div className="text-xs text-fd-muted-foreground">
       Agricultural advisory for weather updates, crop disease diagnosis, and market prices in local dialects.
@@ -598,7 +598,7 @@ We are rapidly expanding the Realtime engine.
 <div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-2 mt-8">
 <div className="p-4 border border-fd-border rounded-lg bg-fd-card">
 <h3 className="font-bold flex items-center gap-2 mb-2 text-fd-foreground">
-<Activity className="w-4 h-4 text-green-500" />
+<Activity className="w-4 h-4 text-fd-muted-foreground" />
 VAD (Voice Activity Detection)
 </h3>
 <div className="text-sm text-fd-muted-foreground">
@@ -608,10 +608,10 @@ The model currently uses server-side VAD to determine when the user has stopped 
 <div className="p-4 border border-fd-border rounded-lg bg-fd-card opacity-80">
 <div className="flex items-center justify-between mb-2">
 <h3 className="font-bold flex items-center gap-2 text-fd-foreground">
-<BookOpen className="w-4 h-4 text-purple-500" />
+<BookOpen className="w-4 h-4 text-fd-muted-foreground" />
 Knowledge Base
 </h3>
-<span className="text-[10px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full border border-blue-500/20 font-medium">Coming Soon</span>
+<span className="text-xs text-fd-muted-foreground px-2 py-0.5 rounded-full border border-fd-border font-medium">Coming Soon</span>
 </div>
 <div className="text-sm text-fd-muted-foreground">
 Soon you will be able to attach PDFs or Text documents to the Realtime session. This will allow the voice assistant to answer questions specifically based on your uploaded data (RAG).

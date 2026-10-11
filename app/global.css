@@ -1,25 +1,12 @@
 @import 'tailwindcss';
-@import 'fumadocs-ui/css/neutral.css';
+/*
+ * Monochrome theme (black on white, white on black), the same base Better Auth
+ * uses. --color-fd-primary comes from the theme, so links, the active sidebar
+ * item, the "On this page" highlight and New badges stay black and white.
+ * Colour is reserved for meaning: callouts, errors, status, and code.
+ */
+@import 'fumadocs-ui/css/black.css';
 @import 'fumadocs-ui/css/preset.css';
-
-:root {
-  /* keep originals as reference */
-  --color-fd-primary-original: #27cdfe;
-  --color-fd-primary-light-original: #245efe;
-  --color-fd-primary-dark-original: #121291;
-
-  /* For light mode (default), use the "light" variant as the primary color */
-  --color-fd-primary: var(--color-fd-primary-light-original);
-  --color-fd-primary-light: var(--color-fd-primary-original);
-  --color-fd-primary-dark: var(--color-fd-primary-dark-original);
-}
-
-/* When the .dark class is present, swap back so primary uses the original primary */
-.dark {
-  --color-fd-primary: var(--color-fd-primary-original);
-  --color-fd-primary-light: var(--color-fd-primary-light-original);
-  --color-fd-primary-dark: var(--color-fd-primary-dark-original);
-}
 
 @layer components {
   /*
