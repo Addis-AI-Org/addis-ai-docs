@@ -53,6 +53,12 @@ const config = {
         destination: '/docs/platform/faq',
         permanent: true,
       },
+      {
+        // Live status moved to its own Worker (addisai-status repo).
+        source: '/docs/platform/status',
+        destination: 'https://status.addisassistant.com',
+        permanent: false,
+      },
     ];
   },
 };

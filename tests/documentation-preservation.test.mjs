@@ -42,7 +42,7 @@ test('keeps the original documentation tree and adds only approved primary pages
   assert.match(meta, /"announcements"/);
   assert.match(meta, /"get-started\/sdks"/);
   assert.match(meta, /"platform\/pricing"/);
-  assert.match(meta, /"platform\/errors",\s*"platform\/status",\s*"platform\/faq"/);
+  assert.match(meta, /"platform\/errors",\s*"platform\/faq"/);
   assert.doesNotMatch(meta, /get-started\/models/);
   assert.doesNotMatch(meta, /text-to-speech-legacy/);
 });
@@ -379,29 +379,18 @@ test('corrects capability page descriptions, terminology, and title badges', () 
   assert.doesNotMatch(errors, /check our status page/);
 });
 
-test('publishes status documentation and legacy route redirects', () => {
-  const status = read('content/docs/platform/status.mdx');
+test('points status at status.addisassistant.com and keeps legacy route redirects', () => {
   const errors = read('content/docs/platform/errors.mdx');
   const config = read('next.config.mjs');
+  const meta = read('content/docs/meta.json');
 
-  assert.match(status, /^title: Status$/m);
-  assert.match(status, /^description: Current availability, incidents, and uptime history for Addis AI services\.$/m);
-  for (const label of [
-    'Operational',
-    'Degraded Performance',
-    'Partial Outage',
-    'Major Outage',
-    'Maintenance',
-  ]) {
-    assert.match(status, new RegExp(label));
-  }
-  assert.match(status, /import \{ LiveStatus \} from '@\/components\/live-status';/);
-  assert.match(status, /<LiveStatus \/>/);
-  assert.match(status, /https:\/\/status\.addisassistant\.com/);
-  assert.match(status, /## Support escalation/);
-  assert.doesNotMatch(status, /## Current status|## Current incidents|## Recent uptime history|manually maintained/);
-  assert.match(errors, /https:\/\/status\.addisassistant\.com/);
+  // Live status is served by the addisai-status Worker, not by the docs site.
+  assert.equal(existsSync(join(root, 'content/docs/platform/status.mdx')), false);
   assert.equal(existsSync(join(root, 'proxy.ts')), false);
+  assert.doesNotMatch(meta, /platform\/status/);
+  assert.match(errors, /https:\/\/status\.addisassistant\.com/);
+  assert.match(config, /source: '\/docs\/platform\/status'/);
+  assert.match(config, /destination: 'https:\/\/status\.addisassistant\.com'/);
 
   for (const [source, destination] of [
     ['/docs/get-started/quick-start', '/docs/get-started/quickstart'],

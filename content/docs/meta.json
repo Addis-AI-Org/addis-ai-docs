@@ -31,7 +31,6 @@
     "--- Platform ---",
     "platform/pricing",
     "platform/errors",
-    "platform/status",
     "platform/faq"
   ]
 }
