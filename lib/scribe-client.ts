@@ -7,9 +7,14 @@ export type ScribeResult = {
   /** Present when the request used `timestamps=word`. Times are seconds, already corrected by the server. */
   words?: ScribeWord[];
   segments?: ScribeSegment[];
+  /** Present when the request used `speakers=true` (Turbo only): the number of distinct speakers. */
+  speakers?: number;
 };
-export type ScribeWord = { text: string; start: number; end: number };
-export type ScribeSegment = { text: string; start: number; end: number };
+/** `speaker` is 1-based, numbered by first appearance; `null` means the word or cue could not be attributed. */
+export type ScribeWord = { text: string; start: number; end: number; speaker?: number | null };
+export type ScribeSegment = { text: string; start: number; end: number; speaker?: number | null };
+/** Live `transcript.segment` event (sessions created with `speakers: true`): committed after each pause. Times are seconds from session start; labels already sent never change. */
+export type ScribeLiveSegment = { type: 'transcript.segment'; request_id: string; words: ScribeWord[]; segments: ScribeSegment[]; speakers: number };
 
 export const CAPTION_LINE_LENGTH = 42;
 
@@ -36,17 +41,27 @@ function requireSegments(result: { segments?: ScribeSegment[] }): ScribeSegment[
   return result.segments;
 }
 
-/** SubRip captions computed locally from the returned segments (no API call). */
+function hasSpeaker(segment: ScribeSegment): segment is ScribeSegment & { speaker: number } {
+  return typeof segment.speaker === 'number';
+}
+
+/** SubRip captions computed locally from the returned segments (no API call). A `Speaker N: ` prefix counts toward line wrapping. */
 export function toSrt(result: { segments?: ScribeSegment[] }): string {
   return requireSegments(result)
-    .map((segment, i) => `${i + 1}\n${captionTime(segment.start, ',')} --> ${captionTime(segment.end, ',')}\n${wrapCaption(segment.text).join('\n')}\n`)
+    .map((segment, i) => {
+      const text = hasSpeaker(segment) ? `Speaker ${segment.speaker}: ${segment.text}` : segment.text;
+      return `${i + 1}\n${captionTime(segment.start, ',')} --> ${captionTime(segment.end, ',')}\n${wrapCaption(text).join('\n')}\n`;
+    })
     .join('\n');
 }
 
-/** WebVTT captions computed locally from the returned segments (no API call). */
+/** WebVTT captions computed locally from the returned segments (no API call). Speakers become a leading `<v Speaker N>` voice span. */
 export function toVtt(result: { segments?: ScribeSegment[] }): string {
   const cues = requireSegments(result)
-    .map(segment => `${captionTime(segment.start, '.')} --> ${captionTime(segment.end, '.')}\n${wrapCaption(segment.text).join('\n')}\n`);
+    .map(segment => {
+      const voice = hasSpeaker(segment) ? `<v Speaker ${segment.speaker}>` : '';
+      return `${captionTime(segment.start, '.')} --> ${captionTime(segment.end, '.')}\n${voice}${wrapCaption(segment.text).join('\n')}\n`;
+    });
   return ['WEBVTT\n', ...cues].join('\n');
 }
 
@@ -62,6 +77,24 @@ export function wordsBySegment(result: { words?: ScribeWord[]; segments?: Scribe
     const until = segments[i + 1]?.start ?? Infinity;
     return words.filter(word => word.start >= segment.start && word.start < until);
   });
+}
+
+/** Appends a live event's segments, skipping any that start before the last committed one ends (a replayed event). */
+export function appendLiveSegments(committed: ScribeSegment[], event: Pick<ScribeLiveSegment, 'segments'>): ScribeSegment[] {
+  const until = committed.at(-1)?.end ?? -Infinity;
+  const next = (event.segments ?? []).filter(segment => segment.start >= until);
+  return next.length ? [...committed, ...next] : committed;
+}
+
+/** Joins consecutive segments from the same speaker into one turn for a running transcript. */
+export function speakerTurns(segments: ScribeSegment[]): { speaker: number | null; text: string; start: number }[] {
+  const turns: { speaker: number | null; text: string; start: number }[] = [];
+  for (const segment of segments) {
+    const speaker = typeof segment.speaker === 'number' ? segment.speaker : null, last = turns.at(-1);
+    if (last && last.speaker === speaker) last.text += ` ${segment.text}`;
+    else turns.push({ speaker, text: segment.text, start: segment.start });
+  }
+  return turns;
 }
 
 /** Index of the segment on screen at `time`, or -1 between cues. */

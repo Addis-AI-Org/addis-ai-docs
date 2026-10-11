@@ -144,6 +144,8 @@ Stream microphone or PCM audio with `scribe.connect`. See [Connect live audio wi
 | Recover an existing request | `scribe.recover(requestId)` | `scribe.recover(request_id)` |
 | Word timestamps and caption cues (0.5.0) | `scribe.transcribe({ ..., timestamps: "word" })` | `scribe.transcribe(..., timestamps="word")` |
 | Build SRT or VTT captions locally (0.5.0) | `toSrt(result)`, `toVtt(result)` | `addisai.to_srt(result)`, `addisai.to_vtt(result)` |
+| Speaker labels on words and caption cues (0.6.0, Turbo) | `scribe.transcribe({ ..., backend: "turbo", speakers: true })` | `scribe.transcribe(..., backend="turbo", speakers=True)` |
+| SRT or VTT captions with speaker labels (0.6.0) | `toSrt(result)`, `toVtt(result)` | `addisai.to_srt(result)`, `addisai.to_vtt(result)` |
 
 HTTP defaults to Standard and `1120ms` chunks; live sessions default to Standard and `320ms` chunks. Either transport accepts `320ms` or `1120ms`. File uploads accept at most **25 MiB / 180 seconds**. Socket frames accept at most two seconds each and 180 seconds total. Socket tickets are one-use and expire after **60 seconds**. An unavailable mode returns an error.
 
@@ -275,6 +277,138 @@ With `timestamps=word`, the usual `data` object also contains:
 - Scribe does not add punctuation, so captions break at pauses rather than at the ends of sentences.
 
 **Accuracy.** Times come from the speech model and are close, not exact. On long Amharic recordings, captions usually appear about 0.15 seconds after the speaker starts and disappear about 0.4 seconds before they finish. That is fine for subtitles and following along, but check by ear if you need frame-exact edits.
+
+### Speaker labels <NewBadge className="ml-2 align-middle" /> [#speaker-labels]
+
+Scribe can tell you who said what in a recording with more than one voice, such as an interview, a meeting, or a podcast. Every word and every caption cue gets a speaker number. Speakers are numbered **Speaker 1, Speaker 2, …** in the order they first speak; Scribe does not know or return anyone's name.
+
+Add this query parameter to `POST /api/v1/scribe/transcribe`. Everything else about the request stays the same.
+
+<TypeTable
+  type={{
+    'speakers': {
+      description: 'true adds a speaker number to every word and caption cue, and the number of speakers to the result. Turbo only: send it with backend=turbo. It turns on word timestamps, the same as timestamps=word. It does not work with stream=true or on live WebSocket sessions.',
+      type: 'boolean',
+      default: 'false',
+    },
+  }}
+/>
+
+With `speakers=true`, each word and segment has a `speaker` field, and `data.speakers` is the number of different speakers found:
+
+```json
+{
+  "data": {
+    "text": "ሰላም ወዳጆቻችን እንዴት ናችሁ",
+    "words": [
+      { "text": "ሰላም", "start": 0.98, "end": 1.08, "speaker": 1 },
+      { "text": "ወዳጆቻችን", "start": 1.12, "end": 1.6, "speaker": 1 },
+      { "text": "እንዴት", "start": 1.7, "end": 2.2, "speaker": 2 },
+      { "text": "ናችሁ", "start": 2.3, "end": 3.0, "speaker": 2 }
+    ],
+    "segments": [
+      { "text": "ሰላም ወዳጆቻችን", "start": 0.6, "end": 1.6, "speaker": 1 },
+      { "text": "እንዴት ናችሁ", "start": 1.7, "end": 3.0, "speaker": 2 }
+    ],
+    "speakers": 2
+  }
+}
+```
+
+- `speaker` is `1`, `2`, and so on, numbered by first appearance. It is `null` when Scribe could not tell who said a word.
+- A caption cue always ends when the speaker changes, so each cue has one speaker. A word with `speaker: null` stays in the current cue.
+
+Caption files show the speaker on every cue. `format=srt` puts `Speaker N: ` before the cue text; the label counts toward the 42-character line length:
+
+```text
+1
+00:00:00,600 --> 00:00:01,600
+Speaker 1: ሰላም ወዳጆቻችን
+```
+
+`format=vtt` uses a WebVTT voice tag, `<v Speaker N>`, at the start of the cue instead of a text label:
+
+```text
+00:00:00.600 --> 00:00:01.600
+<v Speaker 1>ሰላም ወዳጆቻችን
+```
+
+<Tabs items={['Node.js', 'Python', 'cURL']}>
+  <Tab value="Node.js">
+    ```bash
+    npm install https://github.com/Addis-AI-Org/addisai-js/releases/download/v0.6.0/addisai-0.6.0.tgz
+    ```
+
+    ```ts
+    import { writeFile } from "node:fs/promises";
+    import AddisAI, { fileFromPath, toSrt, ulid } from "addisai";
+
+    const addis = new AddisAI();
+    const result = await addis.scribe.transcribe({
+      audio: await fileFromPath("interview.wav"),
+      backend: "turbo", // Speaker labels need Turbo
+      speakers: true,   // Also turns on word timestamps
+      requestId: ulid(),
+    });
+
+    console.log(`${result.speakers} speakers`);
+    for (const segment of result.segments ?? []) {
+      console.log(`Speaker ${segment.speaker ?? "?"}:`, segment.text);
+    }
+    await writeFile("captions.srt", toSrt(result)); // or toVtt(result)
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```bash
+    pip install "addisai[realtime]==0.6.0"
+    ```
+
+    ```python
+    import addisai
+    from addisai import AddisAI, ulid
+
+    with AddisAI() as client, open("interview.wav", "rb") as audio:
+        result = client.scribe.transcribe(
+            audio=audio,
+            backend="turbo",  # Speaker labels need Turbo
+            speakers=True,    # Also turns on word timestamps
+            request_id=ulid(),
+        )
+
+    print(result["speakers"], "speakers")
+    for segment in result["segments"]:
+        print(f"Speaker {segment['speaker'] or '?'}:", segment["text"])
+    with open("captions.srt", "w", encoding="utf-8") as captions:
+        captions.write(addisai.to_srt(result))  # or addisai.to_vtt(result)
+    ```
+  </Tab>
+  <Tab value="cURL">
+    ```bash
+    # JSON with words, segments, and speaker numbers
+    curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?backend=turbo&speakers=true&request_id=my-speakers-1' \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'audio=@interview.wav'
+
+    # An SRT caption file with "Speaker N: " labels
+    curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?backend=turbo&speakers=true&format=srt&request_id=my-speakers-2' \
+      -H "x-api-key: $ADDIS_API_KEY" \
+      -F 'audio=@interview.wav' \
+      -o captions.srt
+    ```
+  </Tab>
+</Tabs>
+
+In SDK 0.6.0, `toSrt`/`toVtt` and `to_srt`/`to_vtt` add the same speaker labels whenever a segment has a speaker, so local caption files match the API's byte for byte. The SDKs check the request before sending it: `speakers` without `backend: "turbo"` (`backend="turbo"` in Python), or with `scribe.stream`, is rejected locally.
+
+**Limits**
+
+- Speaker labels need `backend=turbo`. With Standard the API returns HTTP 422 `INVALID_REQUEST`; with `stream=true` it also returns HTTP 422. Live WebSocket sessions return text only.
+- `scribe.capabilities()` lists the backends that support speaker labels and the most speakers Scribe will separate in one file (currently 8).
+- There is no extra charge. Billing stays per transcribed character.
+- A request ID is tied to its settings. Replaying the same ID with a different `speakers` value returns HTTP 409; use a new ID.
+- Files are limited to **180 seconds** and **25 MiB**, as for other uploads.
+
+**Accuracy.** On simulated Amharic conversations, 97.8% of words get the right speaker. It works best with 2 to 4 speakers who take turns. When people talk over each other, words near the overlap are more likely to get the wrong speaker or `null`. Check the labels before publishing anything where it matters who said what.
 
 
 ## Usage Guide
