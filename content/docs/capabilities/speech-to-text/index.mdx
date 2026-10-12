@@ -33,7 +33,7 @@ Use `backend=standard` for Standard or `backend=turbo` for Turbo. Add `stream=tr
 
 For live microphone input, see [Live transcription](/docs/capabilities/speech-to-text/live).
 
-`transcript.partial` text is provisional. `transcript.completed` confirms the final text and settled charge. Once audio is accepted, disconnecting still finishes transcription and billing. Recover an interrupted response with `GET /api/v1/scribe/requests/YOUR_REQUEST_ID` and the same account's API key. Replaying a completed request returns its original result without another charge; changed audio or settings require a new ID. Completed results are recoverable for 24 hours; pending settlements remain recoverable. One transcription per wallet is admitted at a time; a busy backend returns an error without switching backends.
+`transcript.partial` text is provisional. `transcript.completed` confirms the final text and settled charge. Once audio is accepted, disconnecting still finishes transcription and billing. Recover an interrupted response with `GET /api/v1/scribe/requests/YOUR_REQUEST_ID` and the same account's API key. Replaying a completed request returns its original result without another charge; changed audio or settings require a new ID. Completed results are recoverable for 24 hours; pending settlements remain recoverable. Each account can run up to 10 file transcriptions and 3 live sessions at the same time. When the service is at capacity, a request waits briefly for a free slot; if none frees up, it returns HTTP 429 with a `Retry-After` header. Retry after that delay with the same request ID. A request always runs on the backend you chose (`standard` or `turbo`); it is never moved to the other one.
 
 `GET /api/v1/scribe/usage` returns the current STT rate and account balance. Billing uses final transcribed characters, at the existing **3.5 ETB per 1,000 characters** rate as of October 4, 2026. Standard and Turbo pricing is the same. Model compute time excludes upload, network, and wallet settlement time.
 
@@ -155,7 +155,7 @@ Only the **final transcript** is billable. Partial events are provisional cumula
 
 Save a request ID before sending audio. The SDK disables automatic retries for paid uploads and ticket creation. If the response is interrupted or billing is pending, call `scribe.recover` with that ID and the same account's key. A completed replay returns its original settled result without another deduction. Use a new ID when changing audio, backend, chunk, or HTTP streaming settings. Accepted audio can still finish and be billed after a socket disconnect or when you stop reading an HTTP stream.
 
-Completed results remain recoverable for 24 hours; pending settlement remains recoverable. Recovery can report `IN_PROGRESS`, `BILLING_PENDING`, `REQUEST_INTERRUPTED`, or `NOT_FOUND`. Do not display a confirmed charge unless `usage.settled` is true. A busy account/backend returns HTTP 429, and changed inputs with a reused ID return HTTP 409.
+Completed results remain recoverable for 24 hours; pending settlement remains recoverable. Recovery can report `IN_PROGRESS`, `BILLING_PENDING`, `REQUEST_INTERRUPTED`, or `NOT_FOUND`. Do not display a confirmed charge unless `usage.settled` is true. A request beyond your account's limit (10 file transcriptions or 3 live sessions at once), or one that finds the service at capacity, returns HTTP 429 with `Retry-After`. Changed inputs with a reused ID return HTTP 409.
 
 ### Timestamps and captions <NewBadge className="ml-2 align-middle" /> [#timestamps-and-captions]
 
