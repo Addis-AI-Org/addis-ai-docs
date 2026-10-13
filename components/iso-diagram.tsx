@@ -7,7 +7,7 @@
  * iso-glow skill. Structure is drawn once in a static base SVG using theme
  * tokens; every lit or moving part is its own small absolutely positioned
  * layer, so the browser only ever animates `opacity` and `transform` on
- * composited layers. Styles live in app/global.css under `.iso-diagram`.
+ * composited layers. Styles live in ISO_CSS below and ship with the component.
  */
 
 import {
@@ -25,6 +25,156 @@ import {
 } from "react";
 
 import { cn } from "../lib/cn";
+
+/*
+ * Styles ship with the component, not in app/global.css, so the diagram can
+ * never render without them. React 19 hoists this <style> into <head> and
+ * de-duplicates it by `href`, so two diagrams on a page share one copy.
+ * Teal is the only accent; motion touches transform and opacity only.
+ */
+const ISO_CSS = `
+.iso-diagram {
+  --iso-accent: #27cdfe;
+  /* Accent strokes and text follow the theme primary (darker in light mode). */
+  --iso-ink: var(--color-fd-primary);
+  --iso-glow: 0.2;
+  --iso-haze: 0.07;
+  --iso-top: color-mix(in oklab, var(--color-fd-foreground) 3%, var(--color-fd-background));
+  --iso-front: color-mix(in oklab, var(--color-fd-foreground) 7%, var(--color-fd-background));
+  --iso-side: color-mix(in oklab, var(--color-fd-foreground) 11%, var(--color-fd-background));
+  --iso-recess: color-mix(in oklab, var(--color-fd-foreground) 13%, var(--color-fd-background));
+  --iso-line: color-mix(in oklab, var(--color-fd-foreground) 42%, var(--color-fd-background));
+  --iso-detail: color-mix(in oklab, var(--color-fd-foreground) 22%, var(--color-fd-background));
+  --iso-print: color-mix(in oklab, var(--color-fd-foreground) 52%, var(--color-fd-background));
+}
+
+.dark .iso-diagram {
+  --iso-glow: 0.42;
+  --iso-haze: 0.11;
+}
+
+/* Structural layout, kept here (not in utility classes) so overlays always line up. */
+.iso-stage {
+  position: relative;
+  width: 100%;
+}
+
+.iso-stage > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.iso-layer > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.iso-stage :where(polygon, line, polyline, path, rect, circle, ellipse) {
+  vector-effect: non-scaling-stroke;
+}
+
+.iso-box polygon {
+  stroke: var(--iso-line);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.iso-top { fill: var(--iso-top); }
+.iso-front { fill: var(--iso-front); }
+.iso-side { fill: var(--iso-side); }
+
+.iso-box-lit polygon { stroke: var(--iso-ink); }
+.iso-box-lit .iso-top { fill: color-mix(in oklab, var(--iso-accent) 64%, var(--color-fd-background)); }
+.iso-box-lit .iso-front { fill: color-mix(in oklab, var(--iso-accent) 40%, var(--color-fd-background)); }
+.iso-box-lit .iso-side { fill: color-mix(in oklab, var(--iso-accent) 26%, var(--color-fd-background)); }
+
+.iso-outline,
+.iso-detail,
+.iso-wire,
+.iso-lit,
+.iso-lit-glow {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.iso-outline { stroke: var(--iso-line); stroke-width: 1; }
+.iso-detail { stroke: var(--iso-detail); stroke-width: 1; }
+.iso-wire { stroke: var(--iso-detail); stroke-width: 1.25; }
+.iso-dashed { stroke-dasharray: 3 3; }
+.iso-recess { fill: var(--iso-recess); stroke: var(--iso-line); stroke-width: 1; }
+
+.iso-lit { stroke: var(--iso-ink); stroke-width: 1.5; }
+.iso-lit-glow { stroke: var(--iso-accent); stroke-width: 7; stroke-opacity: var(--iso-glow); }
+.iso-lit-fill {
+  fill: color-mix(in oklab, var(--iso-accent) 48%, var(--color-fd-background));
+  stroke: var(--iso-ink);
+  stroke-width: 1;
+}
+.iso-accent { fill: var(--iso-accent); }
+.iso-halo { opacity: var(--iso-glow); }
+.iso-haze { opacity: var(--iso-haze); }
+
+.iso-print {
+  fill: var(--iso-print);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.iso-print-lit { fill: var(--iso-ink); }
+
+.iso-index {
+  fill: var(--color-fd-muted-foreground);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+}
+
+.iso-label {
+  fill: var(--color-fd-foreground);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.iso-status-dot {
+  background: var(--iso-accent);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--iso-accent) 18%, transparent);
+}
+
+.iso-layer {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity;
+}
+
+.iso-layer[data-on="true"] { opacity: 1; }
+.iso-occluder { transition: none; }
+.iso-pulse { will-change: transform, opacity; }
+
+.iso-ring { will-change: transform, opacity; }
+.iso-ring[data-on="true"] {
+  animation: iso-ring 1.8s cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
+}
+.iso-diagram[data-paused="true"] .iso-ring { animation-play-state: paused; }
+
+@keyframes iso-ring {
+  0% { opacity: 0; transform: scale(0.6); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.35); }
+}
+
+/* Reduced motion: the components hold the final, fully lit frame. */
+@media (prefers-reduced-motion: reduce) {
+  .iso-layer { transition: none; }
+  .iso-ring[data-on="true"] { animation: none; opacity: 0.6; }
+}
+`;
 
 const COS = Math.cos(Math.PI / 6);
 const SIN = 0.5;
@@ -200,8 +350,11 @@ export function IsoStage({
   const viewBox = `${round(view.x)} ${round(view.y)} ${round(view.w)} ${round(view.h)}`;
 
   return (
-    <div className="iso-stage relative w-full" style={{ aspectRatio: `${round(view.w)} / ${round(view.h)}` }}>
-      <svg aria-label={label} className="absolute inset-0 size-full" role="img" viewBox={viewBox}>
+    <div className="iso-stage" style={{ aspectRatio: `${round(view.w)} / ${round(view.h)}` }}>
+      <style href="addis-iso-diagram" precedence="medium">
+        {ISO_CSS}
+      </style>
+      <svg aria-label={label} role="img" viewBox={viewBox}>
         <defs>
           <radialGradient id={hazeId}>
             <stop offset="0" style={{ stopColor: "var(--iso-accent)", stopOpacity: 1 }} />
@@ -261,7 +414,7 @@ export function IsoLayer({
         ...style,
       }}
     >
-      <svg className="block size-full overflow-visible" viewBox={`${round(box.x)} ${round(box.y)} ${round(box.w)} ${round(box.h)}`}>
+      <svg viewBox={`${round(box.x)} ${round(box.y)} ${round(box.w)} ${round(box.h)}`}>
         {halo ? <Halo id={haloId} {...halo} /> : null}
         {children}
       </svg>
@@ -341,40 +494,67 @@ export function IsoPulse({
 }
 
 /**
- * Sound rings on a horizontal plane: the front half of a circle, so the back
- * half reads as hidden behind the object. Two rings expand and fade in a loop.
+ * Sound rings: full circles on a horizontal plane around an object, expanding
+ * and fading in a loop. The back half of each ring is drawn first, then
+ * `occluder` (a static copy of the object) covers it, then `children` (the
+ * object's lit layer), then the front half, so the ring passes behind the
+ * object and in front of it like a real circle would.
  */
-export function IsoRings({ center, radius, on }: { center: Vec3; radius: number; on: boolean }) {
+export function IsoRings({
+  center,
+  radius,
+  on,
+  occluder,
+  occluderBox,
+  children,
+}: {
+  center: Vec3;
+  radius: number;
+  on: boolean;
+  occluder: ReactNode;
+  occluderBox: Rect;
+  children?: ReactNode;
+}) {
   const [cx, cy, cz] = center;
-  const a = radius / Math.SQRT2;
-  const box = bounds(
-    [
-      [cx + a, cy - a, cz],
-      [cx - a, cy + a, cz],
-      [cx + radius, cy + radius, cz],
-      [cx + a, cy + a, cz],
-      [cx, cy + radius, cz],
-      [cx + radius, cy, cz],
-    ],
-    6,
-  );
+  const a = round(radius / Math.SQRT2);
+  const circle: Vec3[] = Array.from({ length: 16 }, (_, k) => {
+    const angle = (k / 16) * Math.PI * 2;
+    return [cx + radius * Math.cos(angle), cy + radius * Math.sin(angle), cz];
+  });
+  const box = bounds(circle, 6);
   const [ox, oy] = iso(cx, cy, cz);
   const origin = `${percent((ox - box.x) / box.w)} ${percent((oy - box.y) / box.h)}`;
-  const ring = (
+  // In plane-local coordinates the far half runs from (-a, a) to (a, -a)
+  // through the back corner; the near half continues back to (-a, a).
+  const back = `M ${-a} ${a} A ${radius} ${radius} 0 0 1 ${a} ${-a}`;
+  const front = `M ${a} ${-a} A ${radius} ${radius} 0 0 1 ${-a} ${a}`;
+  const half = (d: string) => (
     <g transform={onTop(cx, cy, cz)}>
-      <path className="iso-lit-glow" d={`M ${round(a)} ${round(-a)} A ${radius} ${radius} 0 0 1 ${round(-a)} ${round(a)}`} />
-      <path className="iso-lit" d={`M ${round(a)} ${round(-a)} A ${radius} ${radius} 0 0 1 ${round(-a)} ${round(a)}`} />
+      <path className="iso-lit-glow" d={d} />
+      <path className="iso-lit" d={d} />
     </g>
   );
+  const rings = (d: string) =>
+    [0, 900].map((delay) => (
+      <IsoLayer
+        box={box}
+        className="iso-ring"
+        key={delay}
+        on={on}
+        style={{ transformOrigin: origin, animationDelay: `${delay}ms` }}
+      >
+        {half(d)}
+      </IsoLayer>
+    ));
 
   return (
     <>
-      <IsoLayer box={box} className="iso-ring" on={on} style={{ transformOrigin: origin }}>
-        {ring}
+      {rings(back)}
+      <IsoLayer box={occluderBox} className="iso-occluder" on>
+        {occluder}
       </IsoLayer>
-      <IsoLayer box={box} className="iso-ring" on={on} style={{ transformOrigin: origin, animationDelay: "900ms" }}>
-        {ring}
-      </IsoLayer>
+      {children}
+      {rings(front)}
     </>
   );
 }

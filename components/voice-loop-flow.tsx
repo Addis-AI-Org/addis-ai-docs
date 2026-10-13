@@ -320,14 +320,21 @@ export function VoiceLoopFlow() {
               );
             })}
 
-            <IsoLayer
-              box={layerBox(boxCorners(mic - 8, -8, TOP_Z + 21, 16, 16, 14), 26)}
-              halo={haloAt(mic, TOP_Z + 28, 26)}
-              on={reached(0)}
+            <IsoRings
+              center={[mic, 0, TOP_Z]}
+              occluder={<Microphone cx={mic} />}
+              occluderBox={layerBox(boxCorners(mic - 10, -10, TOP_Z, 20, 20, 35), 4)}
+              on={step === 0}
+              radius={24}
             >
-              <Microphone cx={mic} lit />
-            </IsoLayer>
-            <IsoRings center={[mic, 0, TOP_Z]} on={step === 0} radius={24} />
+              <IsoLayer
+                box={layerBox(boxCorners(mic - 8, -8, TOP_Z + 21, 16, 16, 14), 26)}
+                halo={haloAt(mic, TOP_Z + 28, 26)}
+                on={reached(0)}
+              >
+                <Microphone cx={mic} lit />
+              </IsoLayer>
+            </IsoRings>
 
             <IsoLayer
               box={layerBox(boxCorners(stt - 18, 12, TOP_Z, 36, 0.1, 22), 22)}
@@ -370,14 +377,21 @@ export function VoiceLoopFlow() {
               <Waveform cx={tts} lit />
             </IsoLayer>
 
-            <IsoLayer
-              box={layerBox(boxCorners(play - 13, 11, TOP_Z, 26, 0.1, 32), 24)}
-              halo={haloAt(play, TOP_Z + 14, 30)}
-              on={reached(8)}
+            <IsoRings
+              center={[play, 0, TOP_Z]}
+              occluder={<Speaker cx={play} />}
+              occluderBox={layerBox(boxCorners(play - 13, -11, TOP_Z, 26, 22, 32), 4)}
+              on={step >= 8}
+              radius={26}
             >
-              <Speaker cx={play} lit />
-            </IsoLayer>
-            <IsoRings center={[play, 0, TOP_Z]} on={step >= 8} radius={26} />
+              <IsoLayer
+                box={layerBox(boxCorners(play - 13, 11, TOP_Z, 26, 0.1, 32), 24)}
+                halo={haloAt(play, TOP_Z + 14, 30)}
+                on={reached(8)}
+              >
+                <Speaker cx={play} lit />
+              </IsoLayer>
+            </IsoRings>
 
             {connections.map((connection, index) => {
               const [from, to] = wireEnds(index);
