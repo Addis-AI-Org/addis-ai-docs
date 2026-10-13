@@ -1,0 +1,91 @@
+---
+title: Cursor, VS Code, Gemini CLI, and others
+description: Connect any MCP client that supports Streamable HTTP with OAuth to the Addis AI server.
+icon: Blocks
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+The Addis AI MCP server speaks Streamable HTTP and follows the MCP authorization specification. Any client that can sign in to a remote server with OAuth works. It supports both Client ID Metadata Documents and dynamic client registration, so no pre-shared client ID is required.
+
+```text
+https://addisassistant.com/mcp
+```
+
+<Tabs items={['Cursor', 'VS Code', 'Gemini CLI', 'Windsurf', 'Generic']}>
+  <Tab value="Cursor">
+    Click **Install in Cursor** on the [Integrations page](https://addisassistant.com/integrations), or add the server to your project:
+
+    ```json title=".cursor/mcp.json"
+    {
+      "mcpServers": {
+        "addis-ai": { "url": "https://addisassistant.com/mcp" }
+      }
+    }
+    ```
+
+    Open **Settings → MCP**, find **addis-ai**, and click **Connect** to sign in.
+  </Tab>
+  <Tab value="VS Code">
+    Run **MCP: Add Server** from the command palette, choose **HTTP**, and enter the URL. Or add it to your settings:
+
+    ```json title=".vscode/mcp.json"
+    {
+      "servers": {
+        "addis-ai": { "type": "http", "url": "https://addisassistant.com/mcp" }
+      }
+    }
+    ```
+
+    VS Code prompts you to sign in the first time a tool is used in agent mode.
+  </Tab>
+  <Tab value="Gemini CLI">
+    ```json title="~/.gemini/settings.json"
+    {
+      "mcpServers": {
+        "addis-ai": {
+          "httpUrl": "https://addisassistant.com/mcp",
+          "oauth": { "enabled": true }
+        }
+      }
+    }
+    ```
+
+    Then run `/mcp auth addis-ai` inside Gemini CLI.
+  </Tab>
+  <Tab value="Windsurf">
+    ```json title="~/.codeium/windsurf/mcp_config.json"
+    {
+      "mcpServers": {
+        "addis-ai": { "serverUrl": "https://addisassistant.com/mcp" }
+      }
+    }
+    ```
+
+    Windsurf starts the OAuth flow when the server is first used.
+  </Tab>
+  <Tab value="Generic">
+    ```json
+    {
+      "mcpServers": {
+        "addis-ai": { "type": "http", "url": "https://addisassistant.com/mcp" }
+      }
+    }
+    ```
+
+    Discovery documents, for clients that need them explicitly:
+
+    - Protected resource metadata: `https://addisassistant.com/.well-known/oauth-protected-resource/mcp`
+    - Authorization server metadata: `https://addisassistant.com/.well-known/oauth-authorization-server`
+    - Redirect URIs must be `https://` or loopback `http://localhost`, `http://127.0.0.1`, `http://[::1]` on any port.
+  </Tab>
+</Tabs>
+
+<Callout title="Testing with MCP Inspector" type="info">
+  Run `npx @modelcontextprotocol/inspector@latest`, choose **Streamable HTTP**, enter the server URL, and click **Connect**. The inspector completes the OAuth flow and lets you call every tool interactively.
+</Callout>
+
+## Clients without OAuth support
+
+The server does not accept API keys or static bearer tokens: every connection is tied to a user who approved it, so it can be revoked individually. If your client cannot sign in with OAuth, use one of the clients above or call the [REST API](/docs/get-started/api-overview) directly.

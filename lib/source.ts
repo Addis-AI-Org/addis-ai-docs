@@ -11,6 +11,9 @@ const newDocUrls = new Set([
   '/docs/capabilities/streaming',
   '/docs/capabilities/text-to-speech/streaming',
   '/docs/capabilities/speech-to-text/live',
+  '/docs/coding-agents',
+  '/docs/coding-agents/claude-code',
+  '/docs/coding-agents/codex',
 ]);
 
 const navigationLabelsPlugin = {

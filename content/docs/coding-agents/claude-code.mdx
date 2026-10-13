@@ -1,0 +1,84 @@
+---
+title: Claude Code
+description: Install the Addis AI plugin for Claude Code, sign in, and use the MCP tools and skills.
+icon: Terminal
+isNew: true
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+The Addis AI plugin for Claude Code bundles the remote MCP server with skills for the Addis AI APIs, Studio, and the web widget. The skills load automatically when your request matches them.
+
+<Steps>
+  <Step>
+    ## Install the plugin
+
+    ```bash
+    claude plugin marketplace add addisai/agent-plugins
+    claude plugin install addis-ai@addis-ai
+    ```
+
+    To add only the MCP server:
+
+    ```bash
+    claude mcp add --transport http addis-ai https://addisassistant.com/mcp
+    ```
+
+    Use `--scope project` to write the server into the project's `.mcp.json` so teammates get it too:
+
+    ```json title=".mcp.json"
+    {
+      "mcpServers": {
+        "addis-ai": { "type": "http", "url": "https://addisassistant.com/mcp" }
+      }
+    }
+    ```
+  </Step>
+
+  <Step>
+    ## Sign in
+
+    Start a session and run `/mcp`. Select **addis-ai** and choose **Authenticate**. Your browser opens the Addis AI consent screen; sign in if needed, review the permissions, and approve.
+
+    From a terminal you can also run `claude mcp login addis-ai`.
+
+    <Callout title="Loopback callback" type="info">
+      Claude Code receives the sign-in result on a local port (`http://localhost:PORT/callback`). The consent screen shows that address so you can confirm the request came from your own machine.
+    </Callout>
+  </Step>
+
+  <Step>
+    ## Try it
+
+    ```text
+    What is my Addis AI balance and which Studio agents do I have?
+    ```
+
+    ```text
+    Create an API key for this project and put it in .env, then generate "ሰላም" with an Amharic voice.
+    ```
+
+    The first write (creating the key) triggers a permission step-up: approve `keys:write` in the browser and Claude Code retries the call.
+  </Step>
+</Steps>
+
+## Tool permissions in Claude Code
+
+Tools appear as `mcp__plugin_addis-ai_addis-ai__<tool>` (plugin install) or `mcp__addis-ai__<tool>` (direct install). Read-only tools are annotated `readOnlyHint`; destructive ones (`delete_api_key`, `archive_agent`, `delete_knowledge_base`) are annotated `destructiveHint` and prompt for approval.
+
+To pre-approve the read tools in a project, add a permission rule:
+
+```json title=".claude/settings.json"
+{
+  "permissions": {
+    "allow": ["mcp__addis-ai__get_*", "mcp__addis-ai__list_*", "mcp__addis-ai__search_docs"]
+  }
+}
+```
+
+## Updating and removing
+
+- `claude plugin update addis-ai@addis-ai` fetches a new version.
+- `claude mcp logout addis-ai` forgets the local token; revoking under **Settings → Authorized apps** on addisassistant.com invalidates it server-side.
+- `claude plugin uninstall addis-ai@addis-ai` removes the plugin.

@@ -1,0 +1,46 @@
+---
+title: Claude.ai, Desktop, and Cowork
+description: Add Addis AI as a custom connector in Claude on the web, desktop, mobile, and Cowork.
+icon: MessageSquare
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Claude's hosted apps connect to remote MCP servers as **connectors**. The Addis AI server works as a custom connector today; a directory listing is planned.
+
+<Steps>
+  <Step>
+    ## Add the connector
+
+    1. Open **Settings → Connectors** (or **Customize → Connectors**).
+    2. Choose **Add custom connector**.
+    3. Enter the name `Addis AI` and the URL `https://addisassistant.com/mcp`.
+
+    Custom connectors are available on Pro, Max, Team, and Enterprise plans. On Team and Enterprise, an Owner adds the connector; each member then connects their own account.
+  </Step>
+
+  <Step>
+    ## Sign in
+
+    Click **Connect**. Claude opens the Addis AI consent screen in a popup. Sign in, review the permissions, and approve. Claude identifies itself to Addis AI with its client metadata document, so no client ID or secret is needed.
+  </Step>
+
+  <Step>
+    ## Use it in a conversation
+
+    Enable the connector in the chat's tools menu and ask, for example, "Summarise this week's Studio analytics for my clinic agent." Read tools run without prompts; destructive tools ask for confirmation.
+  </Step>
+</Steps>
+
+<Callout title="Where requests come from" type="info">
+  Claude's hosted apps reach the Addis AI server from Anthropic's infrastructure, not from your device. Sign-in redirects to `https://claude.ai/api/mcp/auth_callback`, which the consent screen displays.
+</Callout>
+
+## Claude Code sync
+
+A connector added on claude.ai is also available inside Claude Code sessions signed in with the same account. If you prefer the bundled skills, install the [Claude Code plugin](/docs/coding-agents/claude-code) as well.
+
+## Disconnecting
+
+Remove the connector in Claude's settings, and revoke it under **Settings → Authorized apps** on addisassistant.com to invalidate the tokens Claude holds.

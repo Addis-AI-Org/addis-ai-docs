@@ -1,0 +1,75 @@
+---
+title: Codex
+description: Connect OpenAI Codex (CLI, app, and IDE extension) to Addis AI with the plugin or a direct MCP server entry.
+icon: SquareTerminal
+isNew: true
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Steps>
+  <Step>
+    ## Add the server
+
+    ```bash
+    codex mcp add addis-ai --url https://addisassistant.com/mcp
+    ```
+
+    Or install the plugin, which adds the server plus the Addis AI skills:
+
+    ```bash
+    codex plugin marketplace add addisai/agent-plugins
+    ```
+
+    Then enable **Addis AI** in the Plugins tab. Codex, ChatGPT, and the IDE extension share the same plugin.
+  </Step>
+
+  <Step>
+    ## Sign in
+
+    ```bash
+    codex mcp login addis-ai
+    ```
+
+    Codex identifies itself with a client metadata document (CIMD) and receives the result on `http://127.0.0.1/callback`. Approve the permissions in your browser. Tokens are stored in Codex's credential store and refreshed automatically.
+  </Step>
+
+  <Step>
+    ## Choose an approval mode
+
+    Codex can run read-only tools without prompting and ask before writes. In `~/.codex/config.toml`:
+
+    ```toml title="~/.codex/config.toml"
+    [mcp_servers.addis-ai]
+    url = "https://addisassistant.com/mcp"
+    default_tools_approval_mode = "writes"
+
+    [mcp_servers.addis-ai.tools.delete_api_key]
+    approval_mode = "prompt"
+    ```
+
+    `writes` prompts only for tools that are not annotated read-only. The three destructive tools (`delete_api_key`, `archive_agent`, `delete_knowledge_base`) are worth pinning to `prompt`.
+  </Step>
+</Steps>
+
+## Direct configuration
+
+If you manage `config.toml` by hand:
+
+```toml title="~/.codex/config.toml"
+[mcp_servers.addis-ai]
+url = "https://addisassistant.com/mcp"
+oauth_resource = "https://addisassistant.com/mcp"
+scopes = ["account:read", "usage:read", "keys:read", "studio:read", "offline_access"]
+```
+
+Write scopes (`keys:write`, `studio:write`) are requested on demand through the step-up flow; you do not need to list them up front.
+
+<Callout title="ChatGPT on the web" type="info">
+  ChatGPT does not read local config files. Install the plugin from the marketplace instead; its bundled `mcp.json` configures the same OAuth connection.
+</Callout>
+
+## Disconnecting
+
+Remove the entry from `config.toml` or disable the plugin, then revoke the connection under **Settings → Authorized apps** on addisassistant.com.

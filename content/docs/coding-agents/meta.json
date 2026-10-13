@@ -1,0 +1,6 @@
+{
+  "title": "Coding agents",
+  "icon": "Bot",
+  "defaultOpen": true,
+  "pages": ["index", "claude-code", "claude", "codex", "other-clients", "tools", "permissions"]
+}

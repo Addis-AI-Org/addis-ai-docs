@@ -27,6 +27,9 @@
     "integration/mobile",
     "integration/server",
 
+    "--- Coding agents ---",
+    "coding-agents",
+
     "--- Playgrounds ---",
     "[Speech-to-text playground](/docs/playground/speech-to-text)",
     "[Text-to-speech playground](/docs/playground/text-to-speech)",

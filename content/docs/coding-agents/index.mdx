@@ -1,0 +1,81 @@
+---
+title: Use Addis AI from your coding agent
+description: Connect Claude Code, Codex, Cursor, or any MCP client to your Addis AI account to manage API keys, usage, and Studio voice agents.
+icon: Bot
+isNew: true
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Addis AI runs a remote [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server. Once your coding agent is connected, it can create API keys, check your balance and usage, and build, publish, and monitor Studio voice agents, using permissions you approve once and can revoke at any time.
+
+```text
+https://addisassistant.com/mcp
+```
+
+The same server works in every MCP-capable tool. The Claude Code and Codex plugins also bundle skills that teach the agent the Addis AI text-to-speech, speech-to-text, chat, translation, realtime, and widget APIs.
+
+## Connect in under a minute
+
+<Tabs items={['Claude Code', 'Codex', 'Claude.ai and Desktop', 'Cursor and others']}>
+  <Tab value="Claude Code">
+    ```bash
+    claude plugin marketplace add addisai/agent-plugins
+    claude plugin install addis-ai@addis-ai
+    ```
+
+    Inside a session, run `/mcp`, choose **addis-ai**, and approve the connection in your browser. Prefer the bare server without skills? Use `claude mcp add --transport http addis-ai https://addisassistant.com/mcp`.
+  </Tab>
+  <Tab value="Codex">
+    ```bash
+    codex mcp add addis-ai --url https://addisassistant.com/mcp
+    codex mcp login addis-ai
+    ```
+
+    Or install the plugin with `codex plugin marketplace add addisai/agent-plugins` and enable **Addis AI** in the Plugins tab.
+  </Tab>
+  <Tab value="Claude.ai and Desktop">
+    Open **Settings → Connectors → Add custom connector** and paste `https://addisassistant.com/mcp`. Available on Pro, Max, Team, and Enterprise plans. Team and Enterprise admins add the connector once; members then sign in from their own settings.
+  </Tab>
+  <Tab value="Cursor and others">
+    Add a Streamable HTTP server pointing at `https://addisassistant.com/mcp`. Every client that supports OAuth sign-in for remote servers works, including Cursor, VS Code, Gemini CLI, and Windsurf. See [Other clients](/docs/coding-agents/other-clients) for exact configuration.
+  </Tab>
+</Tabs>
+
+Signed in to the dashboard? The [Integrations page](https://addisassistant.com/integrations) shows the same commands with one-click install links and marks the clients already connected to your account.
+
+## What your agent can do
+
+| Area | Examples |
+| --- | --- |
+| Docs and catalog | Search the documentation, list models with prices, list voices (no sign-in needed) |
+| Account | Balance, plan status, daily spend, token usage, transactions |
+| API keys | List keys, create a key (the secret is returned once), rename, disable, delete |
+| Studio agents | Create, edit, publish, duplicate, archive; versions; attach knowledge bases |
+| Widget | Configure the web widget and get the embed snippet |
+| Observability | Conversations with transcripts and latencies, analytics with period comparison |
+
+The full list, with the permission each tool needs, is in the [tools reference](/docs/coding-agents/tools).
+
+<Callout title="Never exposed to agents" type="info">
+  Payments and top-ups, credentials and secrets (except a freshly created API key), recording playback, personal-data export or deletion, HIPAA/GDPR settings, and account deletion stay in the dashboard by design.
+</Callout>
+
+## Example session
+
+> **You:** Set up Addis AI in this project and generate a greeting in Amharic.
+>
+> **Agent:** Creates an API key named after your project, writes it to `.env` as `ADDIS_API_KEY`, installs the `addisai` SDK, picks an available Amharic voice with `list_voices`, and writes the TTS call.
+
+> **You:** Build a receptionist agent for my clinic that answers in Afaan Oromo and put it on our website.
+>
+> **Agent:** Calls `create_agent` with your prompt, asks you to approve write access once, publishes the agent, configures the widget for your domain, and returns the script tag to paste.
+
+## How access works
+
+- Sign-in uses OAuth 2.1 in your browser. The agent never sees your password; it receives a short-lived token limited to the permissions you tick on the consent screen.
+- The first consent grants read access. When a tool needs write access, the agent asks you to approve it, then retries.
+- Access tokens expire after one hour and refresh automatically; revoking a connection under **Settings → Authorized apps** invalidates every token immediately.
+
+Details in [Permissions and security](/docs/coding-agents/permissions).
