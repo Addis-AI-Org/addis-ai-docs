@@ -27,7 +27,7 @@ const button = 'inline-flex items-center justify-center gap-2 rounded-md border 
 
 export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const [credential, setCredential] = useState('');
-  const [backend, setBackend] = useState<Backend>('standard');
+  const [backend, setBackend] = useState<Backend>('turbo');
   const [file, setFile] = useState<File | null>(null);
   const [uploadStream, setUploadStream] = useState(false);
   const [timestamps, setTimestamps] = useState(true);

@@ -15,7 +15,7 @@ Our Speech-to-Text (STT) technology is powered by specialized models trained to 
 
 ## Try Addis Scribe live
 
-Transcribe **Amharic** live or upload audio. Choose **Standard** or **Turbo · 3× speed** and enter your API key. Both modes use the same transcription rate. Uploaded files can also return [word timestamps and captions](#timestamps-and-captions) that play in sync with your audio.
+Transcribe **Amharic** live or upload audio. Choose **Turbo · 3× speed** (the default) or **Standard** and enter your API key. Both modes use the same transcription rate. Uploaded files can also return [word timestamps and captions](#timestamps-and-captions) that play in sync with your audio.
 
 <ScribeDemo />
 
@@ -24,12 +24,12 @@ Transcribe **Amharic** live or upload audio. Choose **Standard** or **Turbo · 3
 The Scribe endpoints are separate from the existing file-transcription API documented below. Upload one `audio` file, up to **25 MB** and **180 seconds**, with a unique `request_id`:
 
 ```bash
-curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?backend=standard&request_id=my-transcript-1' \
+curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?backend=turbo&request_id=my-transcript-1' \
   -H "x-api-key: $ADDIS_API_KEY" \
   -F 'audio=@audio.wav'
 ```
 
-Use `backend=standard` for Standard or `backend=turbo` for Turbo. Add `stream=true` for newline-delimited `transcript.partial` events after uploading; `transcript.completed` includes the final text and confirmed wallet usage. An ordinary HTTP request returns `data.text`, `data.seconds`, `data.compute_ms`, and `data.usage` as JSON.
+Use `backend=turbo` for Turbo (the default) or `backend=standard` for Standard. Add `stream=true` for newline-delimited `transcript.partial` events after uploading; `transcript.completed` includes the final text and confirmed wallet usage. An ordinary HTTP request returns `data.text`, `data.seconds`, `data.compute_ms`, and `data.usage` as JSON.
 
 For live microphone input, see [Live transcription](/docs/capabilities/speech-to-text/live).
 
@@ -56,7 +56,7 @@ Keep `ADDIS_API_KEY` on your application server. For browser integrations, creat
     const requestId = ulid();   // Save before sending audio
     const result = await addis.scribe.transcribe({
       audio: await fileFromPath("audio.wav"),
-      backend: "standard",
+      backend: "turbo",
       requestId,
     });
 
@@ -78,7 +78,7 @@ Keep `ADDIS_API_KEY` on your application server. For browser integrations, creat
     request_id = ulid()  # Save before sending audio
     with AddisAI() as addis, open("audio.wav", "rb") as audio:
         result = addis.scribe.transcribe(
-            audio=audio, backend="standard", request_id=request_id,
+            audio=audio, backend="turbo", request_id=request_id,
         )
         print(result["text"])
         print(result["usage"]["credits_used"], result["usage"]["currency"])
@@ -98,7 +98,7 @@ Keep `ADDIS_API_KEY` on your application server. For browser integrations, creat
     ```ts
     const stream = await addis.scribe.stream({
       audio: await fileFromPath("audio.wav"),
-      backend: "standard",
+      backend: "turbo",
       requestId: ulid(),
     });
     try {
@@ -147,7 +147,7 @@ Stream microphone or PCM audio with `scribe.connect`. See [Connect live audio wi
 | Speaker labels on words and caption cues (0.6.0, Turbo) | `scribe.transcribe({ ..., backend: "turbo", speakers: true })` | `scribe.transcribe(..., backend="turbo", speakers=True)` |
 | SRT or VTT captions with speaker labels (0.6.0) | `toSrt(result)`, `toVtt(result)` | `addisai.to_srt(result)`, `addisai.to_vtt(result)` |
 
-HTTP defaults to Standard and `1120ms` chunks; live sessions default to Standard and `320ms` chunks. Either transport accepts `320ms` or `1120ms`. File uploads accept at most **25 MiB / 180 seconds**. Socket frames accept at most two seconds each and 180 seconds total. Socket tickets are one-use and expire after **60 seconds**. An unavailable mode returns an error.
+HTTP defaults to Turbo and `1120ms` chunks; live sessions default to Turbo and `320ms` chunks (SDK 0.7.0 and the API share this default; older SDKs send Standard unless told otherwise). Either transport accepts `320ms` or `1120ms`. File uploads accept at most **25 MiB / 180 seconds**. Socket frames accept at most two seconds each and 180 seconds total. Socket tickets are one-use and expire after **60 seconds**. An unavailable mode returns an error.
 
 ### Billing and interrupted requests
 
