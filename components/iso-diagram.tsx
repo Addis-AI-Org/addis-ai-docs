@@ -35,8 +35,8 @@ import { cn } from "../lib/cn";
 const ISO_CSS = `
 .iso-diagram {
   --iso-accent: #27cdfe;
-  /* Darker variant for accent strokes and text on light panels. */
-  --iso-ink: #0b87b3;
+  /* Accent strokes and text follow the theme primary (darker in light mode). */
+  --iso-ink: var(--color-fd-primary);
   --iso-glow: 0.2;
   --iso-haze: 0.07;
   --iso-top: color-mix(in oklab, var(--color-fd-foreground) 3%, var(--color-fd-background));
@@ -49,7 +49,6 @@ const ISO_CSS = `
 }
 
 .dark .iso-diagram {
-  --iso-ink: #27cdfe;
   --iso-glow: 0.42;
   --iso-haze: 0.11;
 }

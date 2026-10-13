@@ -110,10 +110,16 @@ test('publishes AI-readable docs and page chrome', () => {
   assert.match(read('app/llms-full.txt/route.ts'), /charset=utf-8/);
 });
 
-test('keeps the docs theme black and white like Better Auth', () => {
+test('keeps the docs theme neutral with the brand colour only as the primary', () => {
   const css = read('app/global.css');
   assert.match(css, /@import 'fumadocs-ui\/css\/black\.css';/);
-  assert.doesNotMatch(css, /--color-fd-primary\s*:/, 'Do not override the theme primary with a brand colour');
+  assert.match(css, /--color-fd-primary:\s*#0878a1;/, 'Light-mode primary is the AA-contrast brand shade');
+  assert.match(css, /--color-fd-primary:\s*#27cdfe;/, 'Dark-mode primary is the brand colour');
+  assert.doesNotMatch(
+    css,
+    /text-decoration-color:\s*var\(--color-fd-primary\)/,
+    'Link underlines stay neutral; the brand colour is only the primary',
+  );
 
   for (const path of pages) {
     assert.doesNotMatch(

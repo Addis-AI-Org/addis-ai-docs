@@ -1,12 +1,27 @@
 @import 'tailwindcss';
 /*
- * Monochrome theme (black on white, white on black), the same base Better Auth
- * uses. --color-fd-primary comes from the theme, so links, the active sidebar
- * item, the "On this page" highlight and New badges stay black and white.
- * Colour is reserved for meaning: callouts, errors, status, and code.
+ * Neutral black-and-white theme (the same base Better Auth uses) with one brand
+ * colour: --color-fd-primary. It drives the active sidebar item, the "On this
+ * page" highlight, primary buttons, eyebrow labels and New badges. Nothing
+ * else is coloured; link underlines stay neutral.
  */
 @import 'fumadocs-ui/css/black.css';
 @import 'fumadocs-ui/css/preset.css';
+
+/*
+ * Brand primary. Light mode uses a darker shade of the brand cyan so text
+ * meets WCAG AA (4.8:1 on the page, 5.0:1 for white button text); dark mode
+ * uses the brand colour itself (10.9:1) with dark button text.
+ */
+:root {
+  --color-fd-primary: #0878a1;
+  --color-fd-primary-foreground: #ffffff;
+}
+
+.dark {
+  --color-fd-primary: #27cdfe;
+  --color-fd-primary-foreground: hsl(0, 0%, 9%);
+}
 
 @layer components {
   /*
@@ -90,7 +105,7 @@
 }
 
 /*
- * Prose links: quiet 1px neutral underline that turns brand-coloured on hover.
+ * Prose links: quiet 1px neutral underline that darkens on hover.
  * Unlayered on purpose so it overrides the Fumadocs typography rule, which
  * underlines every link 1.5px in --color-fd-primary.
  */
@@ -108,5 +123,5 @@
 
 .prose a:not([data-card]):not(:where(.not-prose, .not-prose *)):hover {
   opacity: 1;
-  text-decoration-color: var(--color-fd-primary);
+  text-decoration-color: var(--color-fd-foreground);
 }
