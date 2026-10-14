@@ -18,23 +18,24 @@ The Addis AI MCP server is an OAuth 2.1 protected resource, and addisassistant.c
 | `keys:write` | Create keys (secret returned once), rename, disable, delete | On demand |
 | `studio:read` | Agents, knowledge bases, widgets, conversations, analytics | On first sign-in |
 | `studio:write` | Create, update, publish, archive agents; knowledge bases; widgets | On demand |
-| `offline_access` | Stay signed in (refresh token) | Requested by the client |
+| `offline_access` | Stay signed in. Accepted but optional: every client that registers for refresh tokens gets one | Requested by the client |
 
 A write scope implies its read scope. On the consent screen you can untick any permission; the connection then holds only what you approved.
 
 ## Step-up
 
-When a tool needs a permission the connection lacks, the server answers with `403 insufficient_scope` listing the required scope. Clients that follow the MCP specification (Claude, Codex, Cursor, and others) open the consent screen again with the extra permission pre-selected, then retry the call. A step-up never removes permissions you already granted.
+Every request to the MCP server needs a token, so clients ask you to sign in as soon as they connect. When a tool needs a permission the connection lacks, the server answers with `403 insufficient_scope` listing every permission the connection should hold (what it has plus what is missing). Clients that follow the MCP specification (Claude, Codex, Cursor, and others) open the consent screen again with the extra permission pre-selected, then retry the call. A step-up never removes permissions you already granted.
 
 ## Tokens
 
 - Access tokens are opaque, bound to `https://addisassistant.com/mcp`, and expire after one hour. Only a hash is stored.
-- Refresh tokens rotate on every use and expire after 30 days of inactivity or 90 days in total. Reusing an old refresh token or authorization code revokes the whole connection, because reuse indicates a leak.
+- Refresh tokens rotate on every use and expire after 30 days of inactivity or 90 days in total. Reusing an old refresh token or authorization code revokes the whole connection, because reuse indicates a leak. Two refreshes sent within 10 seconds of each other only fail the duplicate, so parallel agent processes do not disconnect you.
+- Closed or suspended accounts stop working immediately, even with a valid token.
 - Tokens are never accepted in URLs, and clients must use PKCE (S256).
 
 ## Consent screen
 
-For clients that identify themselves with a metadata document, the screen names the **host** that controls the client, for example `claude.ai`, rather than the name the client gives itself. For self-registered clients it names the host that will receive the sign-in result and marks the app as unverified. In both cases the exact destination address is shown. When that address is on your own computer (`localhost`), a warning reminds you to continue only if you started the connection yourself.
+For clients that identify themselves with a metadata document, the screen names the **host** that controls the client, for example `claude.ai`, rather than the name the client gives itself. Only well-known coding-agent vendors (such as Claude, ChatGPT and Codex, Cursor, and VS Code) are shown as recognised. Any other app, including every self-registered client, is marked **Unverified app** and its write permissions start unticked. For self-registered clients the screen names the host that will receive the sign-in result. In both cases the exact destination address is shown. When that address is on your own computer (`localhost`), a warning reminds you to continue only if you started the connection yourself.
 
 ## Revoking
 
@@ -55,7 +56,9 @@ Tool results that contain user-authored content (agent prompts, transcripts, doc
 - Protected resource metadata: `https://addisassistant.com/.well-known/oauth-protected-resource/mcp`
 - Authorization server metadata: `https://addisassistant.com/.well-known/oauth-authorization-server`
 - Client registration: Client ID Metadata Documents (preferred) or RFC 7591 dynamic registration for public clients. Dynamically registered clients may use loopback redirect URIs freely; `https://` redirect hosts are limited to known coding-agent vendors, and such clients are labelled "Unverified app" on the consent screen with write permissions unticked by default
-- Required: PKCE S256, the RFC 8707 `resource` parameter set to `https://addisassistant.com/mcp`, `application/x-www-form-urlencoded` token requests
+- Required: PKCE S256 and `application/x-www-form-urlencoded` token requests. Send the RFC 8707 `resource` parameter as `https://addisassistant.com/mcp`; when it is omitted the server assumes that value
+- Redirect URIs: `https://` (vendor hosts for dynamic registration), loopback `http://localhost` / `127.0.0.1` / `[::1]` on any port, and Cursor's `cursor://anysphere.cursor-mcp/oauth/callback`
+- Every MCP method, including `initialize`, needs a bearer token; without one the server answers `401` with a `WWW-Authenticate` challenge
 - Authorization responses include `iss`; token errors use standard RFC 6749 codes (`invalid_grant` for dead refresh tokens)
 - Rate limits: 120 requests per minute per token on `/mcp`; authorization and token endpoints are limited per IP
 

@@ -67,7 +67,7 @@ scopes = ["account:read", "usage:read", "keys:read", "studio:read", "offline_acc
 Write scopes (`keys:write`, `studio:write`) are requested on demand through the step-up flow; you do not need to list them up front.
 
 <Callout title="ChatGPT on the web" type="info">
-  ChatGPT does not read local config files. Install the plugin from the marketplace instead; its bundled `mcp.json` configures the same OAuth connection.
+  ChatGPT does not read local config files. Install the plugin from the marketplace instead; its bundled `mcp.json` points at the same server, and sign-in is discovered automatically from the server's OAuth metadata.
 </Callout>
 
 ## Disconnecting
