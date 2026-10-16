@@ -21,7 +21,7 @@ Transcribe **Amharic** live or upload audio. Choose **Turbo · 3× speed** (the 
 
 ### Scribe HTTP and streaming API
 
-The Scribe endpoints are separate from the existing file-transcription API documented below. Upload one `audio` file, up to **25 MB** and **180 seconds**, with a unique `request_id`:
+The Scribe endpoints are separate from the existing file-transcription API documented below. Upload one `audio` file, up to **50 MB** and **30 minutes**, with a unique `request_id`:
 
 ```bash
 curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?backend=turbo&request_id=my-transcript-1' \
@@ -147,7 +147,9 @@ Stream microphone or PCM audio with `scribe.connect`. See [Connect live audio wi
 | Speaker labels on words and caption cues (0.6.0, Turbo) | `scribe.transcribe({ ..., backend: "turbo", speakers: true })` | `scribe.transcribe(..., backend="turbo", speakers=True)` |
 | SRT or VTT captions with speaker labels (0.6.0) | `toSrt(result)`, `toVtt(result)` | `addisai.to_srt(result)`, `addisai.to_vtt(result)` |
 
-HTTP defaults to Turbo and `1120ms` chunks; live sessions default to Turbo and `320ms` chunks (SDK 0.7.0 and the API share this default; older SDKs send Standard unless told otherwise). Either transport accepts `320ms` or `1120ms`. File uploads accept at most **25 MiB / 180 seconds**. Socket frames accept at most two seconds each and 180 seconds total. Socket tickets are one-use and expire after **60 seconds**. An unavailable mode returns an error.
+HTTP defaults to Turbo and `1120ms` chunks; live sessions default to Turbo and `320ms` chunks (SDK 0.7.0 and the API share this default; older SDKs send Standard unless told otherwise). Either transport accepts `320ms` or `1120ms`. File uploads accept at most **50 MiB / 30 minutes**. Socket frames accept at most two seconds each, and a live session up to **10 minutes** in total. `GET /api/v1/scribe` returns the current limits (`max_upload_bytes`, `max_upload_seconds`, `max_live_seconds`).
+
+A long upload can take longer than a proxy keeps a request open. If the transcription is still running after about 75 seconds, `POST /transcribe` answers **202** with `{"data": {"request_id": "…", "status": "processing", "poll_url": "/api/v1/scribe/requests/…"}}` and a `Retry-After` header. The transcription keeps running and is billed once; poll `GET /api/v1/scribe/requests/{request_id}` (it answers 409 `IN_PROGRESS` until the result is ready). SDK 0.8.0 does this for you. With `stream=true` the response stays open, sending blank keep-alive lines that clients skip. Socket tickets are one-use and expire after **60 seconds**. An unavailable mode returns an error.
 
 ### Billing and interrupted requests
 
@@ -272,7 +274,7 @@ With `timestamps=word`, the usual `data` object also contains:
 **Limits**
 
 - Timestamps are available for completed file uploads only. They are not available with `stream=true` or on live WebSocket sessions; combining them with `stream=true` returns HTTP 422 `INVALID_REQUEST`.
-- Files are limited to **180 seconds** and **25 MiB**, as for other uploads.
+- Files are limited to **30 minutes** and **50 MiB**, as for other uploads.
 - There is no extra charge. Billing stays per transcribed character.
 - Scribe does not add punctuation, so captions break at pauses rather than at the ends of sentences.
 
@@ -406,7 +408,7 @@ In SDK 0.6.0, `toSrt`/`toVtt` and `to_srt`/`to_vtt` add the same speaker labels 
 - `scribe.capabilities()` lists the backends that support speaker labels and the most speakers Scribe will separate in one file (currently 8).
 - There is no extra charge. Billing stays per transcribed character.
 - A request ID is tied to its settings. Replaying the same ID with a different `speakers` value returns HTTP 409; use a new ID.
-- Files are limited to **180 seconds** and **25 MiB**, as for other uploads.
+- Files are limited to **30 minutes** and **50 MiB**, as for other uploads.
 
 **Accuracy.** On simulated Amharic conversations, 97.8% of words get the right speaker. It works best with 2 to 4 speakers who take turns. When people talk over each other, words near the overlap are more likely to get the wrong speaker or `null`. Check the labels before publishing anything where it matters who said what.
 
