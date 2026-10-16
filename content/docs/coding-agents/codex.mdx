@@ -61,10 +61,10 @@ If you manage `config.toml` by hand:
 [mcp_servers.addis-ai]
 url = "https://addisassistant.com/mcp"
 oauth_resource = "https://addisassistant.com/mcp"
-scopes = ["account:read", "usage:read", "keys:read", "studio:read", "offline_access"]
+scopes = ["account:read", "usage:read", "keys:read", "keys:write", "studio:read", "studio:write", "offline_access"]
 ```
 
-Write scopes (`keys:write`, `studio:write`) are requested on demand through the step-up flow; you do not need to list them up front.
+Listing the write scopes lets the consent screen offer them; they still start unticked, so the connection only gets write access if you tick it.
 
 <Callout title="ChatGPT on the web" type="info">
   ChatGPT does not read local config files. Install the plugin from the marketplace instead; its bundled `mcp.json` points at the same server, and sign-in is discovered automatically from the server's OAuth metadata.

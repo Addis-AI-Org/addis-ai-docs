@@ -15,16 +15,18 @@ The Addis AI MCP server is an OAuth 2.1 protected resource, and addisassistant.c
 | `account:read` | Profile, account status, plan status, balance | On first sign-in |
 | `usage:read` | Daily spend, token usage, spend by capability, transactions | On first sign-in |
 | `keys:read` | API key names, prefixes, status, last use (never the secret) | On first sign-in |
-| `keys:write` | Create keys (secret returned once), rename, disable, delete | On demand |
+| `keys:write` | Create keys (secret returned once), rename, disable, delete | Offered at sign-in, unticked |
 | `studio:read` | Agents, knowledge bases, widgets, conversations, analytics | On first sign-in |
-| `studio:write` | Create, update, publish, archive agents; knowledge bases; widgets | On demand |
+| `studio:write` | Create, update, publish, archive agents; knowledge bases; widgets | Offered at sign-in, unticked |
 | `offline_access` | Stay signed in. Accepted but optional: every client that registers for refresh tokens gets one | Requested by the client |
 
 A write scope implies its read scope. On the consent screen you can untick any permission; the connection then holds only what you approved.
 
 ## Step-up
 
-Every request to the MCP server needs a token, so clients ask you to sign in as soon as they connect. When a tool needs a permission the connection lacks, the server answers with `403 insufficient_scope` listing every permission the connection should hold (what it has plus what is missing). Clients that follow the MCP specification (Claude, Codex, Cursor, and others) open the consent screen again with the extra permission pre-selected, then retry the call. A step-up never removes permissions you already granted.
+Every request to the MCP server needs a token, so clients ask you to sign in as soon as they connect. The consent screen lists every permission, and write access starts unticked: tick it only if you want the agent to make changes.
+
+When a tool needs a permission the connection lacks, the server answers with `403 insufficient_scope` listing every permission the connection should hold (what it has plus what is missing). Some clients open the consent screen again on their own and retry the call. Others (including clients built on the MCP TypeScript SDK) refresh their token instead, which cannot add permissions; reconnect from the client and tick the write permission. A step-up never removes permissions you already granted.
 
 ## Tokens
 
