@@ -94,7 +94,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   };
   const upload = async () => {
     if (!file) return;
-    if (file.size > 50 * 1024 * 1024) { setError('Choose a file no larger than 50 MB.'); return; }
+    if (file.size > 95 * 1024 * 1024) { setError('Choose a file no larger than 95 MB.'); return; }
     try {
       const { headers, id } = startRequest();
       // Timestamps are only available for completed uploads, so they never combine with stream=true.
@@ -217,7 +217,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
             <button type="button" className={`${button} w-full bg-fd-primary text-fd-primary-foreground`} disabled={(busy && phase !== 'recording') || !credential.trim()} onClick={phase === 'recording' ? finishRecording : record}>{phase === 'recording' ? <><Square className="size-4" />Finish recording</> : <><Mic className="size-4" />Record live</>}</button>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={liveSpeakers} disabled={busy} aria-describedby="scribe-live-speakers-hint" onChange={e => { setLiveSpeakers(e.target.checked); if (e.target.checked) setBackend('turbo'); }} /><Users aria-hidden="true" className="size-4" />Label speakers</label>
             <p id="scribe-live-speakers-hint" className="text-xs leading-5 text-fd-muted-foreground">{liveSpeakers ? 'Preview: lines are labelled after each pause. Best with two people; upload group recordings. Uses Turbo.' : 'Marks who said what as Speaker 1, 2… (not names). Uses Turbo.'}</p>
-            <p className="text-xs text-fd-muted-foreground">Up to 10 minutes.</p>
+            <p className="text-xs text-fd-muted-foreground">Up to 15 minutes.</p>
           </div>
           <div className="space-y-3 border-t border-fd-border pt-5">
             <label htmlFor="scribe-file" className="flex items-center gap-2 text-sm font-medium"><FileAudio className="size-4" />Upload audio</label>
@@ -228,7 +228,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
             <label className={`flex items-center gap-2 text-sm ${timestamps ? 'text-fd-muted-foreground' : ''}`}><input type="checkbox" checked={uploadStream && !timestamps} disabled={busy || timestamps} aria-describedby="scribe-timestamps-hint" onChange={e => setUploadStream(e.target.checked)} />Show partial text after upload</label>
             <p id="scribe-timestamps-hint" className="text-xs leading-5 text-fd-muted-foreground">{timestamps ? 'Timestamps return the full result at once, so partial text is off. Turn timestamps off to see partial text.' : 'Turn on timestamps to play the file with synced captions and download SRT or VTT.'} Live recording returns text only unless Label speakers is on above.</p>
             <button type="button" className={`${button} w-full`} disabled={busy || !file || !credential.trim()} onClick={upload}>{phase === 'processing' && <Loader2 className="size-4 animate-spin" />}Transcribe file</button>
-            <p className="text-xs text-fd-muted-foreground">WAV, MP3, M4A, WebM, OGG or FLAC · 50 MB · 30 minutes</p>
+            <p className="text-xs text-fd-muted-foreground">WAV, MP3, M4A, WebM, OGG or FLAC · 95 MB · 1 hour</p>
           </div>
         </div>
         <div className="flex min-h-96 flex-col p-5 sm:p-6">
