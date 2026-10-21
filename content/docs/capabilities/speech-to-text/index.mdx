@@ -506,8 +506,8 @@ Every part but the last is exactly `part_bytes` long (currently 4 MiB). Send par
       speakers: true, // Turbo only; also turns on word timestamps
       requestId,
       onProgress: (job) => {
-        // Called with each 202 body while the job runs
-        console.log(job.status, job.chunks?.done ?? 0, "of", job.chunks?.total ?? "?", "pieces");
+        // Called with each 202 body while the job runs (camelCase fields)
+        console.log(job.status, `${job.processedSeconds ?? 0}/${job.audioSeconds ?? "?"} s`, job.chunks?.done ?? 0, "of", job.chunks?.total ?? "?", "pieces");
       },
     });
 
