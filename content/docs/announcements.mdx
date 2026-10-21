@@ -42,8 +42,9 @@ icon: Megaphone
   <AnnouncementItem label="Speech-to-Text" title="Addis Scribe speech-to-text" isNew>
     Addis Scribe transcribes **Amharic** from a microphone or an uploaded file. Choose
     **Standard** or **Turbo** (3× speed) at the same price. Stream live audio over a
-    WebSocket with a one-use session ticket, or upload a file of up to 25 MB and 180
-    seconds and receive partial transcripts while it is processed. Only the final
+    WebSocket with a one-use session ticket (up to 15 minutes), or upload a file of up to
+    95 MB and one hour and receive partial transcripts while it is processed; longer
+    recordings, up to three hours, run as [long-audio jobs](/docs/capabilities/speech-to-text#long-audio). Only the final
     transcript is billed, at **3.5 ETB per 1,000 characters**. The SDKs add
     `scribe.transcribe`, `scribe.stream`, `scribe.connect`, and request recovery.
 
