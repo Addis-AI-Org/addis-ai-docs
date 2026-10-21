@@ -5,14 +5,28 @@ icon: Megaphone
 ---
 
 
-<AnnouncementHero date="2026-10-08">
-  Addis Scribe brings live and file speech-to-text with word timestamps and captions,
+<AnnouncementHero date="2026-10-21">
+  Addis Scribe now transcribes recordings of up to three hours as jobs with progress. It
+  brings live and file speech-to-text with word timestamps and captions,
   and Addis Voices 2 now streams speech as it is generated. The July 23 release brought
   Addis Voices 2, official Node.js and Python SDKs, richer chat controls, and an
   SDK-first documentation experience.
 </AnnouncementHero>
 
 <AnnouncementFeed>
+  <AnnouncementItem label="Speech-to-Text" title="Long audio: transcribe up to three hours" isNew>
+    Scribe now takes recordings of up to **three hours** as a job. Upload once (files over
+    95 MB go up in parts), get a request ID back at once, poll for progress, and read one
+    transcript with one speaker numbering and one bill. The audio is cut at pauses,
+    transcribed on Turbo, and stitched back together; only the final text is billed.
+    SDK 0.9.0 adds `scribe.transcribeLong` / `scribe.transcribe_long` with a progress
+    callback, and `scribe.jobs` for driving a job yourself.
+
+    <AnnouncementLink href="/docs/capabilities/speech-to-text#long-audio">
+      Transcribe long audio
+    </AnnouncementLink>
+  </AnnouncementItem>
+
   <AnnouncementItem label="Pricing" title="50% off Addis Voices 2 and Addis Scribe until November 12" isNew>
     From October 12 until the end of **November 12, 2026** (East Africa Time), Addis Voices 2
     is **2.5 ETB per generated minute** (normally 5 ETB) and Addis Scribe is

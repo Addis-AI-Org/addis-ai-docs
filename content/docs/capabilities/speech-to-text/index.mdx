@@ -146,8 +146,10 @@ Stream microphone or PCM audio with `scribe.connect`. See [Connect live audio wi
 | Build SRT or VTT captions locally (0.5.0) | `toSrt(result)`, `toVtt(result)` | `addisai.to_srt(result)`, `addisai.to_vtt(result)` |
 | Speaker labels on words and caption cues (0.6.0, Turbo) | `scribe.transcribe({ ..., backend: "turbo", speakers: true })` | `scribe.transcribe(..., backend="turbo", speakers=True)` |
 | SRT or VTT captions with speaker labels (0.6.0) | `toSrt(result)`, `toVtt(result)` | `addisai.to_srt(result)`, `addisai.to_vtt(result)` |
+| Long audio up to three hours as a job, with progress (0.9.0, Turbo) | `scribe.transcribeLong({ audio, speakers, timestamps, requestId, onProgress })` | `scribe.transcribe_long(audio=..., speakers=..., timestamps=..., request_id=..., on_progress=...)` |
+| Drive a long-audio job step by step (0.9.0) | `scribe.jobs.upload(...)`, `scribe.jobs.create(...)`, `scribe.jobs.putPart(...)`, `scribe.jobs.complete(...)`, `scribe.jobs.status(...)`, `scribe.jobs.wait(...)` | `scribe.jobs.upload(...)`, `scribe.jobs.create(...)`, `scribe.jobs.put_part(...)`, `scribe.jobs.complete(...)`, `scribe.jobs.status(...)`, `scribe.jobs.wait(...)` |
 
-HTTP defaults to Turbo and `1120ms` chunks; live sessions default to Turbo and `320ms` chunks (SDK 0.7.0 and the API share this default; older SDKs send Standard unless told otherwise). Either transport accepts `320ms` or `1120ms`. File uploads accept at most **95 MiB / one hour**, speaker labels included. Socket frames accept at most two seconds each, and a live session up to **15 minutes** in total. `GET /api/v1/scribe` returns the current limits (`max_upload_bytes`, `max_upload_seconds`, `max_live_seconds`).
+HTTP defaults to Turbo and `1120ms` chunks; live sessions default to Turbo and `320ms` chunks (SDK 0.7.0 and the API share this default; older SDKs send Standard unless told otherwise). Either transport accepts `320ms` or `1120ms`. File uploads accept at most **95 MiB / one hour**, speaker labels included. For anything longer, up to **three hours**, send a [long-audio job](#long-audio). Socket frames accept at most two seconds each, and a live session up to **15 minutes** in total. `GET /api/v1/scribe` returns the current limits (`max_upload_bytes`, `max_upload_seconds`, `max_live_seconds`).
 
 A long upload can take longer than a proxy keeps a request open. If the transcription is still running after about 75 seconds, `POST /transcribe` answers **202** with `{"data": {"request_id": "…", "status": "processing", "poll_url": "/api/v1/scribe/requests/…"}}` and a `Retry-After` header. The transcription keeps running and is billed once; poll `GET /api/v1/scribe/requests/{request_id}` (it answers 409 `IN_PROGRESS` until the result is ready). SDK 0.8.0 does this for you. With `stream=true` the response stays open, sending blank keep-alive lines that clients skip. Socket tickets are one-use and expire after **60 seconds**. An unavailable mode returns an error.
 
@@ -274,7 +276,7 @@ With `timestamps=word`, the usual `data` object also contains:
 **Limits**
 
 - Timestamps are available for completed file uploads only. They are not available with `stream=true` or on live WebSocket sessions; combining them with `stream=true` returns HTTP 422 `INVALID_REQUEST`.
-- Files are limited to **one hour** and **95 MiB**, as for other uploads.
+- Files are limited to **one hour** and **95 MiB**, as for other uploads, or up to three hours as a [long-audio job](#long-audio).
 - There is no extra charge. Billing stays per transcribed character.
 - Scribe does not add punctuation, so captions break at pauses rather than at the ends of sentences.
 
@@ -408,9 +410,188 @@ In SDK 0.6.0, `toSrt`/`toVtt` and `to_srt`/`to_vtt` add the same speaker labels 
 - `scribe.capabilities()` lists the backends that support speaker labels and the most speakers Scribe will separate in one file (currently 8).
 - There is no extra charge. Billing stays per transcribed character.
 - A request ID is tied to its settings. Replaying the same ID with a different `speakers` value returns HTTP 409; use a new ID.
-- Files are limited to **one hour** and **95 MiB**, as for other uploads.
+- Files are limited to **one hour** and **95 MiB**, as for other uploads, or up to three hours as a [long-audio job](#long-audio).
 
 **Accuracy.** On simulated Amharic conversations, 97.8% of words get the right speaker. It works best with 2 to 4 speakers who take turns. When people talk over each other, words near the overlap are more likely to get the wrong speaker or `null`. Check the labels before publishing anything where it matters who said what.
+
+### Long audio: up to three hours <NewBadge className="ml-2 align-middle" /> [#long-audio]
+
+One upload stops at **one hour** and **95 MB**. For anything longer, up to **three hours**, send the file as a **job**: you get a request ID back at once, poll for progress, and read one transcript with one speaker numbering and one bill. Use a job for a long interview, a meeting, or a lecture, or for any file when you want a job ID and progress while it runs. Jobs run on **Turbo** and take the same formats as other uploads (WAV, MP3, M4A, OGG, FLAC, AIFF, WebM, MKV; stereo is mixed down).
+
+A job takes the same query parameters as `POST /transcribe`: `backend` (Turbo only), `chunk`, `timestamps`, and `speakers`. For jobs, `timestamps` defaults to `word`, so the result has `words` and `segments` unless you send `timestamps=none`.
+
+**One request: files up to 95 MB.** A three-hour MP3 or M4A fits in one request. Post the file to `/jobs` with a unique `request_id`:
+
+```bash
+curl 'https://api.addisassistant.com/api/v1/scribe/jobs?request_id=my-meeting-1&speakers=true' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -F 'audio=@meeting.mp3'
+```
+
+The job starts at once. The answer is **202** with a `Location` header pointing at `poll_url` and a `Retry-After` header:
+
+```json
+{
+  "data": {
+    "request_id": "my-meeting-1",
+    "status": "queued",
+    "audio_seconds": null,
+    "poll_url": "/api/v1/scribe/requests/my-meeting-1",
+    "job_url": "/api/v1/scribe/jobs/my-meeting-1"
+  }
+}
+```
+
+Poll `GET /api/v1/scribe/requests/{request_id}` (add `?format=srt` or `?format=vtt` for a caption file). While the job runs it answers **202** with the current progress and `Retry-After` (5 seconds, or 10 while more than ten minutes of audio remain). When the job is done it answers **200** with the result. Sending the same file and settings under the same ID again returns the current state; a different file or different settings under the same ID returns HTTP 409.
+
+For a status view with progress, call `GET /api/v1/scribe/jobs/{request_id}`:
+
+```json
+{
+  "data": {
+    "request_id": "my-meeting-1",
+    "status": "processing",
+    "audio_seconds": 9015.3,
+    "processed_seconds": 3012.8,
+    "chunks": { "total": 6, "done": 2 },
+    "poll_url": "/api/v1/scribe/requests/my-meeting-1"
+  }
+}
+```
+
+`status` is `uploading`, `queued`, `processing`, `completed`, or `failed`. `audio_seconds` is the decoded length, `processed_seconds` is how much has been transcribed so far, and `chunks` is how many pieces the file was cut into and how many are done. When `status` is `failed`, `error` carries the code and message, and nothing was charged.
+
+**Parts: files over 95 MB, up to 512 MB.** A three-hour WAV is about 345 MB, so it does not fit in one request. Declare the job with its size in `bytes`, then send the file in parts:
+
+```bash
+# 1. Declare the job (201). Settings go in the body instead of the query string.
+curl 'https://api.addisassistant.com/api/v1/scribe/jobs' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"request_id": "my-meeting-2", "bytes": 362000044, "speakers": true}'
+# → {"data": {"request_id": "my-meeting-2", "status": "uploading",
+#             "part_bytes": 4194304, "parts": 87, "received": [], ...}}
+
+# 2. Send each part: the raw bytes [index × part_bytes, (index + 1) × part_bytes)
+#    of the file. For example, split -b 4194304 meeting.wav part- makes part-aa, part-ab, …
+curl -X PUT 'https://api.addisassistant.com/api/v1/scribe/jobs/my-meeting-2/parts/0' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H 'Content-Type: application/octet-stream' \
+  --data-binary @part-aa
+# → {"data": {"index": 0, "received": [0]}}
+
+# 3. Start the job once every part is there (202, same body as the one-request create)
+curl -X POST 'https://api.addisassistant.com/api/v1/scribe/jobs/my-meeting-2/complete' \
+  -H "x-api-key: $ADDIS_API_KEY"
+```
+
+Every part but the last is exactly `part_bytes` long (currently 4 MiB). Send parts one at a time, in any order. To resume after a dropped connection, declare the job again with the same body: the answer is 200 with the `received` list, and you send only the parts that are missing. A stored part sent again with the same bytes is a no-op; different bytes return HTTP 409, and a wrong length returns HTTP 422. `POST …/complete` returns HTTP 409 `UPLOAD_INCOMPLETE` with the `missing` indexes while parts are still missing; calling it again is safe, and once the job runs it answers like the one-request create. An upload left incomplete is deleted after 24 hours.
+
+**SDK.** `scribe.transcribeLong` (Node.js) and `scribe.transcribe_long` (Python), in SDK 0.9.0, do all of this in one call. They send one request when the file is at most 95 MiB and otherwise declare the job and send 4 MiB parts in order, resuming from `received` after a dropped connection. Then they poll `GET /requests/{id}` every 5 seconds, honouring `Retry-After`, for up to four hours, calling `onProgress` / `on_progress` with each 202 body, and return the settled result in the same shape as `transcribe`. `toSrt` / `to_srt` and `toVtt` / `to_vtt` work on it unchanged.
+
+<Tabs items={['Node.js', 'Python']}>
+  <Tab value="Node.js">
+    ```bash
+    npm install https://github.com/Addis-AI-Org/addisai-js/releases/download/v0.9.0/addisai-0.9.0.tgz
+    ```
+
+    ```ts
+    import { writeFile } from "node:fs/promises";
+    import AddisAI, { fileFromPath, toSrt, ulid } from "addisai";
+
+    const addis = new AddisAI();
+    const requestId = ulid(); // Save before sending audio
+    const result = await addis.scribe.transcribeLong({
+      audio: await fileFromPath("meeting.mp3"),
+      speakers: true, // Turbo only; also turns on word timestamps
+      requestId,
+      onProgress: (job) => {
+        // Called with each 202 body while the job runs
+        console.log(job.status, job.chunks?.done ?? 0, "of", job.chunks?.total ?? "?", "pieces");
+      },
+    });
+
+    console.log(result.text);
+    console.log(`${result.chunks} pieces, ${result.speakers} speakers`);
+    console.log(result.usage.creditsUsed, result.usage.currency);
+    await writeFile("captions.srt", toSrt(result)); // or toVtt(result)
+    // After an interrupted call, recover this ID before retrying:
+    // const result = await addis.scribe.recover(requestId);
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```bash
+    pip install "addisai[realtime]==0.9.0"
+    ```
+
+    ```python
+    import addisai
+    from addisai import AddisAI, ulid
+
+    request_id = ulid()  # Save before sending audio
+    with AddisAI() as addis, open("meeting.mp3", "rb") as audio:
+        result = addis.scribe.transcribe_long(
+            audio=audio,
+            speakers=True,  # Turbo only; also turns on word timestamps
+            request_id=request_id,
+            # Called with each 202 body while the job runs
+            on_progress=lambda job: print(
+                job["status"], job.get("processed_seconds"), "/", job.get("audio_seconds"), "s"
+            ),
+        )
+
+    print(result["text"])
+    print(result["chunks"], "pieces,", result["speakers"], "speakers")
+    print(result["usage"]["credits_used"], result["usage"]["currency"])
+    with open("captions.srt", "w", encoding="utf-8") as captions:
+        captions.write(addisai.to_srt(result))  # or addisai.to_vtt(result)
+    # After an interrupted call, recover this ID before retrying:
+    # result = addis.scribe.recover(request_id)
+    ```
+  </Tab>
+</Tabs>
+
+To drive a job yourself, use the lower-level calls: `scribe.jobs.upload(...)` (one request), `scribe.jobs.create(...)` (declaration), `scribe.jobs.putPart(requestId, index, bytes)` / `scribe.jobs.put_part(request_id, index, bytes)`, `scribe.jobs.complete(requestId)`, `scribe.jobs.status(requestId)`, and `scribe.jobs.wait(requestId, { onProgress })` / `scribe.jobs.wait(request_id, on_progress=...)`. As with other paid calls, the SDK does not retry the paid steps on its own; after an interruption, call `scribe.recover` with the saved ID.
+
+The result has the same shape as `transcribe`, with `mode: "job"` and `chunks`, the number of pieces the file was cut into:
+
+```json
+{
+  "data": {
+    "request_id": "my-meeting-1",
+    "text": "…",
+    "seconds": 9015.3,
+    "compute_ms": 61234,
+    "backend": "turbo",
+    "chunk": "1120ms",
+    "mode": "job",
+    "chunks": 6,
+    "words": [{ "text": "ሰላም", "start": 0.7, "end": 1.1, "speaker": 1 }],
+    "segments": [{ "text": "…", "start": 0.3, "end": 4.2, "speaker": 1 }],
+    "speakers": 3,
+    "usage": { "characters": 74210, "credits_used": 259.735, "currency": "ETB", "settled": true }
+  }
+}
+```
+
+Later reads of a completed job return the same result with `idempotent_replay: true` and no further charge.
+
+**How it works.** The gateway decodes the file, then cuts it at pauses into pieces of about **25 minutes**, each also hearing **30 seconds** of its neighbours. The pieces are transcribed on Turbo, a few at a time, and stitched back into one transcript: words in file time, the overlap deduplicated at each cut, and every piece's speaker numbers mapped onto one numbering through the words both neighbours heard. Only the final text is billed, once, exactly as `/transcribe`; the audio heard twice in the overlaps costs nothing extra.
+
+**Speakers across a cut.** Speaker numbers are matched across a cut through the shared minute around it. A speaker who says nothing during that whole minute but talks on both sides of it gets a second number. Check the labels before publishing anything where it matters who said what.
+
+**Limits**
+
+- Audio up to **three hours**. Files up to **95 MB** in one request, or up to **512 MB** declared and sent in parts.
+- At most **2 jobs** in progress per account; a third returns HTTP 429 `BUSY` with `Retry-After`. Jobs share the request ID namespace with `/transcribe`.
+- Turbo only. `backend=standard` returns HTTP 422 `INVALID_REQUEST`.
+- `timestamps` defaults to `word` for jobs. `format=srt` and `format=vtt` work on the result as for other uploads.
+- Results are kept for **24 hours** after completion.
+- There is no extra charge. Billing stays per transcribed character, on the final transcript only.
+
+**Failures.** Credit is checked from the decoded length before anything is transcribed; a file the balance cannot cover fails with HTTP 402 `INSUFFICIENT_CREDITS`. A file Scribe cannot read, or one longer than three hours, fails with HTTP 422 `INVALID_AUDIO`. If the backend stays busy past the job's retries, it fails with HTTP 409 `REQUEST_INTERRUPTED`. `GET /requests/{id}` returns the failure as the job's own status code, and nothing is charged for a failed job.
+
+`GET /api/v1/scribe` lists `jobs` with the current limits (`max_bytes`, `max_seconds`, `max_upload_bytes`, `part_bytes`, `chunk_seconds`, `overlap_seconds`, and the defaults). When `jobs` is absent, long audio is not available.
 
 
 ## Usage Guide
