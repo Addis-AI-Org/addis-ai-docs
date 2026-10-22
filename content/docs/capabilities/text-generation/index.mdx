@@ -148,7 +148,7 @@ Follow these architectural patterns to ensure production readiness.
         <strong className="text-fd-foreground">Retries:</strong> Implement exponential backoff for <code>500</code> or <code>429</code> status codes.
       </div>
       <div>
-        <strong className="text-fd-foreground">Safety:</strong> Handle <code>finish_reason: "safety"</code> gracefully in your UI if the model refuses a prompt.
+        <strong className="text-fd-foreground">Safety:</strong> Handle <code>finish_reason: "content_filter"</code> gracefully in your UI if the model refuses a prompt.
       </div>
     </div>
   </div>

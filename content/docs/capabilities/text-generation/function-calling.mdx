@@ -204,6 +204,10 @@ Use the manual flow when an action needs an approval screen, a durable job, or a
   </Tab>
 </Tabs>
 
+<Callout type="info" title="Keep addis_tool_state unchanged">
+Every tool call carries an `addis_tool_state` field. It is an opaque token: don't parse, edit or store meaning in it. Return the assistant message with its tool calls unchanged, as the examples above do, so the model can continue from the call it made.
+</Callout>
+
 <Callout type="warn" title="Treat tool calls as untrusted input">
 Require approval for consequential actions, use idempotency for side effects, reject unknown functions and fields, set timeouts, cap tool rounds, and never expose secrets in tool results. Tool calling is currently non-streaming.
 </Callout>

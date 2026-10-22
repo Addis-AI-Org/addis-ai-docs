@@ -117,7 +117,6 @@ Your frontend (React, Vue, Blade) should call your **own** backend, which then c
         ])->post('https://api.addisassistant.com/api/v1/chat_generate', [
             'prompt' => $request->input('message'),
             'target_language' => 'am',
-            'model' => 'Addis-፩-አሌፍ',
             'generation_config' => [
                 'temperature' => 0.7
             ]

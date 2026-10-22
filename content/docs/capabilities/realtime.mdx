@@ -327,7 +327,11 @@ This example establishes a connection, captures microphone audio, **converts it 
 
 ## Protocol & Events
 
-The WebSocket handles bidirectional traffic.
+The WebSocket carries the Addis realtime protocol in both directions. The events below are the current protocol.
+
+<Callout type="info" title="A new realtime event schema is coming">
+We are finalising a new, versioned event schema for the Realtime API. The current events keep working until it ships, and this page will document the new events and how to migrate.
+</Callout>
 
 ### 1. Connect + Setup Handshake
 After connecting, wait for a readiness event before streaming microphone frames.
@@ -361,7 +365,7 @@ Send JSON envelopes with base64 PCM16 chunks.
 Server events are JSON messages.
 
 #### AI Audio Response
-The model audio is returned as base64 PCM16 under `inlineData.data`.
+The assistant's audio is returned as base64 PCM16 under `inlineData.data`.
 
 ```json
 {

@@ -158,12 +158,12 @@ Use the vision model to extract text from scanned African documents, ID cards, o
 The API is **stateless**, meaning it treats every request independently. To continue a conversation involving attachments, you must provide the relevant context in the `conversation_history` array.
 
 <Callout type="info" title="Note">
- **Do not re-upload files.** Instead, switch from `multipart/form-data` to a standard **JSON request** and reference the previously uploaded file using its `fileUri` inside the `parts` array.
+ **Do not re-upload files.** Instead, switch from `multipart/form-data` to a standard **JSON request** and reference the previously uploaded file using its `fileUri` inside the `parts` array. A `fileUri` is an opaque Addis file reference of the form `addis://files/<id>`: send it back exactly as you received it.
 </Callout>
 
 This approach maintains continuity while minimizing latency and bandwidth.
 
-The SDK examples retrieve the reusable attachment metadata from the first upload. The cURL tab shows the subsequent JSON request with that returned URI.
+The SDK examples retrieve the reusable attachment metadata from the first upload. The cURL tab shows the subsequent JSON request with that returned file reference.
 
 <Tabs items={['Node.js', 'Python', 'cURL']}>
   <Tab value="Node.js">
@@ -207,7 +207,7 @@ The SDK examples retrieve the reusable attachment metadata from the first upload
             "parts": [
               {
                 "fileData": {
-                  "fileUri": "YOUR_FILE_URI_HERE",
+                  "fileUri": "addis://files/YOUR_FILE_ID",
                   "mimeType": "application/pdf"
                 }
               },
@@ -226,8 +226,8 @@ The SDK examples retrieve the reusable attachment metadata from the first upload
   </Tab>
 </Tabs>
 
-<Callout type="info" title="Reusing returned file URIs">
-The SDK upload helper returns `uploaded_attachments` metadata after the first request. The current high-level SDK methods accept files for uploads; use the raw REST flow shown above when you need to reuse a returned `fileUri` without uploading the file again.
+<Callout type="info" title="Reusing returned file references">
+The SDK upload helper returns `uploaded_attachments` metadata after the first request. The current high-level SDK methods accept files for uploads; use the raw REST flow shown above when you need to reuse a returned `fileUri` (`addis://files/<id>`) without uploading the file again.
 </Callout>
 
 #### Conversation History Object Schema
@@ -271,7 +271,7 @@ Each item in the `parts` array must be **one** of the following:
 <TypeTable
   type={{
     'fileUri': {
-      description: 'The URI returned in the "uploaded_attachments" field of a previous response.',
+      description: 'The opaque Addis file reference ("addis://files/<id>") returned in the "uploaded_attachments" field of a previous response. Send it back unchanged.',
       type: 'string',
       required: true
     },
@@ -345,7 +345,7 @@ When files are uploaded, the response includes an `uploaded_attachments` array c
     "status": "success",
     "data": {
         "response_text": "ይህ ሰነድ በ12ኛው ክፍለ ዘመን በንጉሥ ላሊበላ ስለተገነቡት የላሊበላ ውቅር አብያተ ክርስቲያናት ያብራራል። እነዚህ 11 አብያተ ክርስቲያናት ከወጥ ድንጋይ የተወቀሩ ሲሆኑ፣ በዓለም ቅርስነት የተመዘገቡ ድንቅ የኢትዮጵያ ስልጣኔ ማሳያዎች ናቸው። ሰነዱ በተለይ ስለ ቤተ ጊዮርጊስ የመስቀል ቅርጽ ግንባታ እና ስለ ውስብስብ የውሃ ማስወገጃ ስርዓታቸው ዝርዝር ትንታኔ ይሰጣል።",
-        "finish_reason": "STOP",
+        "finish_reason": "stop",
         "usage_metadata": {
             "prompt_token_count": 2427,
             "candidates_token_count": 269,
@@ -354,7 +354,7 @@ When files are uploaded, the response includes an `uploaded_attachments` array c
         "modelVersion": "Addis-፩-አሌፍ",
         "uploaded_attachments": [
             {
-                "fileUri": "YOUR_FILE_URI_VARIABLE",
+                "fileUri": "addis://files/YOUR_FILE_ID",
                 "mimeType": "application/pdf"
             }
         ]
@@ -369,7 +369,7 @@ When files are uploaded, the response includes an `uploaded_attachments` array c
     "status": "success",
     "data": {
         "response_text": "በቀረበው የውይይት ታሪክ መሠረት፣ ፋሲል ግቢ (የጎንደር ቤተመንግስት) በ17ኛው ክፍለ ዘመን በአፄ ፋሲለደስ የተገነባ ድንቅ የኪነ-ሕንጻ ውጤት ነው። ግቢው በውስጡ ስድስት ዋና ዋና ቤተ-መንግስቶችን፣ ቤተ-መጻሕፍትን እና አብያተ ክርስቲያናትን ይዟል። ሰነዱ በተለይ ስለ ግንባታው የህንድ እና የአረብ ኪነ-ሕንጻ ተፅእኖ እንዲሁም ስለ ህንፃው የመሬት መንቀጥቀጥ መቋቋም ችሎታ ዝርዝር ትንታኔ ይሰጣል።",
-        "finish_reason": "STOP",
+        "finish_reason": "stop",
         "usage_metadata": {
             "prompt_token_count": 3500,
             "candidates_token_count": 145,
@@ -394,10 +394,10 @@ Optimize your multimodal integration with these architectural patterns.
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
       <div>
-        <strong className="text-fd-foreground">Don't Re-upload:</strong> Never re-upload the same file in a multi-turn chat. Upload it once, get the <code>fileUri</code> from the response, and reference that URI in future JSON requests.
+        <strong className="text-fd-foreground">Don't Re-upload:</strong> Never re-upload the same file in a multi-turn chat. Upload it once, get the <code>fileUri</code> (an opaque <code>addis://files/&lt;id&gt;</code> reference) from the response, and send it back unchanged in future JSON requests.
       </div>
       <div>
-        <strong className="text-fd-foreground">Latency:</strong> Passing a URI is milliseconds; re-uploading a 10MB PDF takes seconds.
+        <strong className="text-fd-foreground">Latency:</strong> Passing a file reference is milliseconds; re-uploading a 10MB PDF takes seconds.
       </div>
     </div>
   </div>

@@ -153,7 +153,6 @@ Use this for chatbots, translation, or simple text generation where waiting 2-3 
     		if err := c.BindJSON(&input); err != nil { return }
 
     		payload := map[string]interface{}{
-    			"model": "Addis-፩-አሌፍ",
     			"prompt": input.Message,
     			"target_language": "am",
     		}
@@ -194,7 +193,6 @@ Use this for chatbots, translation, or simple text generation where waiting 2-3 
             'X-API-Key' => env('ADDIS_API_KEY'),
             'Content-Type' => 'application/json',
         ])->post('https://api.addisassistant.com/api/v1/chat_generate', [
-            'model' => 'Addis-፩-አሌፍ',
             'prompt' => $request->input('message'),
             'target_language' => 'am'
         ]);
