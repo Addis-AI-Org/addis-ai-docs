@@ -111,7 +111,7 @@ Source and target must be different. Translation is supported in both directions
 <TypeTable
   type={{
     'text': {
-      description: 'The content to be translated. Max 2000 characters per request.',
+      description: 'The content to be translated. Max 5,000 characters per request; longer text returns 413 text_too_long.',
       type: 'string',
       required: true
     },
@@ -161,7 +161,7 @@ description: 'The resulting translated string.',
 type: 'string'
 },
 'data.quality': {
-description: 'Confidence level of the translation.',
+description: 'Confidence level of the translation: "high", "medium" or "low". Always present.',
 type: 'string'
 },
 'data.usage_metadata': {
@@ -170,6 +170,16 @@ type: 'object'
 }
 }}
 />
+### Errors
+
+| Status | Code | Meaning |
+| :--- | :--- | :--- |
+| 400 | `invalid_input` | `text` is missing or a language code is unsupported. |
+| 400 | `invalid_json` | The request body is not valid JSON. |
+| 401 | `api_key_in_authorization_header` | Send your API key in the `x-api-key` header, not as `Authorization: Bearer`. |
+| 413 | `text_too_long` | `text` is over 5,000 characters. Split it into several requests. |
+| 502 | `translation_incomplete` | The translation came back far shorter than the input. Retry, or send shorter text. |
+
 ---
 ## Best Practices
 Ensure the highest quality translations with these guidelines.

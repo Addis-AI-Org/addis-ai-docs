@@ -62,7 +62,7 @@ type: 'string'
 | **401** | Unauthorized | No valid API key provided. |
 | **403** | Forbidden | The API key doesn't have permissions to perform the request. |
 | **404** | Not Found | The requested resource (e.g., Model ID) doesn't exist. |
-| **429** | Too Many Requests | You have hit your rate limit or quota. |
+| **429** | Too Many Requests | The service is temporarily at capacity, or your account is temporarily limited. See [Rate Limits](/docs/platform/limits). |
 | **500** | Server Error | Something went wrong on Addis AI's end. |
 | **503** | Service Unavailable | The engine is currently overloaded. Please retry. |
 
@@ -163,10 +163,10 @@ You should wrap your API calls in a `try/catch` block to handle exceptions grace
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
       <div>
-        <strong className="text-fd-foreground">Cause:</strong> You are sending requests too fast for your plan (e.g., >60 RPM on Free).
+        <strong className="text-fd-foreground">Cause:</strong> The model is temporarily at capacity, or account protection is limiting unusual traffic. There are no fixed per-plan quotas.
       </div>
       <div>
-        <strong className="text-fd-foreground">Fix:</strong> Implement exponential backoff (wait and retry). Contact sales to increase limits.
+        <strong className="text-fd-foreground">Fix:</strong> Implement exponential backoff (wait and retry). Contact sales before sustained high-volume traffic.
       </div>
     </div>
   </div>

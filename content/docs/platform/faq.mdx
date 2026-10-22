@@ -85,6 +85,6 @@ Here are answers to the most common questions from developers and enterprise tea
   <Accordion title="What happens if I hit my Rate Limit?">
     The API will return a `429 Too Many Requests` error. 
     
-    If you are on the Free plan, you are limited to 60 requests per minute. Upgrading to Pro increases this limit significantly.
+    There are no fixed per-plan quotas: a 429 means the service is briefly at capacity or account protection is limiting unusual traffic. Retry with exponential backoff; see [Rate Limits](/docs/platform/limits).
   </Accordion>
 </Accordions>

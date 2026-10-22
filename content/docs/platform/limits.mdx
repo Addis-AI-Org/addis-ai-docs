@@ -1,6 +1,6 @@
 ---
 title: Rate Limits
-description: API usage quotas, context windows, and system constraints.
+description: When the API returns 429, request size limits, and request IDs.
 icon: Gauge
 ---
 
@@ -8,21 +8,28 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import { Callout } from 'fumadocs-ui/components/callout';
 import { ShieldAlert, Zap, Server, Activity } from 'lucide-react';
 
-To ensure the reliability and stability of the Addis AI platform for all users, we enforce limits on the number of requests you can make over specific periods.
+Addis AI is billed pay-as-you-go from your ETB wallet (see [Pricing](/docs/platform/pricing)). There are no plan tiers and no fixed per-minute or per-day request quotas.
 
-## Tier Quotas
+## When you can get a 429
 
-Limits are applied based on your organization's billing plan.
+A `429 Too Many Requests` response means one of the following:
 
-| Feature | Free / Sandbox | Pro / Team | Enterprise |
-| :--- | :--- | :--- | :--- |
-| **RPM** (Requests Per Minute) | 60 | 500 | Custom |
-| **RPD** (Requests Per Day) | 1,000 | Unlimited | Unlimited |
-| **TPM** (Tokens Per Minute) | 40,000 | 250,000 | Custom |
-| **Concurrency** | 3 Requests | 50 Requests | Custom |
+| Cause | What to do |
+| :--- | :--- |
+| The model behind a capability is temporarily at capacity. | Retry with exponential backoff (below). |
+| Account protection is temporarily limiting your account after unusual traffic. | Slow down and retry later. Contact [Sales](mailto:sales@addisassistant.com) if it persists. |
+| More than 100 Realtime connections from one IP address within 15 minutes. | Reuse open connections instead of reconnecting in a loop. |
 
-<Callout type="info" title="Hitting Limits?">
-  If you consistently hit these limits, please contact [Sales](mailto:sales@addisassistant.com) to discuss an Enterprise plan with dedicated throughput.
+A request is refused with `402` when your wallet balance is too low to cover it. Top up in the [Platform Dashboard](https://addisassistant.com/usage).
+
+## Request size limits
+
+| Capability | Limit |
+| :--- | :--- |
+| Translation | 5,000 characters of `text` per request. Longer text returns `413 text_too_long`; split it into several requests. |
+
+<Callout type="info" title="Need more throughput?">
+  If you plan sustained high-volume traffic, contact [Sales](mailto:sales@addisassistant.com) so we can plan capacity with you.
 </Callout>
 
 ---
@@ -105,15 +112,15 @@ Apart from rate limits, each model has technical constraints regarding input siz
 
 ---
 
-## Response Headers
+## Request IDs
 
-Every API response includes HTTP headers that tell you your current status.
+Every response from `api.addisassistant.com` carries an `X-Request-Id` header. Send your own `x-request-id` (up to 128 letters, digits, `.`, `_`, `:` or `-`) to correlate requests with your logs; otherwise one is generated for you. Include the ID when you contact support about a request.
 
 | Header | Description |
 | :--- | :--- |
-| `x-ratelimit-limit-requests` | The maximum number of requests allowed in the current window. |
-| `x-ratelimit-remaining-requests` | The number of requests remaining in the current window. |
-| `x-ratelimit-reset-requests` | The time (in seconds) until the window resets. |
+| `X-Request-Id` | The ID of this request: yours if you sent a valid `x-request-id`, otherwise a generated UUID. Scribe responses carry the Scribe `request_id` instead. |
+
+The developer API does not send `x-ratelimit-*` headers.
 
 ---
 
