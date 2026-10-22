@@ -82,7 +82,7 @@ Our Realtime model is already deployed across key African sectors. You can test 
 | :--- | :--- |
 | **Encoding** | PCM 16-bit (Little Endian) |
 | **Client Upload** | `audio/pcm;rate=16000` (Mono) |
-| **Server Audio Output** | PCM16 Mono, typically 24,000Hz |
+| **Server Audio Output** | PCM16 Mono, 24,000Hz (each `audio` event carries its `sample_rate`) |
 
 ---
 
@@ -107,6 +107,7 @@ This example establishes a connection, captures microphone audio, **converts it 
     let processor;
     let canStreamAudio = false;
     let nextStartTime = 0;
+    const playing = new Set();
 
     async function startRealtime() {
       // Output context for AI playback
@@ -151,25 +152,35 @@ This example establishes a connection, captures microphone audio, **converts it 
       socket = new WebSocket(WS_URL);
 
       socket.onopen = () => {
-        console.log("Connected. Waiting for setupComplete...");
+        console.log("Connected. Waiting for the ready event...");
       };
 
       socket.onmessage = async (event) => {
         const message = JSON.parse(event.data);
-        console.log("Event:", message);
 
-        if (message.setupComplete || (message.type === "status" && /ready/i.test(message.message || ""))) {
-          canStreamAudio = true;
-          return;
-        }
-
-        const b64 = message?.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-        if (typeof b64 === "string" && b64.length) {
-          await playPcm16Base64(b64, OUTPUT_RATE);
-        }
-
-        if (message?.error) {
-          console.error("Realtime error:", message.error);
+        switch (message.type) {
+          case "ready":
+            canStreamAudio = true;
+            break;
+          case "audio":
+            await playPcm16Base64(message.data, message.sample_rate || OUTPUT_RATE);
+            break;
+          case "interrupted":
+            stopPlayback(); // the user spoke over the assistant: drop queued audio
+            break;
+          case "transcript":
+            if (message.finished) console.log(`${message.role}: ${message.text}`);
+            break;
+          case "turn_complete":
+            if (message.usage) console.log("Usage:", message.usage);
+            break;
+          case "warning":
+          case "session_ending":
+            console.warn(message);
+            break;
+          case "error":
+            console.error("Realtime error:", message.error);
+            break;
         }
       };
 
@@ -239,10 +250,18 @@ This example establishes a connection, captures microphone audio, **converts it 
       const src = outputContext.createBufferSource();
       src.buffer = buffer;
       src.connect(outputContext.destination);
+      playing.add(src);
+      src.onended = () => playing.delete(src);
 
       const startAt = Math.max(outputContext.currentTime, nextStartTime);
       src.start(startAt);
       nextStartTime = startAt + buffer.duration;
+    }
+
+    function stopPlayback() {
+      for (const src of playing) src.stop();
+      playing.clear();
+      nextStartTime = outputContext.currentTime;
     }
     ```
   </Tab>
@@ -279,18 +298,14 @@ This example establishes a connection, captures microphone audio, **converts it 
             async def receive_messages():
                 async for raw in websocket:
                     message = json.loads(raw)
-                    print("<", message)
+                    if message.get("type") != "audio":
+                        print("<", message)
 
-                    if message.get("setupComplete"):
+                    if message.get("type") == "ready":
                         ready_event.set()
-                        continue
-
-                    if (
-                        message.get("type") == "status"
-                        and "ready" in message.get("message", "").lower()
-                    ):
-                        ready_event.set()
-                        continue
+                    elif message.get("type") == "error":
+                        print("Realtime error:", message["error"])
+                        break
 
             print("Listening... (Press Ctrl+C to stop)")
 
@@ -327,32 +342,17 @@ This example establishes a connection, captures microphone audio, **converts it 
 
 ## Protocol & Events
 
-The WebSocket carries the Addis realtime protocol in both directions. The events below are the current protocol.
+The WebSocket carries the Addis realtime protocol: JSON text frames in both directions. Every server event has a `type` field; ignore types you don't recognise, so your client keeps working as events are added.
 
-<Callout type="info" title="A new realtime event schema is coming">
-We are finalising a new, versioned event schema for the Realtime API. The current events keep working until it ships, and this page will document the new events and how to migrate.
-</Callout>
-
-### 1. Connect + Setup Handshake
-After connecting, wait for a readiness event before streaming microphone frames.
+### 1. Wait for `ready`
+After connecting, wait for the `ready` event before streaming microphone frames.
 
 ```json
-{
-  "setupComplete": true
-}
-```
-
-Some integrations may also emit:
-
-```json
-{
-  "type": "status",
-  "message": "Ready to start conversation"
-}
+{ "type": "ready", "protocol": "addis" }
 ```
 
 ### 2. Client to Server Audio
-Send JSON envelopes with base64 PCM16 chunks.
+Send JSON envelopes with base64 PCM16 chunks (16 kHz, mono).
 
 ```json
 {
@@ -361,60 +361,78 @@ Send JSON envelopes with base64 PCM16 chunks.
 }
 ```
 
-### 3. Server to Client
-Server events are JSON messages.
+`{"type": "audio", "data": "BASE64_ENCODED_PCM16_CHUNK"}` is accepted too.
 
-#### AI Audio Response
-The assistant's audio is returned as base64 PCM16 under `inlineData.data`.
+### 3. Server to Client Events
+
+| `type` | When | Fields |
+| :--- | :--- | :--- |
+| `ready` | The session is ready for audio. | `protocol` |
+| `audio` | A chunk of the assistant's speech. | `data` (base64 PCM16 mono), `sample_rate` |
+| `transcript` | Text of what the user or the assistant said. | `role` (`user` or `assistant`), `text`, `finished` |
+| `interrupted` | The user spoke over the assistant. Drop any audio you have queued. | none |
+| `turn_complete` | The assistant finished its turn. Carries the turn's token usage, once per turn. | `usage` (may be absent) |
+| `warning` | A non-critical issue, such as a low wallet balance. | `code`, `message` |
+| `session_ending` | The session is about to end. | `seconds_left` |
+| `error` | A critical failure. The server closes the socket after it. | `error.code`, `error.message`, `error.status` |
+| `tool_call` | The assistant asks your client to run a tool. | `id`, `name`, `arguments` |
+
+#### Audio
 
 ```json
 {
-  "serverContent": {
-    "modelTurn": {
-      "parts": [
-        {
-          "inlineData": {
-            "data": "BASE64_ENCODED_PCM16_AUDIO"
-          }
-        }
-      ]
-    }
-  }
+  "type": "audio",
+  "data": "BASE64_ENCODED_PCM16_AUDIO",
+  "sample_rate": 24000
 }
+```
+
+#### Transcript
+
+```json
+{ "type": "transcript", "role": "assistant", "text": "ሰላም! እንዴት ልርዳዎት?", "finished": true }
+```
+
+#### Interrupted
+
+```json
+{ "type": "interrupted" }
 ```
 
 #### Turn Complete & Usage
-When the AI finishes speaking, the server sends a completion event with billing details.
 
 ```json
 {
-  "serverContent": {
-    "turnComplete": true
-  },
-  "usageMetadata": {
-    "totalBilledAudioDurationSeconds": 5.2
-  }
+  "type": "turn_complete",
+  "usage": { "input_tokens": 120, "output_tokens": 340, "total_tokens": 460 }
 }
 ```
-#### Warning Messages
-Sent if there are non-critical issues, such as billing thresholds.
+
+`usage` holds the turn's billed token counts. It arrives only on `turn_complete`, once per turn; add up `total_tokens` across turns for the session total.
+
+#### Warning and Session Ending
 
 ```json
 {
   "type": "warning",
+  "code": "low_balance",
   "message": "Your wallet balance is low. Please top up to avoid service interruption."
 }
 ```
 
-#### Error Messages
-Sent if a critical failure occurs.
+```json
+{ "type": "session_ending", "seconds_left": 30 }
+```
+
+#### Error
 
 ```json
 {
+  "type": "error",
   "error": {
-    "message": "AI service error",
-    "status": 500,
-    "timestamp": "2025-07-15T10:00:00.000Z"
+    "code": "insufficient_balance",
+    "message": "Your wallet balance is too low to continue.",
+    "status": 402
   }
 }
 ```
@@ -466,6 +484,7 @@ Use this standalone file if you want to run the same flow outside the docs site.
       let muteNode;
       let canStream = false;
       let nextStartTime = 0;
+      const playing = new Set();
 
       const logEl = document.getElementById("log");
       const startBtn = document.getElementById("startBtn");
@@ -501,17 +520,25 @@ Use this standalone file if you want to run the same flow outside the docs site.
         return bytes.buffer;
       }
 
-      async function playPcm16(arrayBuffer) {
+      function stopPlayback() {
+        for (const src of playing) src.stop();
+        playing.clear();
+        nextStartTime = outputCtx ? outputCtx.currentTime : 0;
+      }
+
+      async function playPcm16(arrayBuffer, sampleRate = OUTPUT_RATE) {
         if (!outputCtx) return;
         const pcm16 = new Int16Array(arrayBuffer);
         const f32 = new Float32Array(pcm16.length);
         for (let i = 0; i < pcm16.length; i++) f32[i] = pcm16[i] / 32768;
 
-        const buffer = outputCtx.createBuffer(1, f32.length, OUTPUT_RATE);
+        const buffer = outputCtx.createBuffer(1, f32.length, sampleRate);
         buffer.copyToChannel(f32, 0);
         const src = outputCtx.createBufferSource();
         src.buffer = buffer;
         src.connect(outputCtx.destination);
+        playing.add(src);
+        src.onended = () => playing.delete(src);
         const startAt = Math.max(outputCtx.currentTime, nextStartTime);
         src.start(startAt);
         nextStartTime = startAt + buffer.duration;
@@ -571,17 +598,19 @@ Use this standalone file if you want to run the same flow outside the docs site.
         url.searchParams.set("apiKey", apiKey);
         ws = new WebSocket(url.toString());
 
-        ws.onopen = () => log("Connected. Waiting for setupComplete...");
+        ws.onopen = () => log("Connected. Waiting for the ready event...");
 
         ws.onmessage = async (event) => {
           const msg = JSON.parse(event.data);
-          if (msg.setupComplete || (msg.type === "status" && /ready/i.test(msg.message || ""))) {
+          if (msg.type === "ready") {
             canStream = true;
-            return log("Setup complete. Streaming live.");
+            return log("Ready. Streaming live.");
           }
-          const b64 = msg?.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-          if (typeof b64 === "string" && b64.length) await playPcm16(base64ToAb(b64));
-          if (msg?.error) log(`Server error: ${JSON.stringify(msg.error)}`);
+          if (msg.type === "audio" && msg.data) await playPcm16(base64ToAb(msg.data), msg.sample_rate || OUTPUT_RATE);
+          if (msg.type === "interrupted") stopPlayback();
+          if (msg.type === "transcript" && msg.finished) log(`${msg.role}: ${msg.text}`);
+          if (msg.type === "warning" || msg.type === "session_ending") log(JSON.stringify(msg));
+          if (msg.type === "error") log(`Server error: ${JSON.stringify(msg.error)}`);
         };
 
         ws.onclose = (e) => log(`Closed code=${e.code} reason=${e.reason || "n/a"}`);

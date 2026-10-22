@@ -368,6 +368,7 @@
         processorNode: null,
         muteNode: null,
         nextPlaybackTime: 0,
+        playing: new Set(),
         canStreamAudio: false,
         starting: false,
         running: false,
@@ -446,7 +447,18 @@
         return bytes.buffer;
       }
 
-      async function playPcm16Chunk(arrayBuffer) {
+      // Drop audio that is queued but not yet heard (sent on "interrupted").
+      function stopPlayback() {
+        for (const src of state.playing) {
+          try {
+            src.stop();
+          } catch (_error) {}
+        }
+        state.playing.clear();
+        state.nextPlaybackTime = state.outputCtx ? state.outputCtx.currentTime : 0;
+      }
+
+      async function playPcm16Chunk(arrayBuffer, sampleRate = CONFIG.outputSampleRate) {
         if (!state.outputCtx || !(arrayBuffer instanceof ArrayBuffer)) return;
 
         const pcm16 = new Int16Array(arrayBuffer);
@@ -457,12 +469,14 @@
           float32[i] = pcm16[i] / 32768;
         }
 
-        const buffer = state.outputCtx.createBuffer(1, float32.length, CONFIG.outputSampleRate);
+        const buffer = state.outputCtx.createBuffer(1, float32.length, sampleRate);
         buffer.copyToChannel(float32, 0);
 
         const src = state.outputCtx.createBufferSource();
         src.buffer = buffer;
         src.connect(state.outputCtx.destination);
+        state.playing.add(src);
+        src.onended = () => state.playing.delete(src);
 
         const startAt = Math.max(state.outputCtx.currentTime, state.nextPlaybackTime);
         src.start(startAt);
@@ -518,6 +532,7 @@
 
         cleanupAudioGraph();
         await closeAudioContexts();
+        state.playing.clear();
         state.nextPlaybackTime = 0;
       }
 
@@ -628,8 +643,8 @@
             state.running = true;
             syncButtons();
 
-            setStatus("Connected", "Waiting for setupComplete...", "warn");
-            appendLog("WebSocket connected. Waiting for setupComplete.");
+            setStatus("Connected", "Waiting for the ready event...", "warn");
+            appendLog("WebSocket connected. Waiting for the ready event.");
           };
 
           state.ws.onmessage = async (event) => {
@@ -648,26 +663,42 @@
               return;
             }
 
-            if (message?.setupComplete || (message?.type === "status" && /ready/i.test(message?.message || ""))) {
-              state.canStreamAudio = true;
-              setStatus("Live", "Streaming microphone and AI audio.", "ok");
-              appendLog("Setup complete. Streaming started.");
-              return;
-            }
-
-            if (message?.type === "warning" && message?.message) {
-              appendLog(`Warning: ${message.message}`);
-            }
-
-            const base64Audio = message?.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-            if (typeof base64Audio === "string" && base64Audio.length > 0) {
-              await playPcm16Chunk(base64ToArrayBuffer(base64Audio));
-            }
-
-            if (message?.error) {
-              const errMessage = message.error?.message || JSON.stringify(message.error);
-              setStatus("Server error", errMessage, "err");
-              appendLog(`Server error: ${errMessage}`);
+            switch (message?.type) {
+              case "ready":
+                state.canStreamAudio = true;
+                setStatus("Live", "Streaming microphone and AI audio.", "ok");
+                appendLog("Ready. Streaming started.");
+                return;
+              case "audio":
+                if (typeof message.data === "string" && message.data.length > 0) {
+                  await playPcm16Chunk(base64ToArrayBuffer(message.data), message.sample_rate || CONFIG.outputSampleRate);
+                }
+                return;
+              case "interrupted":
+                stopPlayback();
+                appendLog("Interrupted: queued audio dropped.");
+                return;
+              case "transcript":
+                if (message.finished) appendLog(`${message.role === "user" ? "You" : "Assistant"}: ${message.text}`);
+                return;
+              case "turn_complete":
+                if (message.usage) appendLog(`Usage: ${JSON.stringify(message.usage)}`);
+                return;
+              case "warning":
+                appendLog(`Warning: ${message.message}`);
+                return;
+              case "session_ending":
+                setStatus("Ending soon", `Session ends in ${message.seconds_left} seconds.`, "warn");
+                appendLog(`Session ends in ${message.seconds_left} seconds.`);
+                return;
+              case "error": {
+                const errMessage = message.error?.message || "Realtime error.";
+                setStatus("Server error", errMessage, "err");
+                appendLog(`Server error (${message.error?.code ?? "error"}): ${errMessage}`);
+                return;
+              }
+              default:
+                return;
             }
           };
 

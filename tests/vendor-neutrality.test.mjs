@@ -69,3 +69,29 @@ test('chat docs use the Addis chat contract', () => {
   assert.match(read('content/docs/capabilities/multimodal.mdx'), /addis:\/\/files\/YOUR_FILE_ID/);
   assert.match(read('content/docs/capabilities/realtime.mdx'), /Addis realtime protocol/);
 });
+
+test('realtime docs and demos use only the Addis event format', () => {
+  for (const path of [
+    'content/docs/capabilities/realtime.mdx',
+    'components/realtime-voice-demo.tsx',
+    'public/realtime-demo.html',
+  ]) {
+    const source = read(path);
+    assert.doesNotMatch(
+      source,
+      /setupComplete|serverContent|modelTurn|inlineData|turnComplete|usageMetadata/,
+      `${path} still uses the earlier relay frames`,
+    );
+    for (const event of ['ready', 'audio', 'interrupted', 'error']) {
+      assert.match(source, new RegExp(`"${event}"`), `${path} does not handle the ${event} event`);
+    }
+  }
+  const page = read('content/docs/capabilities/realtime.mdx');
+  for (const event of ['ready', 'audio', 'transcript', 'interrupted', 'turn_complete', 'warning', 'session_ending', 'error', 'tool_call']) {
+    assert.match(page, new RegExp('`' + event + '`'), `realtime.mdx does not document ${event}`);
+  }
+  // Usage arrives only on turn_complete; there is no standalone usage event.
+  for (const path of ['content/docs/capabilities/realtime.mdx', 'components/realtime-voice-demo.tsx', 'public/realtime-demo.html']) {
+    assert.doesNotMatch(read(path), /case "usage"|"type": ?"usage"|\| `usage` \|/, `${path} still handles a standalone usage event`);
+  }
+});

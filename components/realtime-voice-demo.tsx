@@ -24,6 +24,7 @@ type RuntimeState = {
   processorNode: ScriptProcessorNode | null;
   muteNode: GainNode | null;
   nextPlaybackTime: number;
+  playing: Set<AudioBufferSourceNode>;
   canStreamAudio: boolean;
   starting: boolean;
   running: boolean;
@@ -42,6 +43,7 @@ function createRuntimeState(): RuntimeState {
     processorNode: null,
     muteNode: null,
     nextPlaybackTime: 0,
+    playing: new Set(),
     canStreamAudio: false,
     starting: false,
     running: false,
@@ -175,11 +177,24 @@ export function RealtimeVoiceDemo() {
     }
 
     cleanupAudioGraph();
+    rt.playing.clear();
     await closeAudioContexts();
     rt.nextPlaybackTime = 0;
   };
 
-  const playPcm16Chunk = async (arrayBuffer: ArrayBuffer) => {
+  // Drop audio that is queued but not yet heard (sent on "interrupted").
+  const stopPlayback = () => {
+    const rt = runtimeRef.current;
+    for (const src of rt.playing) {
+      try {
+        src.stop();
+      } catch (_error) {}
+    }
+    rt.playing.clear();
+    rt.nextPlaybackTime = rt.outputCtx?.currentTime ?? 0;
+  };
+
+  const playPcm16Chunk = async (arrayBuffer: ArrayBuffer, sampleRate = CONFIG.outputSampleRate) => {
     const rt = runtimeRef.current;
     if (!rt.outputCtx) return;
 
@@ -191,12 +206,14 @@ export function RealtimeVoiceDemo() {
       float32[i] = pcm16[i] / 32768;
     }
 
-    const buffer = rt.outputCtx.createBuffer(1, float32.length, CONFIG.outputSampleRate);
+    const buffer = rt.outputCtx.createBuffer(1, float32.length, sampleRate);
     buffer.copyToChannel(float32, 0);
 
     const src = rt.outputCtx.createBufferSource();
     src.buffer = buffer;
     src.connect(rt.outputCtx.destination);
+    rt.playing.add(src);
+    src.onended = () => rt.playing.delete(src);
 
     const startAt = Math.max(rt.outputCtx.currentTime, rt.nextPlaybackTime);
     src.start(startAt);
@@ -319,8 +336,8 @@ export function RealtimeVoiceDemo() {
         setIsStarting(false);
         setIsRunning(true);
 
-        setStatus("Connected", "Waiting for setupComplete...", "warn");
-        appendLog("WebSocket connected. Waiting for setupComplete.");
+        setStatus("Connected", "Waiting for the ready event...", "warn");
+        appendLog("WebSocket connected. Waiting for the ready event.");
       };
 
       rt.ws.onmessage = async (event) => {
@@ -339,26 +356,42 @@ export function RealtimeVoiceDemo() {
           return;
         }
 
-        if (message?.setupComplete || (message?.type === "status" && /ready/i.test(message?.message || ""))) {
-          runtimeRef.current.canStreamAudio = true;
-          setStatus("Live", "Streaming microphone and AI audio.", "ok");
-          appendLog("Setup complete. Streaming started.");
-          return;
-        }
-
-        if (message?.type === "warning" && message?.message) {
-          appendLog(`Warning: ${message.message}`);
-        }
-
-        const base64Audio = message?.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-        if (typeof base64Audio === "string" && base64Audio.length > 0) {
-          await playPcm16Chunk(base64ToArrayBuffer(base64Audio));
-        }
-
-        if (message?.error) {
-          const errMessage = message.error?.message || JSON.stringify(message.error);
-          setStatus("Server error", errMessage, "err");
-          appendLog(`Server error: ${errMessage}`);
+        switch (message?.type) {
+          case "ready":
+            runtimeRef.current.canStreamAudio = true;
+            setStatus("Live", "Streaming microphone and AI audio.", "ok");
+            appendLog("Ready. Streaming started.");
+            return;
+          case "audio":
+            if (typeof message.data === "string" && message.data.length > 0) {
+              await playPcm16Chunk(base64ToArrayBuffer(message.data), message.sample_rate || CONFIG.outputSampleRate);
+            }
+            return;
+          case "interrupted":
+            stopPlayback();
+            appendLog("Interrupted: queued audio dropped.");
+            return;
+          case "transcript":
+            if (message.finished) appendLog(`${message.role === "user" ? "You" : "Assistant"}: ${message.text}`);
+            return;
+          case "turn_complete":
+            if (message.usage) appendLog(`Usage: ${JSON.stringify(message.usage)}`);
+            return;
+          case "warning":
+            appendLog(`Warning: ${message.message}`);
+            return;
+          case "session_ending":
+            setStatus("Ending soon", `Session ends in ${message.seconds_left} seconds.`, "warn");
+            appendLog(`Session ends in ${message.seconds_left} seconds.`);
+            return;
+          case "error": {
+            const errMessage = message.error?.message || "Realtime error.";
+            setStatus("Server error", errMessage, "err");
+            appendLog(`Server error (${message.error?.code ?? "error"}): ${errMessage}`);
+            return;
+          }
+          default:
+            return;
         }
       };
 
