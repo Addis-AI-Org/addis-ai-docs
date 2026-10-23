@@ -485,9 +485,28 @@ curl -X POST 'https://api.addisassistant.com/api/v1/scribe/jobs/my-meeting-2/com
   -H "x-api-key: $ADDIS_API_KEY"
 ```
 
-Every part but the last is exactly `part_bytes` long (currently 4 MiB). Send parts one at a time, in any order. To resume after a dropped connection, declare the job again with the same body: the answer is 200 with the `received` list, and you send only the parts that are missing. A stored part sent again with the same bytes is a no-op; different bytes return HTTP 409, and a wrong length returns HTTP 422. `POST …/complete` returns HTTP 409 `UPLOAD_INCOMPLETE` with the `missing` indexes while parts are still missing; calling it again is safe, and once the job runs it answers like the one-request create. An upload left incomplete is deleted after 24 hours.
+Every part but the last is exactly `part_bytes` long (currently 4 MiB). Send parts one at a time, in any order. To resume after a dropped connection, declare the job again with the same body: the answer is 200 with the `received` list, and you send only the parts that are missing. A stored part sent again with the same bytes is a no-op; different bytes return HTTP 409, and a wrong length returns HTTP 422. `POST …/complete` returns HTTP 409 `UPLOAD_INCOMPLETE` with the `missing` indexes while parts are still missing; calling it again is safe, and once the job runs it answers like the one-request create.
 
-**SDK.** `scribe.transcribeLong` (Node.js) and `scribe.transcribe_long` (Python), in SDK 0.9.0, do all of this in one call. They send one request when the file is at most 95 MiB and otherwise declare the job and send 4 MiB parts in order, resuming from `received` after a dropped connection. Then they poll `GET /requests/{id}` every 5 seconds, honouring `Retry-After`, for up to four hours, calling `onProgress` / `on_progress` with each 202 body, and return the settled result in the same shape as `transcribe`. `toSrt` / `to_srt` and `toVtt` / `to_vtt` work on it unchanged.
+An upload that receives no part for **30 minutes** is abandoned: it stops counting toward your account's job limit at once and is deleted with its parts, and its request ID is free again. If you come back later, the next part returns HTTP 404 `NOT_FOUND`; declare the job again and send every part. Any upload left incomplete is deleted after 24 hours. `expires_at` in the job view says when yours will be dropped.
+
+**Cancel a job.** Send `DELETE /api/v1/scribe/jobs/{request_id}` with the same key. Nothing is charged for a cancelled job.
+
+```bash
+curl -X DELETE 'https://api.addisassistant.com/api/v1/scribe/jobs/my-meeting-2' \
+  -H "x-api-key: $ADDIS_API_KEY"
+# → {"data": {"request_id": "my-meeting-2", "status": "cancelled",
+#             "was": "uploading", "request_id_reusable": true}}
+```
+
+| Job state | What a cancel does | Request ID |
+|---|---|---|
+| `uploading` or `queued` | Removes the job, its parts and its files | Free again at once |
+| `processing` | Stops the job; polls then return HTTP 409 `REQUEST_CANCELLED` | Stays used; send the file again under a new ID |
+| `completed` or `failed` | Nothing; returns HTTP 409 `JOB_FINISHED` | Unchanged |
+
+Cancelling a processing job again returns the same answer. A removed upload or queued job is gone, so a second cancel returns HTTP 404. Another account's job returns HTTP 404.
+
+**SDK.** `scribe.transcribeLong` (Node.js) and `scribe.transcribe_long` (Python), in SDK 0.9.0 and later, do all of this in one call. They send one request when the file is at most 95 MiB and otherwise declare the job and send 4 MiB parts in order, resuming from `received` after a dropped connection. Then they poll `GET /requests/{id}` every 5 seconds, honouring `Retry-After`, for up to four hours, calling `onProgress` / `on_progress` with each 202 body, and return the settled result in the same shape as `transcribe`. `toSrt` / `to_srt` and `toVtt` / `to_vtt` work on it unchanged. From SDK 0.10.0, stopping the call before the upload is complete (aborting the `signal` you pass in Node.js, or Ctrl-C / `KeyboardInterrupt` in Python) cancels the job, so an interrupted upload does not hold one of your two job slots. Once the job is queued, stopping only ends the waiting: the job runs on and `recover` reads the result later.
 
 <Tabs items={['Node.js', 'Python']}>
   <Tab value="Node.js">
@@ -551,7 +570,7 @@ Every part but the last is exactly `part_bytes` long (currently 4 MiB). Send par
   </Tab>
 </Tabs>
 
-To drive a job yourself, use the lower-level calls: `scribe.jobs.upload(...)` (one request), `scribe.jobs.create(...)` (declaration), `scribe.jobs.putPart(requestId, index, bytes)` / `scribe.jobs.put_part(request_id, index, bytes)`, `scribe.jobs.complete(requestId)`, `scribe.jobs.status(requestId)`, and `scribe.jobs.wait(requestId, { onProgress })` / `scribe.jobs.wait(request_id, on_progress=...)`. As with other paid calls, the SDK does not retry the paid steps on its own; after an interruption, call `scribe.recover` with the saved ID.
+To drive a job yourself, use the lower-level calls: `scribe.jobs.upload(...)` (one request), `scribe.jobs.create(...)` (declaration), `scribe.jobs.putPart(requestId, index, bytes)` / `scribe.jobs.put_part(request_id, index, bytes)`, `scribe.jobs.complete(requestId)`, `scribe.jobs.status(requestId)`, `scribe.jobs.wait(requestId, { onProgress })` / `scribe.jobs.wait(request_id, on_progress=...)`, and, from SDK 0.10.0, `scribe.jobs.cancel(requestId)` / `scribe.jobs.cancel(request_id)`. As with other paid calls, the SDK does not retry the paid steps on its own; after an interruption, call `scribe.recover` with the saved ID.
 
 The result has the same shape as `transcribe`, with `mode: "job"` and `chunks`, the number of pieces the file was cut into:
 
@@ -583,13 +602,13 @@ Later reads of a completed job return the same result with `idempotent_replay: t
 **Limits**
 
 - Audio up to **three hours**. Files up to **95 MB** in one request, or up to **512 MB** declared and sent in parts.
-- At most **2 jobs** in progress per account; a third returns HTTP 429 `BUSY` with `Retry-After`. Jobs share the request ID namespace with `/transcribe`.
+- At most **2 jobs** in progress per account; a third returns HTTP 429 `BUSY` with `Retry-After`. Cancel a job you no longer need to free its slot; an upload idle for 30 minutes stops counting on its own. Jobs share the request ID namespace with `/transcribe`.
 - Turbo only. `backend=standard` returns HTTP 422 `INVALID_REQUEST`.
 - `timestamps` defaults to `word` for jobs. `format=srt` and `format=vtt` work on the result as for other uploads.
 - Results are kept for **24 hours** after completion.
 - There is no extra charge. Billing stays per transcribed character, on the final transcript only.
 
-**Failures.** Credit is checked from the decoded length before anything is transcribed; a file the balance cannot cover fails with HTTP 402 `INSUFFICIENT_CREDITS`. A file Scribe cannot read, or one longer than three hours, fails with HTTP 422 `INVALID_AUDIO`. If the backend stays busy past the job's retries, it fails with HTTP 409 `REQUEST_INTERRUPTED`. `GET /requests/{id}` returns the failure as the job's own status code, and nothing is charged for a failed job.
+**Failures.** Credit is checked from the decoded length before anything is transcribed; a file the balance cannot cover fails with HTTP 402 `INSUFFICIENT_CREDITS`. A file Scribe cannot read, or one longer than three hours, fails with HTTP 422 `INVALID_AUDIO`. If the backend stays busy past the job's retries, it fails with HTTP 409 `REQUEST_INTERRUPTED`; a job cancelled while processing fails with HTTP 409 `REQUEST_CANCELLED`. `GET /requests/{id}` returns the failure as the job's own status code, and nothing is charged for a failed job.
 
 `GET /api/v1/scribe` lists `jobs` with the current limits (`max_bytes`, `max_seconds`, `max_upload_bytes`, `part_bytes`, `chunk_seconds`, `overlap_seconds`, and the defaults). When `jobs` is absent, long audio is not available.
 
