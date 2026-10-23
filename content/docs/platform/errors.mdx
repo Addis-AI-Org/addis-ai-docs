@@ -61,7 +61,11 @@ type: 'string'
 | **400** | Bad Request | The request was unacceptable, often due to missing a required parameter. |
 | **401** | Unauthorized | No valid API key provided. |
 | **403** | Forbidden | The API key doesn't have permissions to perform the request. |
+| **402** | Payment Required | Your wallet balance is too low to cover the request. Top up and retry. |
 | **404** | Not Found | The requested resource (e.g., Model ID) doesn't exist. |
+| **409** | Conflict | The request conflicts with the current state: a request ID reused with different input, or a Scribe job that is finished or no longer takes parts. |
+| **413** | Payload Too Large | The request body is over its limit. See [request size limits](/docs/platform/limits#request-size-limits). |
+| **422** | Unprocessable Entity | The request is well formed but cannot be used, such as an invalid setting or an empty or unreadable audio file. |
 | **429** | Too Many Requests | The service is temporarily at capacity, or your account is temporarily limited. See [Rate Limits](/docs/platform/limits). |
 | **500** | Server Error | Something went wrong on Addis AI's end. |
 | **503** | Service Unavailable | The engine is currently overloaded. Please retry. |
