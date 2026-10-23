@@ -148,8 +148,9 @@ Stream microphone or PCM audio with `scribe.connect`. See [Connect live audio wi
 | SRT or VTT captions with speaker labels (0.6.0) | `toSrt(result)`, `toVtt(result)` | `addisai.to_srt(result)`, `addisai.to_vtt(result)` |
 | Long audio up to three hours as a job, with progress (0.9.0, Turbo) | `scribe.transcribeLong({ audio, speakers, timestamps, requestId, onProgress })` | `scribe.transcribe_long(audio=..., speakers=..., timestamps=..., request_id=..., on_progress=...)` |
 | Drive a long-audio job step by step (0.9.0) | `scribe.jobs.upload(...)`, `scribe.jobs.create(...)`, `scribe.jobs.putPart(...)`, `scribe.jobs.complete(...)`, `scribe.jobs.status(...)`, `scribe.jobs.wait(...)` | `scribe.jobs.upload(...)`, `scribe.jobs.create(...)`, `scribe.jobs.put_part(...)`, `scribe.jobs.complete(...)`, `scribe.jobs.status(...)`, `scribe.jobs.wait(...)` |
+| Cancel a long-audio job (0.10.0) | `scribe.jobs.cancel(requestId)` | `scribe.jobs.cancel(request_id)` |
 
-HTTP defaults to Turbo and `1120ms` chunks; live sessions default to Turbo and `320ms` chunks (SDK 0.7.0 and the API share this default; older SDKs send Standard unless told otherwise). Either transport accepts `320ms` or `1120ms`. File uploads accept at most **95 MiB / one hour**, speaker labels included. For anything longer, up to **three hours**, send a [long-audio job](#long-audio). Socket frames accept at most two seconds each, and a live session up to **15 minutes** in total. `GET /api/v1/scribe` returns the current limits (`max_upload_bytes`, `max_upload_seconds`, `max_live_seconds`).
+HTTP defaults to Turbo and `1120ms` chunks; live sessions default to Turbo and `320ms` chunks (SDK 0.7.0 and the API share this default; older SDKs send Standard unless told otherwise). Either transport accepts `320ms` or `1120ms`. File uploads accept at most **95 MiB / one hour**, speaker labels included. WAV files are accepted at any sample rate and channel count (stereo is mixed down); an empty file returns HTTP 422 `INVALID_AUDIO`. For anything longer, up to **three hours**, send a [long-audio job](#long-audio). Socket frames accept at most two seconds each, and a live session up to **15 minutes** in total. `GET /api/v1/scribe` returns the current limits (`max_upload_bytes`, `max_upload_seconds`, `max_live_seconds`).
 
 A long upload can take longer than a proxy keeps a request open. If the transcription is still running after about 75 seconds, `POST /transcribe` answers **202** with `{"data": {"request_id": "…", "status": "processing", "poll_url": "/api/v1/scribe/requests/…"}}` and a `Retry-After` header. The transcription keeps running and is billed once; poll `GET /api/v1/scribe/requests/{request_id}` (it answers 409 `IN_PROGRESS` until the result is ready). SDK 0.8.0 does this for you. With `stream=true` the response stays open, sending blank keep-alive lines that clients skip. Socket tickets are one-use and expire after **60 seconds**. An unavailable mode returns an error.
 
@@ -485,11 +486,11 @@ curl -X POST 'https://api.addisassistant.com/api/v1/scribe/jobs/my-meeting-2/com
   -H "x-api-key: $ADDIS_API_KEY"
 ```
 
-Every part but the last is exactly `part_bytes` long (currently 4 MiB). Send parts one at a time, in any order. To resume after a dropped connection, declare the job again with the same body: the answer is 200 with the `received` list, and you send only the parts that are missing. A stored part sent again with the same bytes is a no-op; different bytes return HTTP 409, and a wrong length returns HTTP 422. `POST …/complete` returns HTTP 409 `UPLOAD_INCOMPLETE` with the `missing` indexes while parts are still missing; calling it again is safe, and once the job runs it answers like the one-request create.
+The declaration is a JSON body of at most 4 KB; a larger one returns HTTP 413 `PAYLOAD_TOO_LARGE`. Every part but the last is exactly `part_bytes` long (currently 4 MiB). Send parts one at a time, in any order. To resume after a dropped connection, declare the job again with the same body: the answer is 200 with the `received` list, and you send only the parts that are missing. While the upload is open, a stored part sent again with the same bytes is a no-op; different bytes return HTTP 409, and a wrong length returns HTTP 422. `POST …/complete` returns HTTP 409 `UPLOAD_INCOMPLETE` with the `missing` indexes while parts are still missing; calling it again is safe, and once the job runs it answers like the one-request create. After `complete` the upload is closed: a part sent then returns HTTP 409 `UPLOAD_CLOSED`, as does a part sent to a job created with its audio in one request.
 
-An upload that receives no part for **30 minutes** is abandoned: it stops counting toward your account's job limit at once and is deleted with its parts, and its request ID is free again. If you come back later, the next part returns HTTP 404 `NOT_FOUND`; declare the job again and send every part. Any upload left incomplete is deleted after 24 hours. `expires_at` in the job view says when yours will be dropped.
+An unfinished upload expires **30 minutes** after its last new part arrived (or after the declaration, if no part has arrived yet). `expires_at` in the job view is that time, and it moves forward each time a new part is stored. Reading the job, declaring it again, or sending a stored part again does not move it. Once it expires, the upload no longer counts toward your account's limit of 2 jobs, it is deleted with its parts, `GET /api/v1/scribe/jobs/{request_id}` and any further part return HTTP 404 `NOT_FOUND`, and the request ID is free again: declare the job again and send every part. However often parts arrive, an upload must be completed within 24 hours of its declaration.
 
-**Cancel a job.** Send `DELETE /api/v1/scribe/jobs/{request_id}` with the same key. Nothing is charged for a cancelled job.
+**Cancel a job.** Send `DELETE /api/v1/scribe/jobs/{request_id}` with the same key. Nothing is charged for a cancelled job, including one stopped while processing: pieces already transcribed are not billed. The answer says what was cancelled: `was` is the state the job was in (`uploading`, `queued`, or `processing`), and `request_id_reusable` says whether you can use the request ID again at once.
 
 ```bash
 curl -X DELETE 'https://api.addisassistant.com/api/v1/scribe/jobs/my-meeting-2' \
@@ -595,7 +596,7 @@ The result has the same shape as `transcribe`, with `mode: "job"` and `chunks`, 
 
 Later reads of a completed job return the same result with `idempotent_replay: true` and no further charge.
 
-**How it works.** The gateway decodes the file, then cuts it at pauses into pieces of about **25 minutes**, each also hearing **30 seconds** of its neighbours. The pieces are transcribed on Turbo, a few at a time, and stitched back into one transcript: words in file time, the overlap deduplicated at each cut, and every piece's speaker numbers mapped onto one numbering through the words both neighbours heard. Only the final text is billed, once, exactly as `/transcribe`; the audio heard twice in the overlaps costs nothing extra.
+**How it works.** The gateway decodes the file, then cuts it at pauses into pieces of about **25 minutes**, each also hearing **2 minutes** of its neighbours. The pieces are transcribed on Turbo, a few at a time, and stitched back into one transcript: words in file time, the overlap deduplicated at each cut, and every piece's speaker numbers mapped onto one numbering through the words both neighbours heard. Only the final text is billed, once, exactly as `/transcribe`; the audio heard twice in the overlaps costs nothing extra.
 
 **Speakers across a cut.** Speaker numbers are matched across a cut through the shared minute around it. A speaker who says nothing during that whole minute but talks on both sides of it gets a second number. Check the labels before publishing anything where it matters who said what.
 
@@ -609,6 +610,20 @@ Later reads of a completed job return the same result with `idempotent_replay: t
 - There is no extra charge. Billing stays per transcribed character, on the final transcript only.
 
 **Failures.** Credit is checked from the decoded length before anything is transcribed; a file the balance cannot cover fails with HTTP 402 `INSUFFICIENT_CREDITS`. A file Scribe cannot read, or one longer than three hours, fails with HTTP 422 `INVALID_AUDIO`. If the backend stays busy past the job's retries, it fails with HTTP 409 `REQUEST_INTERRUPTED`; a job cancelled while processing fails with HTTP 409 `REQUEST_CANCELLED`. `GET /requests/{id}` returns the failure as the job's own status code, and nothing is charged for a failed job.
+
+**Job request errors.** These come back on the call that caused them, unlike the job failures above, which a poll returns:
+
+| HTTP | Code | When |
+|---|---|---|
+| 404 | `NOT_FOUND` | No such job on this account: it was never created, was cancelled before it ran, or its upload expired |
+| 409 | `UPLOAD_INCOMPLETE` | `complete` before every part is stored (`missing` lists them), or a poll before `complete` |
+| 409 | `UPLOAD_CLOSED` | A part sent after `complete`, or to a job created with its audio in one request |
+| 409 | `IDEMPOTENCY_CONFLICT` | A stored part sent again with different bytes, or a request ID reused for a different file or settings |
+| 409 | `JOB_FINISHED` | A cancel for a job that has already completed or failed |
+| 413 | `PAYLOAD_TOO_LARGE` | A JSON declaration over 4 KB, or a declared size over 512 MB |
+| 422 | `INVALID_AUDIO` | An empty audio file, or a part that is not the expected length |
+| 422 | `INVALID_REQUEST` | A malformed request ID or setting, or `backend=standard` |
+| 429 | `BUSY` | Your account already has 2 jobs in progress, or uploads are busy; retry after `Retry-After` |
 
 `GET /api/v1/scribe` lists `jobs` with the current limits (`max_bytes`, `max_seconds`, `max_upload_bytes`, `part_bytes`, `chunk_seconds`, `overlap_seconds`, and the defaults). When `jobs` is absent, long audio is not available.
 
@@ -720,7 +735,7 @@ These parameters go inside the `request_data` JSON string.
 
 ### Supported Formats
 
-We support standard audio containers. For the fastest processing, we recommend **WAV**.
+We support standard audio containers. For the fastest processing, we recommend **WAV**, at any sample rate and channel count.
 
 | Format | Content Types (MIME) |
 | :--- | :--- |
