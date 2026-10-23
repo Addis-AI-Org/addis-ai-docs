@@ -596,7 +596,7 @@ The result has the same shape as `transcribe`, with `mode: "job"` and `chunks`, 
 
 Later reads of a completed job return the same result with `idempotent_replay: true` and no further charge.
 
-**How it works.** The gateway decodes the file, then cuts it at pauses into pieces of about **25 minutes**, each also hearing **30 seconds** of its neighbours. The pieces are transcribed on Turbo, a few at a time, and stitched back into one transcript: words in file time, the overlap deduplicated at each cut, and every piece's speaker numbers mapped onto one numbering through the words both neighbours heard. Only the final text is billed, once, exactly as `/transcribe`; the audio heard twice in the overlaps costs nothing extra.
+**How it works.** The gateway decodes the file, then cuts it at pauses into pieces of about **25 minutes**, each also hearing **2 minutes** of its neighbours. The pieces are transcribed on Turbo, a few at a time, and stitched back into one transcript: words in file time, the overlap deduplicated at each cut, and every piece's speaker numbers mapped onto one numbering through the words both neighbours heard. Only the final text is billed, once, exactly as `/transcribe`; the audio heard twice in the overlaps costs nothing extra.
 
 **Speakers across a cut.** Speaker numbers are matched across a cut through the shared minute around it. A speaker who says nothing during that whole minute but talks on both sides of it gets a second number. Check the labels before publishing anything where it matters who said what.
 
