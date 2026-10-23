@@ -14,6 +14,19 @@ icon: Megaphone
 </AnnouncementHero>
 
 <AnnouncementFeed>
+  <AnnouncementItem label="Text-to-Speech" title="Tigrinya voices and batch generation" isNew>
+    Addis Voices 2 now speaks **Tigrinya** with seven native voices: Berhane (default),
+    Senait, Haben, Rahel, Filimon, Danait and Yonas. Send `language: "ti"` with any
+    `ti-` voice ID to `voice.generate`, streaming or real-time sessions, at the same
+    per-minute price as every other voice. **Batch generation** (beta) sends many requests
+    at once, finishes within 24 hours at half the standard rate, and supports Tigrinya
+    alongside Amharic and Afaan Oromo. SDK 0.9.0 adds `batches` and `files`.
+
+    <AnnouncementLink href="/docs/capabilities/text-to-speech#tigrinya-voices">
+      Browse the Tigrinya voices
+    </AnnouncementLink>
+  </AnnouncementItem>
+
   <AnnouncementItem label="Speech-to-Text" title="Long audio: transcribe up to three hours" isNew>
     Scribe now takes recordings of up to **three hours** as a job. Upload once (files over
     95 MB go up in parts), get a request ID back at once, poll for progress, and read one

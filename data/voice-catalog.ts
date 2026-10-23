@@ -2,7 +2,7 @@ export type VoiceCatalogEntry = {
   id: string;
   name: string;
   descriptor: string;
-  language: 'am' | 'om';
+  language: 'am' | 'om' | 'ti';
   gender: 'female' | 'male';
   style: string;
   sample: string;
@@ -266,5 +266,68 @@ export const voiceCatalog = [
     gender: 'male',
     style: 'Commercial',
     sample: `${CDN_BASE}/om-chala-v3.mp3`,
+  },
+  {
+    id: 'ti-berhane',
+    name: 'Berhane',
+    descriptor: 'A clear, mid-pitched male voice with a measured, formal pace suitable for narration.',
+    language: 'ti',
+    gender: 'male',
+    style: 'Narration',
+    sample: `${CDN_BASE}/ti-berhane-v1.mp3`,
+  },
+  {
+    id: 'ti-senait',
+    name: 'Senait',
+    descriptor: 'A clear, mid-to-high pitched female voice with a professional and engaging tone.',
+    language: 'ti',
+    gender: 'female',
+    style: 'Professional',
+    sample: `${CDN_BASE}/ti-senait-v1.mp3`,
+  },
+  {
+    id: 'ti-haben',
+    name: 'Haben',
+    descriptor: 'A female voice with a medium pitch and a serious, direct tone, speaking at a steady pace.',
+    language: 'ti',
+    gender: 'female',
+    style: 'Serious',
+    sample: `${CDN_BASE}/ti-haben-v1.mp3`,
+  },
+  {
+    id: 'ti-rahel',
+    name: 'Rahel',
+    descriptor: 'A clear, articulate female voice with a formal, authoritative tone and a consistent pace.',
+    language: 'ti',
+    gender: 'female',
+    style: 'Authoritative',
+    sample: `${CDN_BASE}/ti-rahel-v1.mp3`,
+  },
+  {
+    id: 'ti-filimon',
+    name: 'Filimon',
+    descriptor: 'A warm, mid-to-high pitched male voice with a conversational and expressive tone.',
+    language: 'ti',
+    gender: 'male',
+    style: 'Conversational',
+    sample: `${CDN_BASE}/ti-filimon-v1.mp3`,
+  },
+  {
+    id: 'ti-danait',
+    name: 'Danait',
+    descriptor: 'A direct, mid-pitched female voice with a clear and slightly fast-paced delivery.',
+    language: 'ti',
+    gender: 'female',
+    style: 'Direct',
+    sample: `${CDN_BASE}/ti-danait-v2.mp3`,
+  },
+  {
+    id: 'ti-yonas',
+    name: 'Yonas',
+    descriptor: 'A smooth, mid-pitched male voice with a calm, professional tone and a clear, moderate pace.',
+    language: 'ti',
+    gender: 'male',
+    style: 'Calm',
+    sample: `${CDN_BASE}/ti-yonas-v1.mp3`,
   },
 ] satisfies VoiceCatalogEntry[];

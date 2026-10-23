@@ -1,6 +1,6 @@
 ---
 title: Translation
-description: Translate text between Amharic, Afaan Oromo, and English.
+description: Translate text between Amharic, Afaan Oromo, Tigrinya, and English.
 icon: Languages
 ---
 
@@ -10,7 +10,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 import { Globe, RefreshCw, BookA, ShieldCheck } from 'lucide-react';
 
 
-The Translation API supports bidirectional translation between Amharic (`am`), Afaan Oromo (`om`), and English (`en`). All six source-to-target language combinations are available through the REST API and official SDKs.
+The Translation API supports bidirectional translation between Amharic (`am`), Afaan Oromo (`om`), Tigrinya (`ti`), and English (`en`). All twelve source-to-target language combinations are available through the REST API and official SDKs.
 ## Use Cases
 
 <div className="addis-offset-shell addis-grid grid-cols-1 md:grid-cols-3 mb-10">
@@ -47,7 +47,7 @@ The Translation API supports bidirectional translation between Amharic (`am`), A
 ## Usage Guide
 
 ### Basic Translation
-Translate text between any of the supported languages (`am`, `om`, `en`).
+Translate text between any of the supported languages (`am`, `om`, `ti`, `en`).
 
 <Tabs items={['Node.js', 'Python', 'cURL']}>
   <Tab value="Node.js">
@@ -97,10 +97,10 @@ Translate text between any of the supported languages (`am`, `om`, `en`).
 | Value | Node.js | Python | REST | Required |
 | :--- | :--- | :--- | :--- | :--- |
 | Text to translate | `text` | `text` | `text` | Yes |
-| Source language | `from` | `source` | `source_language` | Yes: `am`, `om`, or `en` |
-| Target language | `to` | `target` | `target_language` | Yes: `am`, `om`, or `en` |
+| Source language | `from` | `source` | `source_language` | Yes: `am`, `om`, `ti`, or `en` |
+| Target language | `to` | `target` | `target_language` | Yes: `am`, `om`, `ti`, or `en` |
 
-Source and target must be different. Translation is supported in both directions between Amharic, Afaan Oromo, and English.
+Source and target must be different. Translation is supported in both directions between Amharic, Afaan Oromo, Tigrinya, and English.
 
 ---
 
@@ -213,6 +213,9 @@ Ensure the highest quality translations with these guidelines.
 <code className="bg-fd-secondary px-2 py-1 rounded text-xs">Amharic ↔ Afaan Oromo</code>
 <code className="bg-fd-secondary px-2 py-1 rounded text-xs">Amharic ↔ English</code>
 <code className="bg-fd-secondary px-2 py-1 rounded text-xs">Afaan Oromo ↔ English</code>
+<code className="bg-fd-secondary px-2 py-1 rounded text-xs">Tigrinya ↔ Amharic</code>
+<code className="bg-fd-secondary px-2 py-1 rounded text-xs">Tigrinya ↔ Afaan Oromo</code>
+<code className="bg-fd-secondary px-2 py-1 rounded text-xs">Tigrinya ↔ English</code>
 </div>
 </div>
 </div>

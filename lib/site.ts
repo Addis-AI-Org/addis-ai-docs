@@ -15,4 +15,4 @@ export const SITE_URL = (
 export const ORGANIZATION_ID = 'https://addisai.ch/#organization';
 
 export const ORGANIZATION_DEFINITION =
-  'Addis AI builds Amharic and Afaan Oromo speech-to-text, text-to-speech and language models for developers and enterprises.';
+  'Addis AI builds Amharic, Afaan Oromo and Tigrinya speech-to-text, text-to-speech and language models for developers and enterprises.';

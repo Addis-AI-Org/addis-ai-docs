@@ -19,7 +19,7 @@ export function GET() {
 
 > ${ORGANIZATION_DEFINITION}
 
-API and SDK documentation for Addis AI: text generation, speech-to-text, text-to-speech, translation and realtime voice in Amharic and Afaan Oromo. Developer platform: https://addisassistant.com. Company site: https://addisai.ch. Full text of every page: ${SITE_URL}/llms-full.txt
+API and SDK documentation for Addis AI: text generation, speech-to-text, text-to-speech, translation and realtime voice in Amharic, Afaan Oromo and Tigrinya. Developer platform: https://addisassistant.com. Company site: https://addisai.ch. Full text of every page: ${SITE_URL}/llms-full.txt
 
 ## Pages
 

@@ -91,7 +91,7 @@ test('uses Addis AI documentation metadata for page titles and link previews', (
   assert.match(sharedMetadata, /Addis AI Documentation \| APIs & SDKs for African Languages/);
   assert.match(
     sharedMetadata,
-    /Build with Addis AI APIs and official Node\.js and Python SDKs for text generation, speech-to-text, Addis Voices 2, translation, multimodal reasoning, and realtime voice in Amharic and Afaan Oromo\./,
+    /Build with Addis AI APIs and official Node\.js and Python SDKs for text generation, speech-to-text, Addis Voices 2, translation, multimodal reasoning, and realtime voice in Amharic, Afaan Oromo and Tigrinya\./,
   );
   assert.match(appLayout, /template: `%s \| \$\{DOCUMENTATION_SITE_NAME\}`/);
   assert.match(appLayout, /openGraph:/);
@@ -348,12 +348,14 @@ test('corrects capability page descriptions, terminology, and title badges', () 
 
   assert.match(speechToText, /^title: Speech-to-Text$/m);
   assert.match(speechToText, /^description: Transcribe Amharic and Afaan Oromo audio into text\.$/m);
-  assert.match(translation, /^description: Translate text between Amharic, Afaan Oromo, and English\.$/m);
-  assert.match(translation, /The Translation API supports bidirectional translation between Amharic \(`am`\), Afaan Oromo \(`om`\), and English \(`en`\)\. All six source-to-target language combinations are available through the REST API and official SDKs\./);
+  assert.match(translation, /^description: Translate text between Amharic, Afaan Oromo, Tigrinya, and English\.$/m);
+  assert.match(translation, /The Translation API supports bidirectional translation between Amharic \(`am`\), Afaan Oromo \(`om`\), Tigrinya \(`ti`\), and English \(`en`\)\. All twelve source-to-target language combinations are available through the REST API and official SDKs\./);
   assert.match(translation, /Supported language pairs/);
   assert.match(translation, /Amharic ↔ Afaan Oromo/);
   assert.match(translation, /Amharic ↔ English/);
   assert.match(translation, /Afaan Oromo ↔ English/);
+  assert.match(translation, /Tigrinya ↔ English/);
+  assert.match(voiceCatalog, /label: 'Tigrinya'/);
   assert.doesNotMatch(visibleDocs, /Afan Oromo/);
   assert.doesNotMatch(translation, /Triangular Support|High-accuracy neural machine translation/);
 

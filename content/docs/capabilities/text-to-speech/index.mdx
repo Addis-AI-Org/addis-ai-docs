@@ -7,7 +7,7 @@ isNew: true
 
 import { VoiceCatalog } from '@/components/voice-catalog';
 
-Addis Voices 2 turns Amharic and Afaan Oromo text into durable audio clips. It is billed by generated duration at **5 ETB per minute**. Use `voice.generate` for completed clips, or follow [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming) for HTTP streams and persistent WebSocket sessions.
+Addis Voices 2 turns Amharic, Afaan Oromo and Tigrinya text into durable audio clips. It is billed by generated duration at **5 ETB per minute**. Use `voice.generate` for completed clips, or follow [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming) for HTTP streams and persistent WebSocket sessions.
 
 <Callout type="warn" title="Maintaining a Voice 1 integration?">
 The original Text-to-Speech API is deprecated and hidden from the primary navigation. [Open the Legacy Text-to-Speech guide →](/docs/capabilities/text-to-speech-legacy)
@@ -15,7 +15,7 @@ The original Text-to-Speech API is deprecated and hidden from the primary naviga
 
 ## Discover voices
 
-Query the catalog rather than copying an arbitrary ID into production configuration. `am-hamen` is the canonical Amharic example.
+Query the catalog rather than copying an arbitrary ID into production configuration. `am-hamen` is the canonical Amharic example, `om-bikila` the Afaan Oromo one and `ti-berhane` the Tigrinya one.
 
 <Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
   <Tab>
@@ -47,16 +47,59 @@ The catalog is dynamic. Filter for the requested language and store only IDs cur
 
 | Filter | Node.js | Python | Values |
 | --- | --- | --- | --- |
-| Language | `language` | `language` | `am` or `om` |
+| Language | `language` | `language` | `am`, `om`, or `ti` |
 | Gender | `gender` | `gender` | `female` or `male` |
 | Search | `search` | `search` | Name, ID, descriptor, style, or tag text |
 | Include unavailable voices | `includeUnavailable` | `include_unavailable` | `false` by default |
 
 ### Browse current voice IDs
 
-The playable catalog below is synchronized with the current backend availability list and developer-platform previews, and was verified on July 23, 2026. Your application should still call `voices.list()` because availability can change without a documentation release.
+The playable catalog below is synchronized with the current backend availability list and developer-platform previews, and was last verified against production on October 23, 2026, when the Tigrinya voices were added. Your application should still call `voices.list()` because availability can change without a documentation release.
 
 <VoiceCatalog />
+
+### Tigrinya voices
+
+Seven native Tigrinya voices are available. Send `language: "ti"` with any of these IDs; `ti-berhane` is the default. Pricing is the same per generated minute as every other Voices 2 voice.
+
+| Voice ID | Name | Gender | Style |
+| --- | --- | --- | --- |
+| `ti-berhane` | Berhane (default) | Male | Narration |
+| `ti-senait` | Senait | Female | Professional |
+| `ti-haben` | Haben | Female | Serious |
+| `ti-rahel` | Rahel | Female | Authoritative |
+| `ti-filimon` | Filimon | Male | Conversational |
+| `ti-danait` | Danait | Female | Direct |
+| `ti-yonas` | Yonas | Male | Calm |
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const clip = await addis.voice.generate({
+  voiceId: "ti-berhane",
+  language: "ti",
+  text: "ሰላም፣ እንቋዕ ብደሓን መጻእኩም።",
+});
+```
+  </Tab>
+  <Tab>
+```python
+clip = addis.voice.generate(
+    voice_id="ti-berhane",
+    language="ti",
+    text="ሰላም፣ እንቋዕ ብደሓን መጻእኩም።",
+)
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/generations \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"voice_id":"ti-berhane","language":"ti","text":"ሰላም፣ እንቋዕ ብደሓን መጻእኩም።","output_format":"mp3_44100"}'
+```
+  </Tab>
+</Tabs>
 
 ## Preview a voice
 
@@ -179,6 +222,59 @@ curl --location "$(jq -r '.data.audio_url' voice.json)" \
 </Tabs>
 
 The cURL example requires `jq`. A generation response contains clip metadata and a signed `audio_url`. A first response may also include an audio data URL; an idempotent replay can omit that inline field, so use the signed URL or SDK file helper.
+
+## Batch generation (beta)
+
+Send many text-to-speech requests in one batch. Batches run off-peak, every batch finishes within 24 hours, and only finished requests are billed, at half the standard Voices 2 rate. Batches accept the same languages and voices as `voice.generate`, including all seven Tigrinya voices. Each request's voice ID must match its language; the SDK rejects any other language before uploading.
+
+Batch is in beta and enabled per account, and the account needs at least one paid top-up. Ask [support@addisassistant.com](mailto:support@addisassistant.com) to enable it. The SDK methods below need Node.js or Python SDK **0.9.0** or later.
+
+<Tabs items={['Node.js', 'Python']} groupId="integration-language">
+  <Tab>
+```ts
+const batch = await addis.batches.createFromRequests({
+  requests: chapters.map((text, index) => ({
+    customId: `chapter-${index + 1}`,
+    text,                 // e.g. "ሎሚ ጽቡቕ መዓልቲ እዩ።"
+    voiceId: "ti-berhane",
+    language: "ti",
+  })),
+  metadata: { project: "audiobook" },
+});
+
+const done = await addis.batches.waitFor(batch.id); // polls every 30 s
+for await (const result of addis.batches.results(done.id)) {
+  if (result.status === "succeeded") {
+    const audio = await addis.files.content(result.response!.audioFileId);
+    // save audio
+  } else {
+    console.warn(result.customId, result.error);
+  }
+}
+```
+  </Tab>
+  <Tab>
+```python
+batch = addis.batches.create_from_requests(
+    [
+        {"custom_id": f"chapter-{i}", "text": text, "voice_id": "ti-berhane", "language": "ti"}
+        for i, text in enumerate(chapters, start=1)
+    ],
+    metadata={"project": "audiobook"},
+)
+
+done = addis.batches.wait_for(batch["id"])  # polls every 30 s
+for result in addis.batches.results(done["id"]):
+    if result["status"] == "succeeded":
+        audio = addis.files.content(result["response"]["audio_file_id"])
+        # save audio
+    else:
+        print(result["custom_id"], result["error"])
+```
+  </Tab>
+</Tabs>
+
+Already have a JSONL file with one `{"custom_id": "...", "body": {...}}` per line? Upload it with `files.upload` and pass its ID to `batches.create`. `batches.cancel` stops queued requests; running ones finish and are billed.
 
 ## Streaming
 
