@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DemoNavigation } from '@/components/demo-navigation';
 import { Captions, Check, Copy, Download, FileAudio, Loader2, Mic, Square, Users, Zap } from 'lucide-react';
-import { SCRIBE_API, appendLiveSegments, authHeaders, pcm16, readJson, readTranscriptStream, segmentAt, speakerTurns, toSrt, toVtt, validateSocketUrl, wordsBySegment, wrapCaption, type Backend, type ScribeLiveSegment, type ScribeResult, type ScribeSegment, type ScribeWord } from '@/lib/scribe-client';
+import { SCRIBE_API, SCRIBE_LANGUAGES, appendLiveSegments, authHeaders, pcm16, readJson, readTranscriptStream, segmentAt, sessionBody, speakerTurns, toSrt, toVtt, uploadQuery, validateSocketUrl, wordsBySegment, wrapCaption, type Backend, type ScribeLanguage, type ScribeLiveSegment, type ScribeResult, type ScribeSegment, type ScribeWord } from '@/lib/scribe-client';
 
 type Phase = 'idle' | 'connecting' | 'recording' | 'processing';
 type Runtime = { socket?: WebSocket; context?: AudioContext; stream?: MediaStream; source?: MediaStreamAudioSourceNode; node?: AudioWorkletNode; mute?: GainNode; timer?: ReturnType<typeof setTimeout>; deadline?: ReturnType<typeof setTimeout>; cancelled: boolean; flushed?: () => void };
@@ -23,11 +23,19 @@ const UNATTRIBUTED_STYLE = { text: 'text-fd-muted-foreground', bg: 'bg-fd-muted'
 function speakerStyle(speaker: number | null | undefined) {
   return typeof speaker === 'number' && speaker >= 1 ? SPEAKER_STYLES[(speaker - 1) % SPEAKER_STYLES.length] : UNATTRIBUTED_STYLE;
 }
+/** Empty-transcript hint in the language being transcribed; `lang` keeps the right script and font fallback. */
+const PLACEHOLDER: Record<ScribeLanguage, { lang: string; text: string }> = {
+  am: { lang: 'am', text: 'የእርስዎ ጽሑፍ እዚህ ይታያል።' },
+  om: { lang: 'en', text: 'Your Afaan Oromo transcript appears here.' },
+};
 const button = 'inline-flex items-center justify-center gap-2 rounded-md border border-fd-border px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary disabled:cursor-not-allowed disabled:opacity-50';
 
 export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const [credential, setCredential] = useState('');
   const [backend, setBackend] = useState<Backend>('turbo');
+  const [language, setLanguage] = useState<ScribeLanguage>('am');
+  // The language of the transcript on screen, fixed when a request starts.
+  const [textLanguage, setTextLanguage] = useState<ScribeLanguage>('am');
   const [file, setFile] = useState<File | null>(null);
   const [uploadStream, setUploadStream] = useState(false);
   const [timestamps, setTimestamps] = useState(true);
@@ -37,7 +45,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const [captionFile, setCaptionFile] = useState<File | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [text, setText] = useState('');
-  const [status, setStatus] = useState('Record Amharic speech or upload audio.');
+  const [status, setStatus] = useState('Record speech or upload audio in Amharic or Afaan Oromo.');
   const [error, setError] = useState('');
   const [result, setResult] = useState<ScribeResult | null>(null);
   const [requestId, setRequestId] = useState('');
@@ -49,7 +57,9 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const busy = phase !== 'idle';
   // Speaker labels ride on word timestamps and are Turbo only, so they pin the backend to Turbo while on.
   const labelSpeakers = timestamps && speakers;
-  const pinTurbo = labelSpeakers || liveSpeakers;
+  // Afaan Oromo is transcribed on Turbo only, so it pins the backend too.
+  const oromo = language === 'om';
+  const pinTurbo = labelSpeakers || liveSpeakers || oromo;
 
   const stopAudio = (rt: Runtime) => {
     clearTimeout(rt.timer);
@@ -83,7 +93,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const startRequest = () => {
     const headers = authHeaders(credential);
     const id = `docs_${crypto.randomUUID().replaceAll('-', '')}`;
-    setRequestId(id); setText(''); setResult(null); setError(''); setCopied(false); setCaptionFile(null); setLiveSegments(null);
+    setRequestId(id); setText(''); setResult(null); setError(''); setCopied(false); setCaptionFile(null); setLiveSegments(null); setTextLanguage(language);
     return { headers, id };
   };
   const recover = async () => {
@@ -102,9 +112,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
       if (timestamps) setCaptionFile(file);
       setPhase('processing'); setStatus(streamUpdates ? 'Uploading audio, then streaming transcript updates…' : labelSpeakers ? 'Uploading and transcribing audio with word timestamps and speaker labels…' : timestamps ? 'Uploading and transcribing audio with word timestamps…' : 'Uploading and transcribing audio…');
       const body = new FormData(); body.set('audio', file);
-      const query = new URLSearchParams({ backend: labelSpeakers ? 'turbo' : backend, chunk: '1120ms', stream: String(streamUpdates), request_id: id });
-      if (timestamps) query.set('timestamps', 'word');
-      if (labelSpeakers) query.set('speakers', 'true');
+      const query = uploadQuery({ backend, language, stream: streamUpdates, requestId: id, timestamps, speakers: labelSpeakers });
       const response = await fetch(`${SCRIBE_API}/transcribe?${query}`, { method: 'POST', headers, body, cache: 'no-store' });
       const data = await readTranscriptStream(response, partial => { if (mounted.current) setText(partial); });
       if (mounted.current) complete(data);
@@ -137,7 +145,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
       if (rt.context.sampleRate !== 16000) throw new Error('This browser cannot capture at 16 kHz. Upload an audio file instead.');
       await rt.context.audioWorklet.addModule('/scribe-pcm-worklet.js');
       await rt.context.resume();
-      const ticket = await readJson(await fetch(`${SCRIBE_API}/sessions`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(liveSpeakers ? { backend: 'turbo', chunk: '320ms', request_id: id, speakers: true } : { backend, chunk: '320ms', request_id: id }), cache: 'no-store' }));
+      const ticket = await readJson(await fetch(`${SCRIBE_API}/sessions`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(sessionBody({ backend, language, requestId: id, speakers: liveSpeakers })), cache: 'no-store' }));
       if (rt.cancelled || !mounted.current) { stopAudio(rt); return; }
       const socket = new WebSocket(validateSocketUrl(ticket.websocket_url)); rt.socket = socket;
       rt.deadline = setTimeout(() => {
@@ -170,7 +178,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
             socket.send(pcm16(message.data));
           };
           rt.source.connect(rt.node); rt.node.connect(rt.mute); rt.mute.connect(rt.context.destination);
-          setPhase('recording'); setStatus(data.speakers ? 'Listening in Amharic. Speaker lines appear after each pause; grey text may change.' : 'Listening in Amharic. Partial text may change as you speak.');
+          setPhase('recording'); setStatus(data.speakers ? `Listening in ${SCRIBE_LANGUAGES[language]}. Speaker lines appear after each pause; grey text may change.` : `Listening in ${SCRIBE_LANGUAGES[language]}. Partial text may change as you speak.`);
           rt.timer = setTimeout(finishRecording, 175000);
         } catch (e) { fail(e instanceof Error ? e.message : 'Invalid streaming response.'); }
       };
@@ -185,7 +193,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
       <div className="border-b border-fd-border p-5 sm:p-6">
         <DemoNavigation fullPage={fullPage} href="/docs/playground/speech-to-text" docsHref="/docs/capabilities/speech-to-text" />
         <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-fd-primary">Addis Scribe · Live API</p>
-        <h3 id="scribe-demo-title" className="text-xl font-semibold tracking-tight">Try Amharic transcription</h3>
+        <h3 id="scribe-demo-title" className="text-xl font-semibold tracking-tight">Try Amharic and Afaan Oromo transcription</h3>
         <p className="mt-2 text-sm leading-6 text-fd-muted-foreground">Record live or upload audio. Standard transcription rates apply.</p>
       </div>
       <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
@@ -197,6 +205,16 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
             <p className="text-xs leading-5 text-fd-muted-foreground">Your API key is not saved. <a href="https://addisassistant.com/apikeys" target="_blank" rel="noopener noreferrer" className="underline decoration-fd-foreground/30 underline-offset-4 hover:decoration-fd-primary">Get an API key</a>.</p>
             <button type="button" disabled={!credential.trim() || checking} className={`${button} w-full`} onClick={checkWallet}>{checking && <Loader2 className="size-4 animate-spin" />}Check balance and rate</button>
             {pricing && <p className="text-sm tabular-nums">Balance <strong>{pricing.balance.toFixed(4)} ETB</strong><br /><span className="text-fd-muted-foreground">{pricing.pricing.price_per_1000_characters} ETB / 1,000 transcribed characters</span></p>}
+          </fieldset>
+          <fieldset disabled={busy}>
+            <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Language</legend>
+            <div className="grid grid-cols-2 items-start gap-2">
+              {(['am', 'om'] as const).map(value => (
+                <button key={value} type="button" aria-pressed={language === value} onClick={() => { setLanguage(value); if (value === 'om') setBackend('turbo'); }} className={`${button} w-full whitespace-nowrap ${language === value ? 'border-fd-primary bg-fd-primary/10 text-fd-primary' : ''}`}>
+                  {SCRIBE_LANGUAGES[value]}
+                </button>
+              ))}
+            </div>
           </fieldset>
           <fieldset disabled={busy}>
             <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Speed</legend>
@@ -211,7 +229,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
                 </div>
               ))}
             </div>
-            {pinTurbo && <p id="scribe-speakers-turbo" className="mt-2 text-xs leading-5 text-fd-muted-foreground">Speaker labels need Turbo. Turn off Label speakers to choose Standard.</p>}
+            {pinTurbo && <p id="scribe-speakers-turbo" className="mt-2 text-xs leading-5 text-fd-muted-foreground">{oromo ? 'Afaan Oromo is transcribed on Turbo. Choose Amharic to use Standard.' : 'Speaker labels need Turbo. Turn off Label speakers to choose Standard.'}</p>}
           </fieldset>
           <div className="space-y-3">
             <button type="button" className={`${button} w-full bg-fd-primary text-fd-primary-foreground`} disabled={(busy && phase !== 'recording') || !credential.trim()} onClick={phase === 'recording' ? finishRecording : record}>{phase === 'recording' ? <><Square className="size-4" />Finish recording</> : <><Mic className="size-4" />Record live</>}</button>
@@ -244,9 +262,9 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
           </div>
           <p role="status" className="mb-4 flex items-center gap-2 text-xs leading-5 text-fd-muted-foreground">{busy && <Loader2 className="size-3.5 shrink-0 animate-spin" />}{status}</p>
           {error && <p role="alert" className="mb-4 rounded border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
-          {liveSegments ? <LiveSpeakerTranscript segments={result?.segments ?? liveSegments} partial={result ? '' : text} /> : <div lang="am" aria-live="polite" aria-atomic="true" className="min-h-40 flex-1 whitespace-pre-wrap break-words text-lg leading-9">{text || <span className="text-fd-muted-foreground/60">የእርስዎ ጽሑፍ እዚህ ይታያል።</span>}</div>}
-          {result?.segments && captionFile && <CaptionPlayer key={`${result.request_id}-${captionFile.name}-${captionFile.lastModified}`} file={captionFile} result={result} />}
-          {result && <dl className="mt-6 grid grid-cols-2 gap-3 border-t border-fd-border pt-4 text-sm tabular-nums"><div><dt className="text-xs text-fd-muted-foreground">Charged</dt><dd className="mt-1 font-semibold">{result.usage.credits_used.toFixed(4)} {result.usage.currency}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Characters</dt><dd className="mt-1 font-semibold">{result.usage.characters}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Audio duration</dt><dd className="mt-1">{result.seconds.toFixed(2)} s</dd></div><div><dt className="text-xs text-fd-muted-foreground">Model compute</dt><dd className="mt-1">{(result.compute_ms / 1000).toFixed(2)} s · {result.backend === 'standard' ? 'Standard' : 'Turbo'}</dd></div></dl>}
+          {liveSegments ? <LiveSpeakerTranscript segments={result?.segments ?? liveSegments} partial={result ? '' : text} language={textLanguage} /> : <div lang={textLanguage} aria-live="polite" aria-atomic="true" className="min-h-40 flex-1 whitespace-pre-wrap break-words text-lg leading-9">{text || <span lang={PLACEHOLDER[language].lang} className="text-fd-muted-foreground/60">{PLACEHOLDER[language].text}</span>}</div>}
+          {result?.segments && captionFile && <CaptionPlayer key={`${result.request_id}-${captionFile.name}-${captionFile.lastModified}`} file={captionFile} result={result} language={result.language ?? textLanguage} />}
+          {result && <dl className="mt-6 grid grid-cols-2 gap-3 border-t border-fd-border pt-4 text-sm tabular-nums"><div><dt className="text-xs text-fd-muted-foreground">Charged</dt><dd className="mt-1 font-semibold">{result.usage.credits_used.toFixed(4)} {result.usage.currency}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Characters</dt><dd className="mt-1 font-semibold">{result.usage.characters}</dd></div><div><dt className="text-xs text-fd-muted-foreground">Audio duration</dt><dd className="mt-1">{result.seconds.toFixed(2)} s</dd></div><div><dt className="text-xs text-fd-muted-foreground">Model compute</dt><dd className="mt-1">{(result.compute_ms / 1000).toFixed(2)} s · {result.backend === 'standard' ? 'Standard' : 'Turbo'}</dd></div><div className="col-span-2"><dt className="text-xs text-fd-muted-foreground">Language and model</dt><dd className="mt-1 break-all">{SCRIBE_LANGUAGES[result.language ?? textLanguage]}{result.model && <> · <code className="text-xs">{result.model}</code></>}</dd></div></dl>}
           {requestId && <div className="mt-5 border-t border-fd-border pt-4"><p className="break-all font-mono text-[10px] text-fd-muted-foreground">Request: {requestId}</p><button type="button" disabled={busy} onClick={recover} className={`${button} mt-3`}>Recover request</button></div>}
           <p className="mt-5 text-xs leading-5 text-fd-muted-foreground">Disconnected? Recover your transcript with no duplicate charge.</p>
         </div>
@@ -272,18 +290,18 @@ function speakerLabel(speaker: number | null | undefined) {
 }
 
 /** Running speaker transcript: committed turns in their speaker's colour, then the unlabelled partial in muted text. */
-function LiveSpeakerTranscript({ segments, partial }: { segments: ScribeSegment[]; partial: string }) {
+function LiveSpeakerTranscript({ segments, partial, language }: { segments: ScribeSegment[]; partial: string; language: ScribeLanguage }) {
   const turns = speakerTurns(segments);
   return (
     <div aria-live="polite" className="min-h-40 flex-1 space-y-3 break-words">
       {turns.map((turn, i) => (
         <p key={`${turn.start}-${i}`} className="text-lg leading-8">
           <span className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider ${speakerStyle(turn.speaker).text}`}><span aria-hidden="true" className={`size-2 rounded-full ${speakerStyle(turn.speaker).dot}`} />{speakerLabel(turn.speaker)}</span>
-          <span lang="am">{turn.text}</span>
+          <span lang={language}>{turn.text}</span>
         </p>
       ))}
-      {partial && <p lang="am" className="text-lg leading-8 text-fd-muted-foreground">{partial}</p>}
-      {!turns.length && !partial && <p lang="am" className="text-lg leading-9 text-fd-muted-foreground/60">የእርስዎ ጽሑፍ እዚህ ይታያል።</p>}
+      {partial && <p lang={language} className="text-lg leading-8 text-fd-muted-foreground">{partial}</p>}
+      {!turns.length && !partial && <p lang={PLACEHOLDER[language].lang} className="text-lg leading-9 text-fd-muted-foreground/60">{PLACEHOLDER[language].text}</p>}
     </div>
   );
 }
@@ -304,7 +322,7 @@ function captionLines(text: string, words: ScribeWord[]): { text: string; words:
   });
 }
 
-function CaptionPlayer({ file, result }: { file: File; result: ScribeResult }) {
+function CaptionPlayer({ file, result, language }: { file: File; result: ScribeResult; language: ScribeLanguage }) {
   const segments = useMemo(() => result.segments ?? [], [result]);
   const groups = useMemo(() => wordsBySegment(result), [result]);
   const audio = useRef<HTMLAudioElement | null>(null);
@@ -366,7 +384,7 @@ function CaptionPlayer({ file, result }: { file: File; result: ScribeResult }) {
       <div aria-label="Caption preview" role="region" className="flex min-h-28 flex-col items-center justify-center rounded-md border border-fd-border bg-fd-secondary/40 px-4 py-5 text-center">
         {cue && labelled && <p className={`mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${speakerStyle(cue.speaker).text}`}><span aria-hidden="true" className={`size-2 rounded-full ${speakerStyle(cue.speaker).dot}`} />{speakerLabel(cue.speaker)}</p>}
         {cue ? (
-          <p lang="am" className="text-lg leading-8">
+          <p lang={language} className="text-lg leading-8">
             {captionLines(cue.text, words).map((line, lineIndex, lines) => {
               const before = lines.slice(0, lineIndex).reduce((sum, previous) => sum + previous.words.length, 0);
               return (
@@ -395,7 +413,7 @@ function CaptionPlayer({ file, result }: { file: File; result: ScribeResult }) {
               <span className="font-mono text-[11px] leading-5 tabular-nums text-fd-muted-foreground">{clock(segment.start)}<br />{clock(segment.end)}</span>
               <span className="leading-6">
                 {labelled && <span className={`block text-[11px] font-semibold uppercase tracking-wider ${speakerStyle(segment.speaker).text}`}>{speakerLabel(segment.speaker)}</span>}
-                <span lang="am">{wrapCaption(segment.text).map((line, j) => <span key={j} className="block">{line}</span>)}</span>
+                <span lang={language}>{wrapCaption(segment.text).map((line, j) => <span key={j} className="block">{line}</span>)}</span>
               </span>
             </button>
           </li>
