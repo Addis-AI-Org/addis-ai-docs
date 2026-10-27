@@ -17,6 +17,8 @@ Our Speech-to-Text (STT) technology is powered by specialized models trained to 
 
 Transcribe **Amharic** live or upload audio. Choose **Turbo · 3× speed** (the default) or **Standard** and enter your API key. Both modes use the same transcription rate. Uploaded files can also return [word timestamps and captions](#timestamps-and-captions) that play in sync with your audio.
 
+Scribe also transcribes **Afaan Oromo**: add `language=om` to the API calls below. See [Afaan Oromo](#afaan-oromo).
+
 <ScribeDemo />
 
 ### Scribe HTTP and streaming API
@@ -29,7 +31,7 @@ curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?backend=turbo&requ
   -F 'audio=@audio.wav'
 ```
 
-Use `backend=turbo` for Turbo (the default) or `backend=standard` for Standard. Add `stream=true` for newline-delimited `transcript.partial` events after uploading; `transcript.completed` includes the final text and confirmed wallet usage. An ordinary HTTP request returns `data.text`, `data.seconds`, `data.compute_ms`, and `data.usage` as JSON.
+Use `backend=turbo` for Turbo (the default) or `backend=standard` for Standard. Add `language=om` to transcribe Afaan Oromo (Turbo only); without it, Scribe transcribes Amharic (`am`). Add `stream=true` for newline-delimited `transcript.partial` events after uploading; `transcript.completed` includes the final text and confirmed wallet usage. An ordinary HTTP request returns `data.text`, `data.seconds`, `data.compute_ms`, and `data.usage` as JSON.
 
 For live microphone input, see [Live transcription](/docs/capabilities/speech-to-text/live).
 
@@ -39,7 +41,7 @@ For live microphone input, see [Live transcription](/docs/capabilities/speech-to
 
 ### Scribe SDK quick start
 
-Install the SDK with the commands below. Scribe currently recognizes **Amharic**; the existing `speech.transcribe` method below continues to use the separate file-transcription service.
+Install the SDK with the commands below. Scribe recognizes **Amharic** (`am`, the default) and **Afaan Oromo** (`om`). The SDKs do not send `language` yet, so they transcribe Amharic; for Afaan Oromo, call the HTTP API with `language=om` as shown in [Afaan Oromo](#afaan-oromo). The existing `speech.transcribe` method below continues to use the separate file-transcription service.
 
 Keep `ADDIS_API_KEY` on your application server. For browser integrations, create a Scribe session on your server and return the scoped one-use ticket to the browser.
 
@@ -150,7 +152,7 @@ Stream microphone or PCM audio with `scribe.connect`. See [Connect live audio wi
 | Drive a long-audio job step by step (0.9.0) | `scribe.jobs.upload(...)`, `scribe.jobs.create(...)`, `scribe.jobs.putPart(...)`, `scribe.jobs.complete(...)`, `scribe.jobs.status(...)`, `scribe.jobs.wait(...)` | `scribe.jobs.upload(...)`, `scribe.jobs.create(...)`, `scribe.jobs.put_part(...)`, `scribe.jobs.complete(...)`, `scribe.jobs.status(...)`, `scribe.jobs.wait(...)` |
 | Cancel a long-audio job (0.10.0) | `scribe.jobs.cancel(requestId)` | `scribe.jobs.cancel(request_id)` |
 
-HTTP defaults to Turbo and `1120ms` chunks; live sessions default to Turbo and `320ms` chunks (SDK 0.7.0 and the API share this default; older SDKs send Standard unless told otherwise). Either transport accepts `320ms` or `1120ms`. File uploads accept at most **95 MiB / one hour**, speaker labels included. WAV files are accepted at any sample rate and channel count (stereo is mixed down); an empty file returns HTTP 422 `INVALID_AUDIO`. For anything longer, up to **three hours**, send a [long-audio job](#long-audio). Socket frames accept at most two seconds each, and a live session up to **15 minutes** in total. `GET /api/v1/scribe` returns the current limits (`max_upload_bytes`, `max_upload_seconds`, `max_live_seconds`).
+HTTP defaults to Turbo and `1120ms` chunks; live sessions default to Turbo and `320ms` chunks (SDK 0.7.0 and the API share this default; older SDKs send Standard unless told otherwise). Either transport accepts `320ms` or `1120ms`. File uploads accept at most **95 MiB / one hour**, speaker labels included. WAV files are accepted at any sample rate and channel count (stereo is mixed down); an empty file returns HTTP 422 `INVALID_AUDIO`. For anything longer, up to **three hours**, send a [long-audio job](#long-audio). Socket frames accept at most two seconds each, and a live session up to **15 minutes** in total. `GET /api/v1/scribe` returns the current limits (`max_upload_bytes`, `max_upload_seconds`, `max_live_seconds`) and, in `languages`, the backends each language supports.
 
 A long upload can take longer than a proxy keeps a request open. If the transcription is still running after about 75 seconds, `POST /transcribe` answers **202** with `{"data": {"request_id": "…", "status": "processing", "poll_url": "/api/v1/scribe/requests/…"}}` and a `Retry-After` header. The transcription keeps running and is billed once; poll `GET /api/v1/scribe/requests/{request_id}` (it answers 409 `IN_PROGRESS` until the result is ready). SDK 0.8.0 does this for you. With `stream=true` the response stays open, sending blank keep-alive lines that clients skip. Socket tickets are one-use and expire after **60 seconds**. An unavailable mode returns an error.
 
@@ -161,6 +163,81 @@ Only the **final transcript** is billable. Partial events are provisional cumula
 Save a request ID before sending audio. The SDK disables automatic retries for paid uploads and ticket creation. If the response is interrupted or billing is pending, call `scribe.recover` with that ID and the same account's key. A completed replay returns its original settled result without another deduction. Use a new ID when changing audio, backend, chunk, or HTTP streaming settings. Accepted audio can still finish and be billed after a socket disconnect or when you stop reading an HTTP stream.
 
 Completed results remain recoverable for 24 hours; pending settlement remains recoverable. Recovery can report `IN_PROGRESS`, `BILLING_PENDING`, `REQUEST_INTERRUPTED`, or `NOT_FOUND`. Do not display a confirmed charge unless `usage.settled` is true. A request beyond your account's limit (10 file transcriptions or 3 live sessions at once), or one that finds the service at capacity, returns HTTP 429 with `Retry-After`. Changed inputs with a reused ID return HTTP 409.
+
+### Afaan Oromo <NewBadge className="ml-2 align-middle" /> [#afaan-oromo]
+
+Scribe transcribes **Afaan Oromo** (language code `om`) as well as Amharic (`am`, the default). It is the same API with one extra parameter: uploads, live sessions, word timestamps, SRT and VTT captions, speaker labels and long-audio jobs all work in Oromo, with the same limits and the same price per character as Amharic. Afaan Oromo runs on **Turbo** only.
+
+<TypeTable
+  type={{
+    'language': {
+      description: 'The spoken language: "am" (Amharic) or "om" (Afaan Oromo). A query parameter on POST /api/v1/scribe/transcribe and POST /api/v1/scribe/jobs, and a JSON field in the POST /api/v1/scribe/sessions body. Long-audio jobs also accept it in the JSON body of a declaration. Any other value returns HTTP 422 UNSUPPORTED_LANGUAGE. "om" is Turbo only: with backend=standard the request returns HTTP 422 INVALID_REQUEST.',
+      type: '"am" | "om"',
+      default: '"am"',
+    },
+  }}
+/>
+
+| | Amharic (`am`) | Afaan Oromo (`om`) |
+| --- | --- | --- |
+| `model` in responses | `addis-scribe-streaming` | `addis-scribe-oromo-streaming` |
+| Backends | Standard, Turbo | Turbo only |
+| File uploads and live sessions | Yes | Yes |
+| Word timestamps, SRT and VTT captions | Yes | Yes |
+| Speaker labels (uploads and live) | Yes | Yes |
+| Long-audio jobs | Yes | Yes |
+| Chunks | `320ms`, `1120ms` | `320ms`, `1120ms` |
+| Limits | Uploads 95 MB and one hour, live 15 minutes | Same |
+| Price | Per transcribed character | Same rate as Amharic |
+
+Upload an Oromo recording. Every other option (`chunk`, `stream`, `timestamps`, `format`, `speakers`, `request_id`) works as for Amharic; leave `backend` at its default, `turbo`:
+
+```bash
+curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?language=om&request_id=my-oromo-1' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -F 'audio=@oromo.wav'
+
+# Oromo captions with speaker labels
+curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?language=om&speakers=true&format=srt&request_id=my-oromo-2' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -F 'audio=@interview.wav' \
+  -o captions.srt
+```
+
+The result has the usual shape. Oromo results also carry `language`, set to `om`, and `model`, set to `addis-scribe-oromo-streaming`:
+
+```json
+{
+  "data": {
+    "request_id": "my-oromo-1",
+    "text": "…",
+    "language": "om",
+    "backend": "turbo"
+  }
+}
+```
+
+For live Oromo, add `"language": "om"` to the session body, then connect to the WebSocket exactly as for Amharic (see [Live transcription](/docs/capabilities/speech-to-text/live)):
+
+```bash
+curl 'https://api.addisassistant.com/api/v1/scribe/sessions' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"language": "om", "backend": "turbo", "chunk": "320ms", "request_id": "my-oromo-live-1"}'
+```
+
+For a long Oromo recording, add `language=om` to the [long-audio job](#long-audio) request, for example `POST /api/v1/scribe/jobs?language=om&request_id=my-oromo-meeting-1&speakers=true`. For a job sent in parts, put `"language": "om"` in the JSON body of the declaration, or in its query string; both are accepted, and the body wins if they differ.
+
+Leaving out `language` means Amharic, exactly as before: Amharic requests and responses are unchanged. An unknown value returns HTTP 422 `UNSUPPORTED_LANGUAGE` with the message `Use language=am|om.` Oromo with `backend=standard` returns HTTP 422 `INVALID_REQUEST` with the message `Oromo is transcribed on the turbo backend (backend=turbo).`
+
+The `GET /api/v1/scribe` capabilities response includes a `languages` object, keyed by language code, with each language's `model`, `backends` and `speakers` (whether speaker labels are available):
+
+| `languages` key | `model` | `backends` | `speakers` |
+| --- | --- | --- | --- |
+| `am` | `addis-scribe-streaming` | `["standard", "turbo"]` | `true` |
+| `om` | `addis-scribe-oromo-streaming` | `["turbo"]` | `true` |
+
+**Accuracy.** On natural Afaan Oromo speech, Addis Scribe has the lowest error rate of every system we tested: 21.1% word error rate live, with the final text about 40 ms after the speaker stops. See the [Addis Scribe Oromo benchmark](https://addisassistant.com/benchmarks/addis-scribe-oromo) for the test set, every system compared and the method.
 
 ### Timestamps and captions <NewBadge className="ml-2 align-middle" /> [#timestamps-and-captions]
 
