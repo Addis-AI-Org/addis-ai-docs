@@ -223,11 +223,11 @@ curl --location "$(jq -r '.data.audio_url' voice.json)" \
 
 The cURL example requires `jq`. A generation response contains clip metadata and a signed `audio_url`. A first response may also include an audio data URL; an idempotent replay can omit that inline field, so use the signed URL or SDK file helper.
 
-## Batch generation (beta)
+## Batch generation
 
-Send many text-to-speech requests in one batch. Batches run off-peak, every batch finishes within 24 hours, and only finished requests are billed, at half the standard Voices 2 rate. Batches accept the same languages and voices as `voice.generate`, including all seven Tigrinya voices. Each request's voice ID must match its language; the SDK rejects any other language before uploading.
+Send up to 10,000 text-to-speech requests in one batch. Batches run off-peak, every batch finishes within 24 hours, and only finished requests are billed, at **2.5 ETB per generated minute**, half the Voices 2 list price. Batches accept Amharic (`am`), Afaan Oromo (`om`) and Tigrinya (`ti`) with the same voices as `voice.generate`, including all seven Tigrinya voices. Each request's voice ID must match its language; the SDK rejects any other language before uploading.
 
-Batch is in beta and enabled per account, and the account needs at least one paid top-up. Ask [support@addisassistant.com](mailto:support@addisassistant.com) to enable it. The SDK methods below need Node.js or Python SDK **0.9.0** or later.
+Any account with at least one paid top-up can create batches; signup credit alone does not count. Create them with the SDK methods below (Node.js or Python SDK **0.9.0** or later), or upload a CSV on the Batches page of the dashboard.
 
 <Tabs items={['Node.js', 'Python']} groupId="integration-language">
   <Tab>
