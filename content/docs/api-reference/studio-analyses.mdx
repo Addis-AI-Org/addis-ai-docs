@@ -5,7 +5,7 @@ description: List the analyses of your Studio conversations, newest first, filte
 
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 
-Lists your conversation analyses, newest analysis first, one page at a time. Each item has the shape of [one analysis](/docs/api-reference/studio-conversation-analysis). Conversations from the agent test panel are left out.
+Lists your conversation analyses one page at a time, newest first by `analysed_at`. Each item has the shape of [one analysis](/docs/api-reference/studio-conversation-analysis), with the labels you corrected in Studio. Conversations from the agent test panel are left out.
 
 ```bash
 curl "https://api.addisassistant.com/v1/studio/analyses?needs_attention=true&limit=20" \
@@ -70,10 +70,19 @@ curl "https://api.addisassistant.com/v1/studio/analyses?needs_attention=true&lim
 
 The item above is shortened; every item has all the fields of [one analysis](/docs/api-reference/studio-conversation-analysis).
 
+## Keeping a copy in sync
+
+To keep your own copy current:
+
+1. Ask for `since` the newest `analysed_at` you have stored.
+2. Follow `next_cursor` until it is null.
+
+`since` is inclusive, so the analysis made at exactly that time comes again: store analyses by `conversation_id`. A conversation analysed again in Studio comes back with its new `analysed_at`. A label you correct in Studio does not change `analysed_at`, so to pick up a correction, read that conversation again by ID.
+
 <TypeTable
 type={{
 'data': {
-description: 'The analyses on this page, newest analysis first.',
+description: 'The analyses on this page, newest analysed_at first.',
 type: 'object[]'
 },
 'next_cursor': {
