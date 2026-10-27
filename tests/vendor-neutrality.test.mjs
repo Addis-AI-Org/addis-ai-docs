@@ -31,37 +31,14 @@ const published = [
 const vendor =
   /\b(gemini|google|vertex|azure|microsoft|openai|open ai|whisper|chatgpt|gpt-?\d\w*|claude|anthropic|elevenlabs|eleven labs|indextts\d*|index-tts|pyannote|deepgram|assemblyai|speechmatics|cartesia)\b|\bflash(-lite)?\b|\w-preview(-\d|\b)(?!-card)/i;
 
-// A published benchmark may name the systems it compares Addis models against and
-// the public datasets it scores on. Only lines between these markers, on the pages
-// listed here, are exempt; nothing there describes what runs underneath Addis AI.
-const comparisonStart = '{/* benchmark-comparison:start */}';
-const comparisonEnd = '{/* benchmark-comparison:end */}';
-const comparisonPages = new Set(['content/docs/capabilities/speech-to-text/index.mdx']);
-const maxComparisonLines = 40;
-
 test('published docs, demos and data name no third-party model or vendor', () => {
   assert.ok(published.length > 20, 'expected to scan the docs content');
   for (const path of published) {
-    let comparisonFrom = -1;
     read(path)
       .split('\n')
       .forEach((line, index) => {
-        if (line.trim() === comparisonStart) {
-          assert.ok(comparisonPages.has(path), `${path}:${index + 1} opens a benchmark comparison outside the allowed pages`);
-          assert.equal(comparisonFrom, -1, `${path}:${index + 1} nests a benchmark comparison`);
-          comparisonFrom = index;
-          return;
-        }
-        if (line.trim() === comparisonEnd) {
-          assert.notEqual(comparisonFrom, -1, `${path}:${index + 1} closes a benchmark comparison that was never opened`);
-          assert.ok(index - comparisonFrom <= maxComparisonLines, `${path}:${index + 1} benchmark comparison is longer than ${maxComparisonLines} lines`);
-          comparisonFrom = -1;
-          return;
-        }
-        if (comparisonFrom !== -1) return;
         assert.doesNotMatch(line, vendor, `${path}:${index + 1} names a third-party model or vendor`);
       });
-    assert.equal(comparisonFrom, -1, `${path} leaves a benchmark comparison open`);
   }
 });
 

@@ -18,7 +18,7 @@ Connect to the returned `data.websocket_url`. Send `{"type":"session.authenticat
 
 ### Live Afaan Oromo
 
-Add `"language": "om"` to the session body to transcribe **Afaan Oromo**. Leave it out, or send `"am"`, for Amharic. Oromo runs on Turbo only: with `"backend":"standard"` the request fails with HTTP 422, and any other language returns `422 UNSUPPORTED_LANGUAGE`. Everything after the ticket, including the WebSocket frames, events and the live speaker labels below, works the same.
+Add `"language": "om"` to the session body to transcribe **Afaan Oromo**. Leave it out, or send `"am"`, for Amharic. Oromo runs on Turbo only: with `"backend":"standard"` the request fails with `422 INVALID_REQUEST`, and any other language returns `422 UNSUPPORTED_LANGUAGE`. Everything after the ticket, including the WebSocket frames, events and the live speaker labels below, works the same.
 
 ```json
 {"language":"om","backend":"turbo","chunk":"320ms","request_id":"my-oromo-live-1"}

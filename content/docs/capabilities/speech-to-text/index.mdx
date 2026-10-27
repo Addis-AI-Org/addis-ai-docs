@@ -171,7 +171,7 @@ Scribe transcribes **Afaan Oromo** (language code `om`) as well as Amharic (`am`
 <TypeTable
   type={{
     'language': {
-      description: 'The spoken language: "am" (Amharic) or "om" (Afaan Oromo). A query parameter on POST /api/v1/scribe/transcribe and POST /api/v1/scribe/jobs, and a JSON field in the POST /api/v1/scribe/sessions body. Any other value returns HTTP 422 UNSUPPORTED_LANGUAGE. "om" is Turbo only: with backend=standard the request returns HTTP 422.',
+      description: 'The spoken language: "am" (Amharic) or "om" (Afaan Oromo). A query parameter on POST /api/v1/scribe/transcribe and POST /api/v1/scribe/jobs, and a JSON field in the POST /api/v1/scribe/sessions body. Long-audio jobs also accept it in the JSON body of a declaration. Any other value returns HTTP 422 UNSUPPORTED_LANGUAGE. "om" is Turbo only: with backend=standard the request returns HTTP 422 INVALID_REQUEST.',
       type: '"am" | "om"',
       default: '"am"',
     },
@@ -226,9 +226,9 @@ curl 'https://api.addisassistant.com/api/v1/scribe/sessions' \
   -d '{"language": "om", "backend": "turbo", "chunk": "320ms", "request_id": "my-oromo-live-1"}'
 ```
 
-For a long Oromo recording, add `language=om` to the [long-audio job](#long-audio) request, for example `POST /api/v1/scribe/jobs?language=om&request_id=my-oromo-meeting-1&speakers=true`.
+For a long Oromo recording, add `language=om` to the [long-audio job](#long-audio) request, for example `POST /api/v1/scribe/jobs?language=om&request_id=my-oromo-meeting-1&speakers=true`. For a job sent in parts, put `"language": "om"` in the JSON body of the declaration, or in its query string; both are accepted, and the body wins if they differ.
 
-Leaving out `language` means Amharic, exactly as before: Amharic requests and responses are unchanged. An unknown value returns HTTP 422 `UNSUPPORTED_LANGUAGE` with the message `Use language=am|om.`
+Leaving out `language` means Amharic, exactly as before: Amharic requests and responses are unchanged. An unknown value returns HTTP 422 `UNSUPPORTED_LANGUAGE` with the message `Use language=am|om.` Oromo with `backend=standard` returns HTTP 422 `INVALID_REQUEST` with the message `Oromo is transcribed on the turbo backend (backend=turbo).`
 
 The `GET /api/v1/scribe` capabilities response includes a `languages` object, keyed by language code, with each language's `model`, `backends` and `speakers` (whether speaker labels are available):
 
@@ -237,31 +237,7 @@ The `GET /api/v1/scribe` capabilities response includes a `languages` object, ke
 | `am` | `addis-scribe-streaming` | `["standard", "turbo"]` | `true` |
 | `om` | `addis-scribe-oromo-streaming` | `["turbo"]` | `true` |
 
-{/* benchmark-comparison:start */}
-#### Afaan Oromo accuracy [#afaan-oromo-accuracy]
-
-We tested Addis Scribe on natural Oromo speech: 150 clips from the Afaan Oromo test split of the [WAXAL dataset](https://huggingface.co/datasets/google/WaxalNLP), 23 speakers and 45 minutes in all, with human transcripts. None of these clips were used to train our models. Every system was scored on the same clips with the same scorer. WER is word error rate and CER is character error rate; lower is better.
-
-| System | Mode | WER | CER | Final text after speech ends | First words | Processing per minute of audio |
-| --- | --- | --- | --- | --- | --- | --- |
-| **Addis Scribe Oromo** | Live, 1.12 s chunks | **21.1%** | **6.8%** | 43 ms | 2.21 s | – |
-| **Addis Scribe Oromo** | Live, 0.32 s chunks | 21.5% | 6.9% | **37 ms** | **1.57 s** | – |
-| **Addis Scribe Oromo** | Upload | 22.3% | 7.6% | – | – | 0.78 s |
-| [Ethio-ASR Oromo (w2v-BERT)](https://huggingface.co/badrex/Ethio-ASR-oromo) | Offline | 24.8% | 7.1% | – | – | 0.68 s |
-| [Ethio-ASR multilingual 600M](https://huggingface.co/badrex/Ethio-ASR-multilingual-600M) | Offline | 25.7% | 7.2% | – | – | 0.69 s |
-| [WAXAL benchmark Whisper-small Oromo](https://huggingface.co/waxal-benchmarking/whisper-small-waxal-orm) | Offline | 28.2% | 8.2% | – | – | 2.70 s |
-| [WAXAL benchmark MMS-300M Oromo](https://huggingface.co/waxal-benchmarking/mms-300m-waxal-orm) | Offline | 29.5% | 7.9% | – | – | 0.21 s |
-| Google Chirp 2 (om-ET) | Batch | 34.8% | 9.9% | – | – | 9.77 s |
-| Google Chirp 2 (om-ET) | Streaming | 42.4% | 14.2% | 1,051 ms | 6.37 s | – |
-
-Addis Scribe has the lowest error rate of every system we tested on natural Oromo speech, and half the errors of Google's live Oromo recognition (21% vs 42% WER). Live, the final text arrives about 40 ms after the speaker stops (Google: about 1 s).
-
-On the full WAXAL Afaan Oromo test split (3,782 clips), Addis Scribe uploads score **20.8% WER / 5.8% CER**, against 24.2% / 6.2% for Ethio-ASR Oromo and 24.5% / 6.1% for Ethio-ASR multilingual 600M.
-
-**Read speech, a small check.** On read sentences from [FLEURS](https://huggingface.co/datasets/google/fleurs) (`om_et` dev and test, only 60 clips), word error rates are higher for every system: Google Chirp 2 53.3%, Addis Scribe upload 57.4%, Ethio-ASR Oromo 62.8%, WAXAL Whisper-small 65.7%, WAXAL MMS-300M 67.5%, Ethio-ASR multilingual 69.3%. Sixty clips are too few to rank systems, so treat this as a sanity check, not a headline.
-
-**Method.** Addis Scribe ran on one NVIDIA A100-class GPU with audio fed at real-time speed. Processing per minute of audio is whole-file transcription, one clip at a time; the open models ran on the same class of GPU. Google was measured from its europe-west4 endpoint, the nearest region that serves Oromo, network included.
-{/* benchmark-comparison:end */}
+**Accuracy.** On natural Afaan Oromo speech, Addis Scribe has the lowest error rate of every system we tested: 21.1% word error rate live, with the final text about 40 ms after the speaker stops. See the [Addis Scribe Oromo benchmark](https://addisassistant.com/benchmarks/addis-scribe-oromo) for the test set, every system compared and the method.
 
 ### Timestamps and captions <NewBadge className="ml-2 align-middle" /> [#timestamps-and-captions]
 
