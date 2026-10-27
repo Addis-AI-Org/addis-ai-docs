@@ -19,6 +19,8 @@ Transcribe **Amharic** live or upload audio. Choose **Turbo · 3× speed** (the 
 
 Scribe also transcribes **Afaan Oromo**: add `language=om` to the API calls below. See [Afaan Oromo](#afaan-oromo).
 
+Accuracy benchmarks for [Amharic](https://addisassistant.com/benchmarks/addis-scribe-amharic) and [Afaan Oromo](https://addisassistant.com/benchmarks/addis-scribe-oromo) compare Scribe with other systems on the same test clips. Anyone can reproduce the numbers with their own Addis Scribe API key, using the references, transcripts, scorer and scripts in the [benchmark folder](https://huggingface.co/datasets/addisai/addis-scribe-benchmark).
+
 <ScribeDemo />
 
 ### Scribe HTTP and streaming API
@@ -237,7 +239,7 @@ The `GET /api/v1/scribe` capabilities response includes a `languages` object, ke
 | `am` | `addis-scribe-streaming` | `["standard", "turbo"]` | `true` |
 | `om` | `addis-scribe-oromo-streaming` | `["turbo"]` | `true` |
 
-**Accuracy.** On natural Afaan Oromo speech, Addis Scribe has the lowest error rate of every system we tested: 21.1% word error rate live, with the final text about 40 ms after the speaker stops. See the [Addis Scribe Oromo benchmark](https://addisassistant.com/benchmarks/addis-scribe-oromo) for the test set, every system compared and the method.
+**Accuracy.** On natural Afaan Oromo speech, Addis Scribe has the lowest error rate of every system we tested: 21.1% word error rate live, with the final text about 40 ms after the speaker stops. See the [Addis Scribe Oromo benchmark](https://addisassistant.com/benchmarks/addis-scribe-oromo) for the test set, every system compared and the method. Anyone can reproduce these numbers with their own Addis Scribe API key: the [benchmark folder](https://huggingface.co/datasets/addisai/addis-scribe-benchmark) has the references, every system's transcripts, the scorer, and scripts and a local app to run each system again.
 
 ### Timestamps and captions <NewBadge className="ml-2 align-middle" /> [#timestamps-and-captions]
 
