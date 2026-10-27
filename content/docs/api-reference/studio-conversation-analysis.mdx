@@ -1,0 +1,223 @@
+---
+title: GET /v1/studio/conversations/{id}/analysis
+description: The analysis of one Studio conversation, with its summary, satisfaction, follow-up, questions and your custom fields.
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+After a conversation with one of your Studio agents ends, Studio analyses it: a summary, the customer's satisfaction, whether it was resolved, its priority, whether a person should step in, the follow-up you owe, the questions the customer asked, and the custom fields and success criteria you set on the agent. This endpoint returns that analysis.
+
+```bash
+curl https://api.addisassistant.com/v1/studio/conversations/c1000000-0000-4000-8000-000000000010/analysis \
+  -H "x-api-key: $ADDIS_API_KEY"
+```
+
+## Path parameters
+
+<TypeTable
+  type={{
+    'id': {
+      description: 'The conversation ID, as shown in Studio and sent in the call.analyzed webhook.',
+      type: 'string (UUID)',
+      required: true
+    }
+  }}
+/>
+
+## Response
+
+```json
+{
+  "conversation_id": "c1000000-0000-4000-8000-000000000010",
+  "agent_id": "a1000000-0000-4000-8000-000000000010",
+  "channel": "phone",
+  "status": "completed",
+  "skip_reason": null,
+  "summary": "A new customer asked about the price of the 200 watt home solar kit and paying in instalments. The agent explained the price, the three month plan and what is included, and will send the plan on WhatsApp today.",
+  "contact_reason": "Wants to buy a home solar kit and pay in instalments.",
+  "contact_type": "pricing",
+  "customer_status": "new",
+  "sentiment": {
+    "start": "neutral",
+    "end": "positive",
+    "reason": "Neutral while comparing prices, then thanked the agent after hearing about installation and the warranty."
+  },
+  "friction": [],
+  "resolution": "resolved",
+  "priority": "normal",
+  "needs_human": false,
+  "needs_human_reason": null,
+  "follow_up": {
+    "needed": true,
+    "action": "Send the instalment plan on WhatsApp",
+    "when": "today",
+    "due_at": "2026-10-24T21:00:00+00:00"
+  },
+  "lead_temperature": "hot",
+  "pack": {
+    "buying_conversation": true,
+    "need": "strong",
+    "fit": "some",
+    "timeline": "strong",
+    "intent": "strong",
+    "buying_signals": [{ "text": "Asked about paying in instalments", "turns": [3] }],
+    "objections": [{ "text": "Has a cheaper quote from another shop", "turns": [5] }],
+    "interest": "200 watt home solar kit",
+    "budget": "",
+    "next_step": "Send the instalment plan on WhatsApp"
+  },
+  "addon": {},
+  "questions": [
+    {
+      "question": "How much is the 200 watt home solar kit?",
+      "topic": "Solar kit prices",
+      "topic_id": "70000000-0000-4000-8000-000000000001",
+      "answered": "answered"
+    }
+  ],
+  "schema_version": 1,
+  "profile_version": 1,
+  "custom_fields": {
+    "kit_size": "200 watt",
+    "wants_installation": true,
+    "budget_etb": null,
+    "visit_date": null,
+    "objection": "Has a cheaper quote from another shop"
+  },
+  "criteria": [
+    {
+      "key": "explained_plan",
+      "name": "Explained the instalment plan",
+      "result": "met",
+      "rationale": "The agent explained the three month plan and what it includes."
+    }
+  ],
+  "summary_language": "en",
+  "started_at": "2026-10-25T06:10:00+00:00",
+  "analysed_at": "2026-10-25T07:10:30+00:00"
+}
+```
+
+<TypeTable
+type={{
+'conversation_id': {
+description: 'The conversation.',
+type: 'string (UUID)'
+},
+'agent_id': {
+description: 'The agent that handled it.',
+type: 'string (UUID)'
+},
+'channel': {
+description: 'One of "phone", "widget", "api", "whatsapp" or "telegram".',
+type: 'string'
+},
+'status': {
+description: '"completed", or "skipped" when there was nothing to analyse. A skipped analysis has a skip_reason and its other fields empty.',
+type: 'string'
+},
+'skip_reason': {
+description: 'Why it was skipped: "disabled" (analysis is off for the agent), "no_engagement" (the customer said nothing) or "too_short". Null when completed.',
+type: 'string | null'
+},
+'summary': {
+description: 'One to three sentences on what the customer wanted, what happened and what is left to do.',
+type: 'string | null'
+},
+'contact_reason': {
+description: 'Why the customer got in touch, in one sentence.',
+type: 'string | null'
+},
+'contact_type': {
+description: 'One of "information", "pricing", "purchase", "booking", "support", "complaint", "feedback", "other" or "no_request".',
+type: 'string | null'
+},
+'customer_status': {
+description: '"new", "existing" or "unknown".',
+type: 'string | null'
+},
+'sentiment': {
+description: 'The customer\'s satisfaction with the conversation at its start and end ("positive", "neutral", "negative" or "unknown"), and the reason.',
+type: 'object'
+},
+'friction': {
+description: 'What got in the way, if anything: "unanswered", "misunderstood", "repeated_self", "slow", "wanted_person", "price_or_policy", "product_problem" or "other".',
+type: 'string[]'
+},
+'resolution': {
+description: '"resolved", "partially_resolved", "unresolved", "not_applicable" or "unknown".',
+type: 'string | null'
+},
+'priority': {
+description: '"urgent", "high", "normal" or "low".',
+type: 'string | null'
+},
+'needs_human': {
+description: 'True when a person at your business should step in; needs_human_reason says why.',
+type: 'boolean | null'
+},
+'follow_up': {
+description: 'What you owe the customer: needed, action, when (as said) and due_at (a timestamp, or null when no time was stated).',
+type: 'object'
+},
+'lead_temperature': {
+description: 'For sales agents: "hot", "warm", "cold" or "not_a_lead". Null for other agents.',
+type: 'string | null'
+},
+'pack': {
+description: 'The fields of the agent\'s use case (sales, support, booking or collections), or {}.',
+type: 'object'
+},
+'addon': {
+description: 'The fields of the agent\'s industry (agriculture, education or healthcare), or {}.',
+type: 'object'
+},
+'questions': {
+description: 'Up to five questions the customer asked, each with its topic, the topic\'s ID and whether it was "answered", "partially" answered, "unanswered" or "unknown". A topic that was merged reads as the topic it was merged into.',
+type: 'object[]'
+},
+'schema_version': {
+description: 'The version of this shape. Fields are only ever added within a version.',
+type: 'number'
+},
+'profile_version': {
+description: 'The version of the agent\'s custom fields and success criteria the analysis used, or null when the agent had none.',
+type: 'number | null'
+},
+'custom_fields': {
+description: 'Your custom fields by key: true or false, one of the choices, text, a number or a date (YYYY-MM-DD). Null when the conversation did not say.',
+type: 'object'
+},
+'criteria': {
+description: 'Each success criterion with its result, "met", "not_met" or "unknown", and a one-sentence rationale.',
+type: 'object[]'
+},
+'summary_language': {
+description: 'The language of the summary and the reasons: "en" or "am". Questions and topics are always in English. Null when skipped.',
+type: 'string | null'
+},
+'started_at': {
+description: 'When the conversation started.',
+type: 'string (ISO 8601)'
+},
+'analysed_at': {
+description: 'When it was analysed.',
+type: 'string (ISO 8601)'
+}
+}}
+/>
+
+<Callout type="info" title="The same shape as the webhook">
+The `call.analyzed` webhook sends this shape too, without `started_at`, `analysed_at` and each question's `topic_id`. A conversation is analysed again when you ask for it in Studio; this endpoint always returns the latest analysis.
+</Callout>
+
+## Errors
+
+| Status | Code | Meaning |
+| :--- | :--- | :--- |
+| 401 | `unauthorized`, `invalid_api_key` | The `x-api-key` header is missing or not a valid key. |
+| 404 | `analysis_not_found` | No analysis of this conversation in your account: the ID is wrong, the conversation is not yours, or it has not been analysed yet. |
+| 429 | `risk_rate_limited` | Your account is temporarily limited. See [Rate Limits](/docs/platform/limits). |
+
+Errors use the [error object](/docs/platform/errors).

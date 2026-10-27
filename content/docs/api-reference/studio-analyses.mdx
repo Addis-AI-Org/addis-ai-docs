@@ -1,0 +1,95 @@
+---
+title: GET /v1/studio/analyses
+description: List the analyses of your Studio conversations, newest first, filtered by agent, time and whether they need attention.
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+Lists your conversation analyses, newest analysis first, one page at a time. Each item has the shape of [one analysis](/docs/api-reference/studio-conversation-analysis). Conversations from the agent test panel are left out.
+
+```bash
+curl "https://api.addisassistant.com/v1/studio/analyses?needs_attention=true&limit=20" \
+  -H "x-api-key: $ADDIS_API_KEY"
+```
+
+## Query parameters
+
+<TypeTable
+  type={{
+    'agent_id': {
+      description: 'Only this agent\'s conversations.',
+      type: 'string (UUID)',
+      required: false
+    },
+    'since': {
+      description: 'Only analyses made at or after this time. An ISO 8601 date or date and time, such as 2026-10-01 or 2026-10-27T09:00:00+03:00; without an offset it is UTC.',
+      type: 'string',
+      required: false
+    },
+    'until': {
+      description: 'Only analyses made before this time. Must be later than since.',
+      type: 'string',
+      required: false
+    },
+    'needs_attention': {
+      description: 'true for the conversations that still need attention in Studio (not marked done, and asking for a person, owing a follow-up, or urgent or high priority); false for the rest.',
+      type: 'boolean',
+      required: false
+    },
+    'limit': {
+      description: 'Analyses per page, from 1 to 100.',
+      type: 'number',
+      default: '50'
+    },
+    'cursor': {
+      description: 'The next_cursor of the previous page.',
+      type: 'string',
+      required: false
+    }
+  }}
+/>
+
+## Response
+
+```json
+{
+  "data": [
+    {
+      "conversation_id": "c1000000-0000-4000-8000-000000000010",
+      "agent_id": "a1000000-0000-4000-8000-000000000010",
+      "status": "completed",
+      "summary": "A new customer asked about the price of the 200 watt home solar kit...",
+      "priority": "normal",
+      "needs_human": false,
+      "analysed_at": "2026-10-25T07:10:30+00:00"
+    }
+  ],
+  "next_cursor": "1792912230000000_c1000000-0000-4000-8000-000000000010"
+}
+```
+
+The item above is shortened; every item has all the fields of [one analysis](/docs/api-reference/studio-conversation-analysis).
+
+<TypeTable
+type={{
+'data': {
+description: 'The analyses on this page, newest analysis first.',
+type: 'object[]'
+},
+'next_cursor': {
+description: 'Pass it as cursor to get the next page. Null on the last page.',
+type: 'string | null'
+}
+}}
+/>
+
+## Errors
+
+| Status | Code | Meaning |
+| :--- | :--- | :--- |
+| 400 | `invalid_request` | A query parameter is not valid; `error.param` names it. |
+| 400 | `invalid_cursor` | The cursor is not one this endpoint returned. |
+| 401 | `unauthorized`, `invalid_api_key` | The `x-api-key` header is missing or not a valid key. |
+| 429 | `risk_rate_limited` | Your account is temporarily limited. See [Rate Limits](/docs/platform/limits). |
+
+Errors use the [error object](/docs/platform/errors).

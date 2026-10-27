@@ -1,0 +1,110 @@
+---
+title: GET /v1/studio/agents/{agent_id}/top-questions
+description: The topics your customers ask one Studio agent about most, with how often they go unanswered.
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+Studio files every question a customer asks under a topic. This endpoint returns an agent's topics for a period, the most asked first, with how many conversations raised each one, how often the agent could not answer, and a few of the ways customers put it. These are the numbers on the Top questions card in Studio Analytics.
+
+```bash
+curl "https://api.addisassistant.com/v1/studio/agents/a1000000-0000-4000-8000-000000000010/top-questions?since=2026-10-01" \
+  -H "x-api-key: $ADDIS_API_KEY"
+```
+
+## Path parameters
+
+<TypeTable
+  type={{
+    'agent_id': {
+      description: 'One of your Studio agents.',
+      type: 'string (UUID)',
+      required: true
+    }
+  }}
+/>
+
+## Query parameters
+
+<TypeTable
+  type={{
+    'since': {
+      description: 'Only conversations that started at or after this time. An ISO 8601 date or date and time; without an offset it is UTC. Defaults to 30 days before until.',
+      type: 'string',
+      required: false
+    },
+    'until': {
+      description: 'Only conversations that started before this time. Defaults to now. The period can be at most 366 days.',
+      type: 'string',
+      required: false
+    },
+    'limit': {
+      description: 'How many topics, from 1 to 50.',
+      type: 'number',
+      default: '10'
+    }
+  }}
+/>
+
+## Response
+
+```json
+{
+  "data": [
+    {
+      "topic": "Instalment payments",
+      "topic_id": "70000000-0000-4000-8000-000000000002",
+      "conversations": 12,
+      "questions": 14,
+      "unanswered_share": 0.0714,
+      "examples": [
+        "Can I pay for a solar kit in instalments?",
+        "How many months can I pay over?"
+      ]
+    }
+  ]
+}
+```
+
+<TypeTable
+type={{
+'topic': {
+description: 'The topic. A topic merged in Studio counts under the one kept; hidden topics are left out.',
+type: 'string'
+},
+'topic_id': {
+description: 'The topic\'s ID, as in each question of an analysis.',
+type: 'string (UUID)'
+},
+'conversations': {
+description: 'Conversations in the period with at least one question on the topic.',
+type: 'number'
+},
+'questions': {
+description: 'Questions on the topic in the period.',
+type: 'number'
+},
+'unanswered_share': {
+description: 'The share of those questions the agent did not answer, from 0 to 1, counting only questions whose answer is known. Null when none is known.',
+type: 'number | null'
+},
+'examples': {
+description: 'Up to three of the most common ways customers asked it.',
+type: 'string[]'
+}
+}}
+/>
+
+Conversations from the agent test panel are not counted.
+
+## Errors
+
+| Status | Code | Meaning |
+| :--- | :--- | :--- |
+| 400 | `invalid_request` | A query parameter is not valid; `error.param` names it. |
+| 400 | `invalid_range` | since is not before until, or the period is longer than 366 days. |
+| 401 | `unauthorized`, `invalid_api_key` | The `x-api-key` header is missing or not a valid key. |
+| 404 | `agent_not_found` | No such agent in your account. |
+| 429 | `risk_rate_limited` | Your account is temporarily limited. See [Rate Limits](/docs/platform/limits). |
+
+Errors use the [error object](/docs/platform/errors).
