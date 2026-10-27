@@ -16,6 +16,16 @@ For live microphone input, create a one-use ticket with `POST /api/v1/scribe/ses
 
 Connect to the returned `data.websocket_url`. Send `{"type":"session.authenticate","token":"YOUR_ONE_USE_TICKET"}` as the first frame. After `session.created`, send binary **16 kHz mono PCM16 little-endian** frames, ideally 100 ms each. Finish with `{"type":"audio.finish"}`. Tickets expire after 60 seconds and bind the backend, chunk size, and request ID. Keep API keys and tickets out of WebSocket URLs.
 
+### Live Afaan Oromo
+
+Add `"language": "om"` to the session body to transcribe **Afaan Oromo**. Leave it out, or send `"am"`, for Amharic. Oromo runs on Turbo only: with `"backend":"standard"` the request fails with HTTP 422, and any other language returns `422 UNSUPPORTED_LANGUAGE`. Everything after the ticket, including the WebSocket frames, events and the live speaker labels below, works the same.
+
+```json
+{"language":"om","backend":"turbo","chunk":"320ms","request_id":"my-oromo-live-1"}
+```
+
+The SDK's `scribe.connect` and `createSession` do not send `language` yet, so they open Amharic sessions. For Oromo, create the session with the HTTP request above. See [Afaan Oromo](/docs/capabilities/speech-to-text#afaan-oromo) for uploads, captions and accuracy.
+
 ## Connect live audio with the SDK
 
 Send **raw mono PCM16 little-endian at 16 kHz**. WAV/MP3 container bytes belong in the file-upload API; strip or decode them before sending PCM. A 100 ms frame is 3,200 bytes. Read events while sending audio, then call `finish()` to obtain the final transcript and billing result.

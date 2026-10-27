@@ -27,7 +27,7 @@ A request is refused with `402` when your wallet balance is too low to cover it.
 | Capability | Limit |
 | :--- | :--- |
 | Translation | 5,000 characters of `text` per request. Longer text returns `413 text_too_long`; split it into several requests. |
-| Scribe file upload | 95 MB and one hour of audio per request. WAV is accepted at any sample rate and channel count; an empty file returns `422 INVALID_AUDIO`. |
+| Scribe file upload | 95 MB and one hour of audio per request, for Amharic and Afaan Oromo alike. WAV is accepted at any sample rate and channel count; an empty file returns `422 INVALID_AUDIO`. |
 | Scribe long-audio job | Up to three hours: 95 MB in one request, or up to 512 MB declared in a JSON body of at most 4 KB (`413` beyond) and sent in 4 MiB parts. At most 2 jobs in progress per account; an unfinished upload stops counting 30 minutes after its last part. See [long audio](/docs/capabilities/speech-to-text#long-audio). |
 
 <Callout type="info" title="Need more throughput?">

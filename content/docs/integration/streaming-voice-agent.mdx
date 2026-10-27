@@ -26,7 +26,7 @@ The examples below combine three billed services. Run them end to end against yo
 ## Before you start
 
 - Keep your API key on the server as `ADDIS_API_KEY`. The browser never sees it; it receives only a one-use Scribe ticket.
-- Scribe live transcription recognizes **Amharic** only, so this guide uses the Amharic voice `am-hamen`.
+- Scribe live transcription recognizes **Amharic** (the default) and **Afaan Oromo** (add `"language": "om"` to the session body; see [Live Afaan Oromo](/docs/capabilities/speech-to-text/live#live-afaan-oromo)). This guide uses Amharic and the Amharic voice `am-hamen`.
 - Ask for microphone permission **before** you request the ticket. Tickets expire after 60 seconds.
 - Keep API keys and tickets out of WebSocket and page URLs.
 - [Install the SDK](/docs/get-started/sdks#install) on the server.
