@@ -24,7 +24,7 @@ Add `"language": "om"` to the session body to transcribe **Afaan Oromo**. Leave 
 {"language":"om","backend":"turbo","chunk":"320ms","request_id":"my-oromo-live-1"}
 ```
 
-The SDK's `scribe.connect` and `createSession` do not send `language` yet, so they open Amharic sessions. For Oromo, create the session with the HTTP request above. See [Afaan Oromo](/docs/capabilities/speech-to-text#afaan-oromo) for uploads, captions and accuracy.
+With SDK 0.11.0 or later, pass `language: "om"` to `scribe.connect` or `createSession` (Python `language="om"`), or create the session with the HTTP request above. See [Afaan Oromo](/docs/capabilities/speech-to-text#afaan-oromo) for uploads, captions and accuracy.
 
 ### Live Tigrinya
 
@@ -34,7 +34,7 @@ Add `"language": "ti"` to the session body to transcribe **Tigrinya**. Tigrinya 
 {"language":"ti","backend":"turbo","chunk":"320ms","request_id":"my-tigrinya-live-1"}
 ```
 
-The SDK's `scribe.connect` and `createSession` do not send `language` yet, so they open Amharic sessions. For Tigrinya, create the session with the HTTP request above. See [Tigrinya](/docs/capabilities/speech-to-text#tigrinya) for uploads and captions.
+With SDK 0.12.0 or later, pass `language: "ti"` to `scribe.connect` or `createSession` (Python `language="ti"`), or create the session with the HTTP request above. See [Tigrinya](/docs/capabilities/speech-to-text#tigrinya) for uploads and captions.
 
 ## Connect live audio with the SDK
 

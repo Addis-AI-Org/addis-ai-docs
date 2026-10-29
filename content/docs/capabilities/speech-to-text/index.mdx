@@ -43,7 +43,7 @@ For live microphone input, see [Live transcription](/docs/capabilities/speech-to
 
 ### Scribe SDK quick start
 
-Install the SDK with the commands below. Scribe recognizes **Amharic** (`am`, the default), **Afaan Oromo** (`om`) and **Tigrinya** (`ti`). The SDKs do not send `language` yet, so they transcribe Amharic; for Afaan Oromo or Tigrinya, call the HTTP API with `language=om` or `language=ti` as shown in [Afaan Oromo](#afaan-oromo) and [Tigrinya](#tigrinya). The existing `speech.transcribe` method below continues to use the separate file-transcription service.
+Install the SDK with the commands below. Scribe recognizes **Amharic** (`am`, the default), **Afaan Oromo** (`om`) and **Tigrinya** (`ti`). Pass `language` (`"ti"` or `"om"`) to any Scribe call: Tigrinya needs SDK 0.12.0 or later, Afaan Oromo 0.11.0 or later. Without it the SDKs transcribe Amharic. See [Afaan Oromo](#afaan-oromo) and [Tigrinya](#tigrinya) for the HTTP API. The existing `speech.transcribe` method below continues to use the separate file-transcription service.
 
 Keep `ADDIS_API_KEY` on your application server. For browser integrations, create a Scribe session on your server and return the scoped one-use ticket to the browser.
 
