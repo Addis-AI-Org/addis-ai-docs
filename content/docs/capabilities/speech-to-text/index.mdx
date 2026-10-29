@@ -1,6 +1,6 @@
 ---
 title: Speech-to-Text
-description: Transcribe Amharic and Afaan Oromo audio into text.
+description: Transcribe Amharic, Afaan Oromo and Tigrinya audio into text.
 icon: Mic
 ---
 
@@ -15,9 +15,9 @@ Our Speech-to-Text (STT) technology is powered by specialized models trained to 
 
 ## Try Addis Scribe live
 
-Transcribe **Amharic** or **Afaan Oromo** live or upload audio. Choose the language, choose **Turbo · 3× speed** (the default) or **Standard** (Amharic only), and enter your API key. Both modes use the same transcription rate. Uploaded files can also return [word timestamps and captions](#timestamps-and-captions) that play in sync with your audio.
+Transcribe **Amharic**, **Afaan Oromo** or **Tigrinya** live or upload audio. Choose the language, choose **Turbo · 3× speed** (the default) or **Standard** (Amharic only), and enter your API key. Both modes use the same transcription rate. Uploaded files can also return [word timestamps and captions](#timestamps-and-captions) that play in sync with your audio.
 
-In your own code, add `language=om` to the API calls below for Afaan Oromo. See [Afaan Oromo](#afaan-oromo).
+In your own code, add `language=om` to the API calls below for Afaan Oromo, or `language=ti` for Tigrinya. See [Afaan Oromo](#afaan-oromo) and [Tigrinya](#tigrinya).
 
 Accuracy benchmarks for [Amharic](https://addisassistant.com/benchmarks/addis-scribe-amharic) and [Afaan Oromo](https://addisassistant.com/benchmarks/addis-scribe-oromo) compare Scribe with other systems on the same test clips. Anyone can reproduce the numbers with their own Addis Scribe API key, using the references, transcripts, scorer and scripts in the [benchmark folder](https://huggingface.co/datasets/addisai/addis-scribe-benchmark).
 
@@ -33,7 +33,7 @@ curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?backend=turbo&requ
   -F 'audio=@audio.wav'
 ```
 
-Use `backend=turbo` for Turbo (the default) or `backend=standard` for Standard. Add `language=om` to transcribe Afaan Oromo (Turbo only); without it, Scribe transcribes Amharic (`am`). Add `stream=true` for newline-delimited `transcript.partial` events after uploading; `transcript.completed` includes the final text and confirmed wallet usage. An ordinary HTTP request returns `data.text`, `data.seconds`, `data.compute_ms`, and `data.usage` as JSON.
+Use `backend=turbo` for Turbo (the default) or `backend=standard` for Standard. Add `language=om` to transcribe Afaan Oromo, or `language=ti` to transcribe Tigrinya (both Turbo only); without it, Scribe transcribes Amharic (`am`). Add `stream=true` for newline-delimited `transcript.partial` events after uploading; `transcript.completed` includes the final text and confirmed wallet usage. An ordinary HTTP request returns `data.text`, `data.seconds`, `data.compute_ms`, and `data.usage` as JSON.
 
 For live microphone input, see [Live transcription](/docs/capabilities/speech-to-text/live).
 
@@ -43,7 +43,7 @@ For live microphone input, see [Live transcription](/docs/capabilities/speech-to
 
 ### Scribe SDK quick start
 
-Install the SDK with the commands below. Scribe recognizes **Amharic** (`am`, the default) and **Afaan Oromo** (`om`). The SDKs do not send `language` yet, so they transcribe Amharic; for Afaan Oromo, call the HTTP API with `language=om` as shown in [Afaan Oromo](#afaan-oromo). The existing `speech.transcribe` method below continues to use the separate file-transcription service.
+Install the SDK with the commands below. Scribe recognizes **Amharic** (`am`, the default), **Afaan Oromo** (`om`) and **Tigrinya** (`ti`). Pass `language` (`"ti"` or `"om"`) to any Scribe call: Tigrinya needs SDK 0.12.0 or later, Afaan Oromo 0.11.0 or later. Without it the SDKs transcribe Amharic. See [Afaan Oromo](#afaan-oromo) and [Tigrinya](#tigrinya) for the HTTP API. The existing `speech.transcribe` method below continues to use the separate file-transcription service.
 
 Keep `ADDIS_API_KEY` on your application server. For browser integrations, create a Scribe session on your server and return the scoped one-use ticket to the browser.
 
@@ -173,8 +173,8 @@ Scribe transcribes **Afaan Oromo** (language code `om`) as well as Amharic (`am`
 <TypeTable
   type={{
     'language': {
-      description: 'The spoken language: "am" (Amharic) or "om" (Afaan Oromo). A query parameter on POST /api/v1/scribe/transcribe and POST /api/v1/scribe/jobs, and a JSON field in the POST /api/v1/scribe/sessions body. Long-audio jobs also accept it in the JSON body of a declaration. Any other value returns HTTP 422 UNSUPPORTED_LANGUAGE. "om" is Turbo only: with backend=standard the request returns HTTP 422 INVALID_REQUEST.',
-      type: '"am" | "om"',
+      description: 'The spoken language: "am" (Amharic), "om" (Afaan Oromo) or "ti" (Tigrinya). A query parameter on POST /api/v1/scribe/transcribe and POST /api/v1/scribe/jobs, and a JSON field in the POST /api/v1/scribe/sessions body. Long-audio jobs also accept it in the JSON body of a declaration. Any other value returns HTTP 422 UNSUPPORTED_LANGUAGE. "om" and "ti" are Turbo only: with backend=standard the request returns HTTP 422 INVALID_REQUEST.',
+      type: '"am" | "om" | "ti"',
       default: '"am"',
     },
   }}
@@ -230,7 +230,7 @@ curl 'https://api.addisassistant.com/api/v1/scribe/sessions' \
 
 For a long Oromo recording, add `language=om` to the [long-audio job](#long-audio) request, for example `POST /api/v1/scribe/jobs?language=om&request_id=my-oromo-meeting-1&speakers=true`. For a job sent in parts, put `"language": "om"` in the JSON body of the declaration, or in its query string; both are accepted, and the body wins if they differ.
 
-Leaving out `language` means Amharic, exactly as before: Amharic requests and responses are unchanged. An unknown value returns HTTP 422 `UNSUPPORTED_LANGUAGE` with the message `Use language=am|om.` Oromo with `backend=standard` returns HTTP 422 `INVALID_REQUEST` with the message `Oromo is transcribed on the turbo backend (backend=turbo).`
+Leaving out `language` means Amharic, exactly as before: Amharic requests and responses are unchanged. An unknown value returns HTTP 422 `UNSUPPORTED_LANGUAGE` with the message `Use language=am|om|ti.` Oromo with `backend=standard` returns HTTP 422 `INVALID_REQUEST` with the message `Oromo is transcribed on the turbo backend (backend=turbo).`
 
 The `GET /api/v1/scribe` capabilities response includes a `languages` object, keyed by language code, with each language's `model`, `backends` and `speakers` (whether speaker labels are available):
 
@@ -238,8 +238,65 @@ The `GET /api/v1/scribe` capabilities response includes a `languages` object, ke
 | --- | --- | --- | --- |
 | `am` | `addis-scribe-streaming` | `["standard", "turbo"]` | `true` |
 | `om` | `addis-scribe-oromo-streaming` | `["turbo"]` | `true` |
+| `ti` | `addis-scribe-tigrinya-streaming` | `["turbo"]` | `true` |
 
 **Accuracy.** On natural Afaan Oromo speech, Addis Scribe has the lowest error rate of every system we tested: 21.1% word error rate live, with the final text about 40 ms after the speaker stops. See the [Addis Scribe Oromo benchmark](https://addisassistant.com/benchmarks/addis-scribe-oromo) for the test set, every system compared and the method. Anyone can reproduce these numbers with their own Addis Scribe API key: the [benchmark folder](https://huggingface.co/datasets/addisai/addis-scribe-benchmark) has the references, every system's transcripts, the scorer, and scripts and a local app to run each system again.
+
+### Tigrinya <NewBadge className="ml-2 align-middle" /> [#tigrinya]
+
+Scribe transcribes **Tigrinya** (language code `ti`) as well as Amharic (`am`, the default) and Afaan Oromo (`om`). It is the same API with the same `language` parameter: uploads, live sessions, word timestamps, SRT and VTT captions, speaker labels and long-audio jobs all work in Tigrinya, with the same limits and the same price per character as Amharic. Tigrinya runs on **Turbo** only.
+
+| | Amharic (`am`) | Tigrinya (`ti`) |
+| --- | --- | --- |
+| `model` in responses | `addis-scribe-streaming` | `addis-scribe-tigrinya-streaming` |
+| Backends | Standard, Turbo | Turbo only |
+| File uploads and live sessions | Yes | Yes |
+| Word timestamps, SRT and VTT captions | Yes | Yes |
+| Speaker labels (uploads and live) | Yes | Yes |
+| Long-audio jobs | Yes | Yes |
+| Chunks | `320ms`, `1120ms` | `320ms`, `1120ms` |
+| Limits | Uploads 95 MB and one hour, live 15 minutes | Same |
+| Price | Per transcribed character | Same rate as Amharic |
+
+Upload a Tigrinya recording. Every other option (`chunk`, `stream`, `timestamps`, `format`, `speakers`, `request_id`) works as for Amharic; leave `backend` at its default, `turbo`:
+
+```bash
+curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?language=ti&request_id=my-tigrinya-1' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -F 'audio=@tigrinya.wav'
+
+# Tigrinya captions with speaker labels
+curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?language=ti&speakers=true&format=srt&request_id=my-tigrinya-2' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -F 'audio=@interview.wav' \
+  -o captions.srt
+```
+
+The result has the usual shape. Tigrinya results also carry `language`, set to `ti`, and `model`, set to `addis-scribe-tigrinya-streaming`:
+
+```json
+{
+  "data": {
+    "request_id": "my-tigrinya-1",
+    "text": "…",
+    "language": "ti",
+    "backend": "turbo"
+  }
+}
+```
+
+For live Tigrinya, add `"language": "ti"` to the session body, then connect to the WebSocket exactly as for Amharic (see [Live transcription](/docs/capabilities/speech-to-text/live)):
+
+```bash
+curl 'https://api.addisassistant.com/api/v1/scribe/sessions' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"language": "ti", "backend": "turbo", "chunk": "320ms", "request_id": "my-tigrinya-live-1"}'
+```
+
+For a long Tigrinya recording, add `language=ti` to the [long-audio job](#long-audio) request, for example `POST /api/v1/scribe/jobs?language=ti&request_id=my-tigrinya-meeting-1&speakers=true`. For a job sent in parts, put `"language": "ti"` in the JSON body of the declaration, or in its query string; both are accepted, and the body wins if they differ.
+
+Tigrinya with `backend=standard` returns HTTP 422 `INVALID_REQUEST`. In the `GET /api/v1/scribe` capabilities response, `languages.ti` lists the model `addis-scribe-tigrinya-streaming`, the backends `["turbo"]` and `speakers: true`; see the table under [Afaan Oromo](#afaan-oromo).
 
 ### Timestamps and captions <NewBadge className="ml-2 align-middle" /> [#timestamps-and-captions]
 

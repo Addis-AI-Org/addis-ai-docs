@@ -347,7 +347,7 @@ test('corrects capability page descriptions, terminology, and title badges', () 
   assert.match(voiceCatalog, /'Afaan Oromo'/);
 
   assert.match(speechToText, /^title: Speech-to-Text$/m);
-  assert.match(speechToText, /^description: Transcribe Amharic and Afaan Oromo audio into text\.$/m);
+  assert.match(speechToText, /^description: Transcribe Amharic, Afaan Oromo and Tigrinya audio into text\.$/m);
   assert.match(translation, /^description: Translate text between Amharic, Afaan Oromo, Tigrinya, and English\.$/m);
   assert.match(translation, /The Translation API supports bidirectional translation between Amharic \(`am`\), Afaan Oromo \(`om`\), Tigrinya \(`ti`\), and English \(`en`\)\. All twelve source-to-target language combinations are available through the REST API and official SDKs\./);
   assert.match(translation, /Supported language pairs/);

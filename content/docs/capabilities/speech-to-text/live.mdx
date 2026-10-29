@@ -18,13 +18,23 @@ Connect to the returned `data.websocket_url`. Send `{"type":"session.authenticat
 
 ### Live Afaan Oromo
 
-Add `"language": "om"` to the session body to transcribe **Afaan Oromo**. Leave it out, or send `"am"`, for Amharic. Oromo runs on Turbo only: with `"backend":"standard"` the request fails with `422 INVALID_REQUEST`, and any other language returns `422 UNSUPPORTED_LANGUAGE`. Everything after the ticket, including the WebSocket frames, events and the live speaker labels below, works the same.
+Add `"language": "om"` to the session body to transcribe **Afaan Oromo**. Leave it out, or send `"am"`, for Amharic. Oromo runs on Turbo only: with `"backend":"standard"` the request fails with `422 INVALID_REQUEST`, and a language other than `am`, `om` or `ti` returns `422 UNSUPPORTED_LANGUAGE`. Everything after the ticket, including the WebSocket frames, events and the live speaker labels below, works the same.
 
 ```json
 {"language":"om","backend":"turbo","chunk":"320ms","request_id":"my-oromo-live-1"}
 ```
 
-The SDK's `scribe.connect` and `createSession` do not send `language` yet, so they open Amharic sessions. For Oromo, create the session with the HTTP request above. See [Afaan Oromo](/docs/capabilities/speech-to-text#afaan-oromo) for uploads, captions and accuracy.
+With SDK 0.11.0 or later, pass `language: "om"` to `scribe.connect` or `createSession` (Python `language="om"`), or create the session with the HTTP request above. See [Afaan Oromo](/docs/capabilities/speech-to-text#afaan-oromo) for uploads, captions and accuracy.
+
+### Live Tigrinya
+
+Add `"language": "ti"` to the session body to transcribe **Tigrinya**. Tigrinya runs on Turbo only: with `"backend":"standard"` the request fails with `422 INVALID_REQUEST`. Everything after the ticket, including the WebSocket frames, events and the live speaker labels below, works the same.
+
+```json
+{"language":"ti","backend":"turbo","chunk":"320ms","request_id":"my-tigrinya-live-1"}
+```
+
+With SDK 0.12.0 or later, pass `language: "ti"` to `scribe.connect` or `createSession` (Python `language="ti"`), or create the session with the HTTP request above. See [Tigrinya](/docs/capabilities/speech-to-text#tigrinya) for uploads and captions.
 
 ## Connect live audio with the SDK
 

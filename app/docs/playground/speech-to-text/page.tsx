@@ -4,7 +4,7 @@ import { ScribeDemo } from '@/components/scribe-demo';
 
 export const metadata: Metadata = {
   title: 'Speech-to-Text Playground',
-  description: 'Try Amharic and Afaan Oromo transcription: record live or upload audio with Addis Scribe.',
+  description: 'Try Amharic, Afaan Oromo and Tigrinya transcription: record live or upload audio with Addis Scribe.',
   alternates: { canonical: '/docs/playground/speech-to-text' },
 };
 

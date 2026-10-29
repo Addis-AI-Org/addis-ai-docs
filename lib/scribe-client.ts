@@ -1,11 +1,11 @@
 export const SCRIBE_API = 'https://api.addisassistant.com/api/v1/scribe';
 export type Backend = 'standard' | 'turbo';
-/** `am` (Amharic) is the API default and is never sent; `om` (Afaan Oromo) runs on Turbo only. */
-export type ScribeLanguage = 'am' | 'om';
-export const SCRIBE_LANGUAGES: Record<ScribeLanguage, string> = { am: 'Amharic', om: 'Afaan Oromo' };
+/** `am` (Amharic) is the API default and is never sent; `om` (Afaan Oromo) and `ti` (Tigrinya) run on Turbo only. */
+export type ScribeLanguage = 'am' | 'om' | 'ti';
+export const SCRIBE_LANGUAGES: Record<ScribeLanguage, string> = { am: 'Amharic', om: 'Afaan Oromo', ti: 'Tigrinya' };
 export type ScribeResult = {
   text: string; request_id: string; backend: Backend; seconds: number; compute_ms: number;
-  /** Oromo results carry `language: "om"` and the Oromo model id. */
+  /** Oromo and Tigrinya results carry `language` ("om" or "ti") and that language's model id. */
   language?: ScribeLanguage; model?: string;
   usage: { characters: number; credits_used: number; credits_remaining: number; currency: string; settled: boolean };
   idempotent_replay?: boolean;
@@ -107,26 +107,26 @@ export function speakerTurns(segments: ScribeSegment[]): { speaker: number | nul
 export function segmentAt(segments: ScribeSegment[], time: number): number {
   return segments.findIndex(segment => time >= segment.start && time < segment.end);
 }
-/** Backend a request actually uses: Afaan Oromo and speaker labels are Turbo only. */
+/** Backend a request actually uses: Afaan Oromo, Tigrinya and speaker labels are Turbo only. */
 export function effectiveBackend(backend: Backend, language: ScribeLanguage, needsTurbo = false): Backend {
-  return language === 'om' || needsTurbo ? 'turbo' : backend;
+  return language !== 'am' || needsTurbo ? 'turbo' : backend;
 }
 
-/** Query for POST /transcribe. Amharic requests stay exactly as before: `language` is added only for Afaan Oromo. */
+/** Query for POST /transcribe. Amharic requests stay exactly as before: `language` is added only for Afaan Oromo and Tigrinya. */
 export function uploadQuery(options: { backend: Backend; language: ScribeLanguage; stream: boolean; requestId: string; timestamps: boolean; speakers: boolean }): URLSearchParams {
   const query = new URLSearchParams({ backend: effectiveBackend(options.backend, options.language, options.speakers), chunk: '1120ms', stream: String(options.stream), request_id: options.requestId });
   if (options.timestamps) query.set('timestamps', 'word');
   if (options.speakers) query.set('speakers', 'true');
-  if (options.language === 'om') query.set('language', 'om');
+  if (options.language !== 'am') query.set('language', options.language);
   return query;
 }
 
-/** JSON body for POST /sessions. Amharic sessions stay exactly as before: `language` is added only for Afaan Oromo. */
+/** JSON body for POST /sessions. Amharic sessions stay exactly as before: `language` is added only for Afaan Oromo and Tigrinya. */
 export function sessionBody(options: { backend: Backend; language: ScribeLanguage; requestId: string; speakers: boolean }): Record<string, string | boolean> {
   const body: Record<string, string | boolean> = options.speakers
     ? { backend: 'turbo', chunk: '320ms', request_id: options.requestId, speakers: true }
     : { backend: effectiveBackend(options.backend, options.language), chunk: '320ms', request_id: options.requestId };
-  if (options.language === 'om') body.language = 'om';
+  if (options.language !== 'am') body.language = options.language;
   return body;
 }
 
