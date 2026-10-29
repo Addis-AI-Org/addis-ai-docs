@@ -1,5 +1,4 @@
 import '@/app/global.css';
-import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import {
@@ -8,6 +7,7 @@ import {
   DOCUMENTATION_SITE_NAME,
 } from '@/lib/metadata';
 import { ORGANIZATION_DEFINITION, ORGANIZATION_ID, SITE_URL } from '@/lib/site';
+import { DocsProvider } from '@/components/provider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -55,7 +55,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
-        <RootProvider>{children}</RootProvider>
+        <DocsProvider>{children}</DocsProvider>
       </body>
     </html>
   );

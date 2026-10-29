@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Mic, Radio, Square, Trash2 } from "lucide-react";
+import { startPlaygroundRun } from "@/lib/analytics";
 
 const CONFIG = {
   wsEndpoint: "wss://relay.addisassistant.com/ws",
@@ -304,6 +305,8 @@ export function RealtimeVoiceDemo() {
 
     sessionStorage.setItem("addis_realtime_api_key", trimmedApiKey);
 
+    // Reported once: success when the relay is ready, or how it failed first.
+    const playground = startPlaygroundRun("realtime_voice_websocket");
     const runId = rt.runId + 1;
     rt.runId = runId;
     rt.starting = true;
@@ -358,6 +361,7 @@ export function RealtimeVoiceDemo() {
 
         switch (message?.type) {
           case "ready":
+            playground.succeeded();
             runtimeRef.current.canStreamAudio = true;
             setStatus("Live", "Streaming microphone and AI audio.", "ok");
             appendLog("Ready. Streaming started.");
@@ -405,6 +409,7 @@ export function RealtimeVoiceDemo() {
         const wasUserStop = runtimeRef.current.userStopped || shouldAbort(runId);
         appendLog(`Socket closed (code=${event.code}, reason=${event.reason || "n/a"}).`);
 
+        if (!wasUserStop) playground.failed();
         if (!wasUserStop && event.code === 1006) {
           appendLog("Hint: 1006 usually means auth mismatch or protocol mismatch.");
         }
@@ -421,6 +426,7 @@ export function RealtimeVoiceDemo() {
         return;
       }
 
+      playground.failed();
       appendLog(`Start failed: ${String(error)}`);
       setStatus("Start failed", "Could not initialize realtime session.", "err");
       await stopRealtime("Disconnected", "Initialization failed.", false);
@@ -455,7 +461,7 @@ export function RealtimeVoiceDemo() {
   const busy = isStarting || isRunning;
 
   return (
-    <div className="not-prose addis-offset-shell addis-panel my-10 p-5">
+    <div className="not-prose addis-offset-shell addis-panel ph-no-capture my-10 p-5">
       <div className="mb-4 flex items-center gap-2">
         <div className="border border-fd-border bg-fd-secondary/30 p-2 text-fd-foreground">
           <Radio className="h-4 w-4" />

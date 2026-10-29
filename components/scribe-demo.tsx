@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DemoNavigation } from '@/components/demo-navigation';
 import { Captions, Check, Copy, Download, FileAudio, Loader2, Mic, Square, Users, Zap } from 'lucide-react';
+import { startPlaygroundRun } from '@/lib/analytics';
 import { SCRIBE_API, appendLiveSegments, authHeaders, pcm16, readJson, readTranscriptStream, segmentAt, speakerTurns, toSrt, toVtt, validateSocketUrl, wordsBySegment, wrapCaption, type Backend, type ScribeLiveSegment, type ScribeResult, type ScribeSegment, type ScribeWord } from '@/lib/scribe-client';
 
 type Phase = 'idle' | 'connecting' | 'recording' | 'processing';
@@ -76,8 +77,9 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   };
   const checkWallet = async () => {
     setChecking(true); setError('');
-    try { setPricing(await readJson(await fetch(`${SCRIBE_API}/usage`, { headers: authHeaders(credential), cache: 'no-store' }))); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Could not check your account.'); }
+    const playground = startPlaygroundRun('stt_account_check');
+    try { setPricing(await readJson(await playground.fetch(`${SCRIBE_API}/usage`, { headers: authHeaders(credential), cache: 'no-store' }))); playground.succeeded(); }
+    catch (e) { playground.failed(); setError(e instanceof Error ? e.message : 'Could not check your account.'); }
     finally { setChecking(false); }
   };
   const startRequest = () => {
@@ -89,12 +91,14 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const recover = async () => {
     if (!requestId) return;
     setError(''); setPhase('processing'); setStatus('Recovering transcript…');
-    try { complete(await readJson(await fetch(`${SCRIBE_API}/requests/${requestId}`, { headers: authHeaders(credential), cache: 'no-store' }))); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Recovery failed.'); setPhase('idle'); }
+    const playground = startPlaygroundRun('stt_request_recover');
+    try { complete(await readJson(await playground.fetch(`${SCRIBE_API}/requests/${requestId}`, { headers: authHeaders(credential), cache: 'no-store' }))); playground.succeeded(); }
+    catch (e) { playground.failed(); setError(e instanceof Error ? e.message : 'Recovery failed.'); setPhase('idle'); }
   };
   const upload = async () => {
     if (!file) return;
     if (file.size > 95 * 1024 * 1024) { setError('Choose a file no larger than 95 MB.'); return; }
+    const playground = startPlaygroundRun('stt_transcribe_upload');
     try {
       const { headers, id } = startRequest();
       // Timestamps are only available for completed uploads, so they never combine with stream=true.
@@ -105,10 +109,11 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
       const query = new URLSearchParams({ backend: labelSpeakers ? 'turbo' : backend, chunk: '1120ms', stream: String(streamUpdates), request_id: id });
       if (timestamps) query.set('timestamps', 'word');
       if (labelSpeakers) query.set('speakers', 'true');
-      const response = await fetch(`${SCRIBE_API}/transcribe?${query}`, { method: 'POST', headers, body, cache: 'no-store' });
+      const response = await playground.fetch(`${SCRIBE_API}/transcribe?${query}`, { method: 'POST', headers, body, cache: 'no-store' });
       const data = await readTranscriptStream(response, partial => { if (mounted.current) setText(partial); });
       if (mounted.current) complete(data);
-    } catch (e) { if (mounted.current) { setError(e instanceof Error ? e.message : 'Transcription failed.'); setPhase('idle'); setStatus('Use Recover request if the connection ended during transcription.'); } }
+      playground.succeeded();
+    } catch (e) { playground.failed(); if (mounted.current) { setError(e instanceof Error ? e.message : 'Transcription failed.'); setPhase('idle'); setStatus('Use Recover request if the connection ended during transcription.'); } }
   };
   const finishRecording = async () => {
     const rt = runtime.current;
@@ -124,6 +129,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   };
   const record = async () => {
     let rt = runtime.current;
+    const playground = startPlaygroundRun('stt_live_websocket');
     try {
       const { headers, id } = startRequest();
       if (liveSpeakers) setLiveSegments([]);
@@ -137,15 +143,15 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
       if (rt.context.sampleRate !== 16000) throw new Error('This browser cannot capture at 16 kHz. Upload an audio file instead.');
       await rt.context.audioWorklet.addModule('/scribe-pcm-worklet.js');
       await rt.context.resume();
-      const ticket = await readJson(await fetch(`${SCRIBE_API}/sessions`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(liveSpeakers ? { backend: 'turbo', chunk: '320ms', request_id: id, speakers: true } : { backend, chunk: '320ms', request_id: id }), cache: 'no-store' }));
+      const ticket = await readJson(await playground.fetch(`${SCRIBE_API}/sessions`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(liveSpeakers ? { backend: 'turbo', chunk: '320ms', request_id: id, speakers: true } : { backend, chunk: '320ms', request_id: id }), cache: 'no-store' }));
       if (rt.cancelled || !mounted.current) { stopAudio(rt); return; }
       const socket = new WebSocket(validateSocketUrl(ticket.websocket_url)); rt.socket = socket;
       rt.deadline = setTimeout(() => {
-        if (!rt.cancelled && mounted.current) { cleanup(rt); setPhase('idle'); setError('The connection timed out. Recover this request before starting again.'); }
+        if (!rt.cancelled && mounted.current) { playground.failed(); cleanup(rt); setPhase('idle'); setError('The connection timed out. Recover this request before starting again.'); }
       }, 10 * 60 * 1000);
       const fail = (message: string) => {
         if (rt.cancelled || !mounted.current) return;
-        cleanup(rt); setPhase('idle'); setError(message); setStatus('Recover this request if audio was already sent.');
+        playground.failed(); cleanup(rt); setPhase('idle'); setError(message); setStatus('Recover this request if audio was already sent.');
       };
       socket.onopen = () => socket.send(JSON.stringify({ type: 'session.authenticate', token: ticket.token }));
       socket.onerror = () => fail('The live connection failed. Recover this request if audio was already sent.');
@@ -157,7 +163,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
           if (data.type === 'error') { fail(data.error?.message ?? 'Transcription failed.'); return; }
           if (data.type === 'transcript.partial') { setText(data.uncommitted ?? data.text); return; }
           if (data.type === 'transcript.segment') { const segment = data as ScribeLiveSegment; setLiveSegments(prev => appendLiveSegments(prev ?? [], segment)); setText(segment.uncommitted ?? ''); return; }
-          if (data.type === 'transcript.completed') { complete(data.data); cleanup(rt); return; }
+          if (data.type === 'transcript.completed') { complete(data.data); playground.succeeded(); cleanup(rt); return; }
           if (data.type !== 'session.created') return;
           if (!rt.context || !rt.stream) throw new Error('Microphone was closed.');
           rt.source = rt.context.createMediaStreamSource(rt.stream);
@@ -174,14 +180,14 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
           rt.timer = setTimeout(finishRecording, 175000);
         } catch (e) { fail(e instanceof Error ? e.message : 'Invalid streaming response.'); }
       };
-    } catch (e) { cleanup(rt); if (mounted.current) { setPhase('idle'); setError(e instanceof Error ? e.message : 'Could not start recording.'); } }
+    } catch (e) { playground.failed(); cleanup(rt); if (mounted.current) { setPhase('idle'); setError(e instanceof Error ? e.message : 'Could not start recording.'); } }
   };
   const copy = async () => {
     try { await navigator.clipboard.writeText(text); setCopied(true); }
     catch { setError('Copy is unavailable. Select the transcript and copy it manually.'); }
   };
   return (
-    <section className={`not-prose addis-offset-shell ${fullPage ? 'my-0 min-h-[calc(100dvh-10rem)]' : 'my-10'} border border-fd-border bg-fd-background`} aria-labelledby="scribe-demo-title">
+    <section className={`not-prose addis-offset-shell ph-no-capture ${fullPage ? 'my-0 min-h-[calc(100dvh-10rem)]' : 'my-10'} border border-fd-border bg-fd-background`} aria-labelledby="scribe-demo-title">
       <div className="border-b border-fd-border p-5 sm:p-6">
         <DemoNavigation fullPage={fullPage} href="/docs/playground/speech-to-text" docsHref="/docs/capabilities/speech-to-text" />
         <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-fd-primary">Addis Scribe · Live API</p>

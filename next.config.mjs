@@ -8,6 +8,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
+  // PostHog's ingestion paths end in a slash (/ingest/e/); a redirect would
+  // drop the event body.
+  skipTrailingSlashRedirect: true,
   turbopack: {
     root: __dirname,
   },
@@ -16,6 +19,16 @@ const config = {
       {
         source: '/docs/:path*.mdx',
         destination: '/llms.mdx/:path*',
+      },
+      // Product analytics (instrumentation-client.ts) through this origin, to
+      // PostHog EU. Static assets first: the second rule would match them too.
+      {
+        source: '/ingest/static/:path*',
+        destination: 'https://eu-assets.i.posthog.com/static/:path*',
+      },
+      {
+        source: '/ingest/:path*',
+        destination: 'https://eu.i.posthog.com/:path*',
       },
     ];
   },

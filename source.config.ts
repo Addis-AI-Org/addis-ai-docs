@@ -59,6 +59,8 @@ export default defineConfig({
   mdxOptions: {
     rehypeCodeOptions: {
       lazy: true,
+      // `language-*` on each block's <code>: the copy event reports it (lib/analytics.ts).
+      addLanguageClass: true,
       langs: ['ts', 'js', 'html', 'tsx', 'mdx'],
       inline: 'tailing-curly-colon',
       themes: {

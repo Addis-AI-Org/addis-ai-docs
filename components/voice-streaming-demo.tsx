@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { DemoNavigation } from '@/components/demo-navigation';
 import { Download, Loader2, Pause, Play, RotateCcw, Square } from 'lucide-react';
+import { startPlaygroundRun, type PlaygroundRun } from '@/lib/analytics';
 import { VOICE_API, authHeaders, readJson, readVoiceStream, validateSocketUrl, validateAudioUrl, availableVoices, selectVoice, type StreamingVoice, type VoiceLanguage, type VoiceCompletion } from '@/lib/voice-stream-client';
 
 import { streamingVoiceCatalog } from '@/data/streaming-voice-catalog';
 type Wallet = { balance: number; pricing: { price_per_minute: number; currency: string } };
 type Submission = { id: string; text: string; voice: string; language: VoiceLanguage; transport: 'websocket' | 'http'; maxAudio: number };
-type Runtime = { socket?: WebSocket; controller?: AbortController; context?: AudioContext; gain?: GainNode; next: number; decode: Promise<void>; muted: boolean; stopped: boolean; wav: boolean; sources: AudioBufferSourceNode[]; parts: Uint8Array[]; total: number; started: number; deadline?: ReturnType<typeof setTimeout>; heartbeat?: ReturnType<typeof setInterval>; finished: boolean };
+type Runtime = { socket?: WebSocket; controller?: AbortController; context?: AudioContext; gain?: GainNode; next: number; decode: Promise<void>; muted: boolean; stopped: boolean; wav: boolean; sources: AudioBufferSourceNode[]; parts: Uint8Array[]; total: number; started: number; deadline?: ReturnType<typeof setTimeout>; heartbeat?: ReturnType<typeof setInterval>; finished: boolean; playground?: PlaygroundRun };
 const fresh = (): Runtime => ({ next: 0, decode: Promise.resolve(), muted: false, stopped: false, wav: false, sources: [], parts: [], total: 0, started: performance.now(), finished: false });
 const examples = {
   am: { name: 'Amharic', voice: 'am-hamen', text: 'ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።' },
@@ -54,14 +55,15 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
   const resetAccount = () => { setWallet(null); setResult(null); request.current = null; };
   const checkWallet = async () => {
     setChecking(true); setError('');
+    const playground = startPlaygroundRun('tts_account_check');
     try {
       const headers = authHeaders(credential);
-      const account = await readJson<Wallet>(await fetch(`${VOICE_API}/voice/usage`, { headers, cache: 'no-store', credentials: 'omit' }));
-      const catalog = await readJson<StreamingVoice[]>(await fetch(`${VOICE_API}/voice/voices`, { headers, cache: 'no-store', credentials: 'omit' }));
+      const account = await readJson<Wallet>(await playground.fetch(`${VOICE_API}/voice/usage`, { headers, cache: 'no-store', credentials: 'omit' }));
+      const catalog = await readJson<StreamingVoice[]>(await playground.fetch(`${VOICE_API}/voice/voices`, { headers, cache: 'no-store', credentials: 'omit' }));
       const available = availableVoices(catalog);
       setWallet(account); setVoices(available); setVoice(previous => selectVoice(available, language, previous));
-      setStatus('Account ready.');
-    } catch (e) { setError(e instanceof Error ? e.message : 'Account check failed.'); }
+      setStatus('Account ready.'); playground.succeeded();
+    } catch (e) { playground.failed(); setError(e instanceof Error ? e.message : 'Account check failed.'); }
     finally { setChecking(false); }
   };
   const receive = (rt: Runtime, data: Uint8Array) => {
@@ -87,6 +89,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
   const complete = (rt: Runtime, data: VoiceCompletion) => {
     if (!data.usage || data.usage.settled === false || !Number.isFinite(data.usage.credits_used)) throw new Error('Billing has not been confirmed. Recover this request.');
     validateAudioUrl(data.audio_url);
+    rt.playground?.succeeded();
     if (!mounted.current || runtime.current !== rt) return;
     setResult(data); setBusy(false);
     if (data.usage.credits_remaining !== null && data.usage.credits_remaining !== undefined) setWallet(prev => prev ? { ...prev, balance: data.usage.credits_remaining! } : prev);
@@ -107,6 +110,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
       request.current = submission;
       const previous = runtime.current; if (previous) { close(previous); void previous.context?.close().catch(() => {}); }
       rt = fresh(); runtime.current = rt;
+      const playground = startPlaygroundRun(submission.transport === 'http' ? 'tts_stream_http' : 'tts_stream_websocket'); rt.playground = playground;
       setBusy(true); setError(''); setPlaybackError(''); setResult(null); setFirstAudio(null); setBytes(0); setMuted(false); setPlaying(false); setPaused(false); setClipUrl('');
       // Resume from the button gesture, before any network request.
       try { rt.context = new AudioContext(); rt.gain = rt.context.createGain(); rt.gain.connect(rt.context.destination); await rt.context.resume(); }
@@ -114,20 +118,20 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
       const current = rt;
       const fail = (message: string) => {
         if (!mounted.current || runtime.current !== current || current.finished || current.stopped) return;
-        close(current); setBusy(false); setError(message); setStatus('Keep this request ID and use Recover request before starting another generation.');
+        playground.failed(); close(current); setBusy(false); setError(message); setStatus('Keep this request ID and use Recover request before starting another generation.');
       };
       current.deadline = setTimeout(() => fail('The stream timed out before billing confirmation.'), 240000);
       setStatus(replay ? 'Recovering the same request…' : 'Creating your speech stream…');
       if (submission.transport === 'http') {
         current.controller = new AbortController();
-        const response = await fetch(`${VOICE_API}/voice/generations/stream`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, credentials: 'omit', cache: 'no-store', signal: current.controller.signal,
+        const response = await playground.fetch(`${VOICE_API}/voice/generations/stream`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, credentials: 'omit', cache: 'no-store', signal: current.controller.signal,
           body: JSON.stringify({ text: submission.text, language: submission.language, voice_id: submission.voice, output_format: 'mp3_44100', client_request_id: submission.id }) });
         const data = await readVoiceStream(response, audio => receive(current, audio), current.controller.signal);
         complete(current, data);
         return;
       }
-      const capability = await readJson<{ version: string }>(await fetch(`${VOICE_API}/realtime`, { cache: 'no-store', credentials: 'omit' }));
-      const ticket = await readJson<{ token: string; websocket_url: string }>(await fetch(`${VOICE_API}/realtime/sessions`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, cache: 'no-store', credentials: 'omit',
+      const capability = await readJson<{ version: string }>(await playground.fetch(`${VOICE_API}/realtime`, { cache: 'no-store', credentials: 'omit' }));
+      const ticket = await readJson<{ token: string; websocket_url: string }>(await playground.fetch(`${VOICE_API}/realtime/sessions`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, cache: 'no-store', credentials: 'omit',
         body: JSON.stringify({ voice_id: submission.voice, language: submission.language, audio_format: 'mp3', max_text_characters: Math.max(submission.text.length, 1), ...(capability.version === '2' ? { max_audio_seconds: submission.maxAudio } : {}) }) }));
       if (!mounted.current || current.finished) return;
       const socket = new WebSocket(validateSocketUrl(ticket.websocket_url)); current.socket = socket;
@@ -152,6 +156,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
       };
     } catch (e) {
       if (rt?.stopped) return;   // the user stopped it; stop() already reset the UI
+      rt?.playground?.failed();
       if (rt) close(rt);
       if (mounted.current) { setBusy(false); setError(e instanceof Error ? e.message : 'Speech request failed.'); }
     }
@@ -174,7 +179,7 @@ export function VoiceStreamingDemo({ fullPage = false }: { fullPage?: boolean })
   };
   const available = voices.filter(v => v.language === language);
   return (
-    <section className={`not-prose addis-offset-shell ${fullPage ? 'my-0 min-h-[calc(100dvh-10rem)]' : 'my-10'} border border-fd-border bg-fd-background`} aria-labelledby="voice-demo-title">
+    <section className={`not-prose addis-offset-shell ph-no-capture ${fullPage ? 'my-0 min-h-[calc(100dvh-10rem)]' : 'my-10'} border border-fd-border bg-fd-background`} aria-labelledby="voice-demo-title">
       <div className="border-b border-fd-border p-5 sm:p-6">
         <DemoNavigation fullPage={fullPage} href="/docs/playground/text-to-speech" docsHref="/docs/capabilities/text-to-speech/streaming" />
         <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-fd-primary">Addis Voices 2 · Live API</p>
