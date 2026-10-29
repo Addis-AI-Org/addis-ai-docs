@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 const source = readFileSync(new URL('../lib/scribe-client.ts', import.meta.url), 'utf8');
 const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { authHeaders, pcm16, validateSocketUrl, readTranscriptStream, toSrt, toVtt, wrapCaption, wordsBySegment, segmentAt, appendLiveSegments, speakerTurns } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+const { authHeaders, pcm16, validateSocketUrl, readTranscriptStream, toSrt, toVtt, wrapCaption, wordsBySegment, segmentAt, appendLiveSegments, speakerTurns, uploadQuery, sessionBody, effectiveBackend } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 
 test('API keys are header-only and absent credentials fail before network access', () => {
   assert.deepEqual(authHeaders('  customer-key  '), { 'x-api-key': 'customer-key' });
@@ -113,4 +113,25 @@ test('live speaker segments append in order and skip replayed events', () => {
 });
 test('speaker turns join consecutive segments from the same speaker', () => {
   assert.deepEqual(speakerTurns([{ text: 'a', start: 0, end: 1, speaker: 1 }, { text: 'b', start: 1, end: 2, speaker: 1 }, { text: 'c', start: 2, end: 3, speaker: null }, { text: 'd', start: 3, end: 4, speaker: 2 }]), [{ speaker: 1, text: 'a b', start: 0 }, { speaker: null, text: 'c', start: 2 }, { speaker: 2, text: 'd', start: 3 }]);
+});
+test('Amharic requests send no language; Afaan Oromo adds language=om and always uses Turbo', () => {
+  const am = uploadQuery({ backend: 'standard', language: 'am', stream: false, requestId: 'docs_1', timestamps: true, speakers: false });
+  assert.equal(am.toString(), 'backend=standard&chunk=1120ms&stream=false&request_id=docs_1&timestamps=word');
+  assert.equal(am.has('language'), false);
+  const amSpeakers = uploadQuery({ backend: 'standard', language: 'am', stream: false, requestId: 'docs_2', timestamps: true, speakers: true });
+  assert.equal(amSpeakers.toString(), 'backend=turbo&chunk=1120ms&stream=false&request_id=docs_2&timestamps=word&speakers=true');
+  const om = uploadQuery({ backend: 'standard', language: 'om', stream: true, requestId: 'docs_3', timestamps: false, speakers: false });
+  assert.equal(om.get('language'), 'om');
+  assert.equal(om.get('backend'), 'turbo');
+  const omSpeakers = uploadQuery({ backend: 'turbo', language: 'om', stream: false, requestId: 'docs_4', timestamps: true, speakers: true });
+  assert.equal(omSpeakers.toString(), 'backend=turbo&chunk=1120ms&stream=false&request_id=docs_4&timestamps=word&speakers=true&language=om');
+
+  assert.deepEqual(sessionBody({ backend: 'standard', language: 'am', requestId: 'docs_5', speakers: false }), { backend: 'standard', chunk: '320ms', request_id: 'docs_5' });
+  assert.deepEqual(sessionBody({ backend: 'standard', language: 'am', requestId: 'docs_6', speakers: true }), { backend: 'turbo', chunk: '320ms', request_id: 'docs_6', speakers: true });
+  assert.deepEqual(sessionBody({ backend: 'standard', language: 'om', requestId: 'docs_7', speakers: false }), { backend: 'turbo', chunk: '320ms', request_id: 'docs_7', language: 'om' });
+  assert.deepEqual(sessionBody({ backend: 'turbo', language: 'om', requestId: 'docs_8', speakers: true }), { backend: 'turbo', chunk: '320ms', request_id: 'docs_8', speakers: true, language: 'om' });
+
+  assert.equal(effectiveBackend('standard', 'am'), 'standard');
+  assert.equal(effectiveBackend('standard', 'am', true), 'turbo');
+  assert.equal(effectiveBackend('standard', 'om'), 'turbo');
 });
