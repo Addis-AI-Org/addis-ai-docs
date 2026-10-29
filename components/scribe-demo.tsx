@@ -28,6 +28,7 @@ function speakerStyle(speaker: number | null | undefined) {
 const PLACEHOLDER: Record<ScribeLanguage, { lang: string; text: string }> = {
   am: { lang: 'am', text: 'የእርስዎ ጽሑፍ እዚህ ይታያል።' },
   om: { lang: 'en', text: 'Your Afaan Oromo transcript appears here.' },
+  ti: { lang: 'en', text: 'Your Tigrinya transcript appears here.' },
 };
 const button = 'inline-flex items-center justify-center gap-2 rounded-md border border-fd-border px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -46,7 +47,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const [captionFile, setCaptionFile] = useState<File | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [text, setText] = useState('');
-  const [status, setStatus] = useState('Record speech or upload audio in Amharic or Afaan Oromo.');
+  const [status, setStatus] = useState('Record speech or upload audio in Amharic, Afaan Oromo or Tigrinya.');
   const [error, setError] = useState('');
   const [result, setResult] = useState<ScribeResult | null>(null);
   const [requestId, setRequestId] = useState('');
@@ -58,9 +59,9 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const busy = phase !== 'idle';
   // Speaker labels ride on word timestamps and are Turbo only, so they pin the backend to Turbo while on.
   const labelSpeakers = timestamps && speakers;
-  // Afaan Oromo is transcribed on Turbo only, so it pins the backend too.
-  const oromo = language === 'om';
-  const pinTurbo = labelSpeakers || liveSpeakers || oromo;
+  // Afaan Oromo and Tigrinya are transcribed on Turbo only, so they pin the backend too.
+  const turboOnlyLanguage = language !== 'am';
+  const pinTurbo = labelSpeakers || liveSpeakers || turboOnlyLanguage;
 
   const stopAudio = (rt: Runtime) => {
     clearTimeout(rt.timer);
@@ -199,7 +200,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
       <div className="border-b border-fd-border p-5 sm:p-6">
         <DemoNavigation fullPage={fullPage} href="/docs/playground/speech-to-text" docsHref="/docs/capabilities/speech-to-text" />
         <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-fd-primary">Addis Scribe · Live API</p>
-        <h3 id="scribe-demo-title" className="text-xl font-semibold tracking-tight">Try Amharic and Afaan Oromo transcription</h3>
+        <h3 id="scribe-demo-title" className="text-xl font-semibold tracking-tight">Try Amharic, Afaan Oromo and Tigrinya transcription</h3>
         <p className="mt-2 text-sm leading-6 text-fd-muted-foreground">Record live or upload audio. Standard transcription rates apply.</p>
       </div>
       <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
@@ -214,9 +215,9 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
           </fieldset>
           <fieldset disabled={busy}>
             <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Language</legend>
-            <div className="grid grid-cols-2 items-start gap-2">
-              {(['am', 'om'] as const).map(value => (
-                <button key={value} type="button" aria-pressed={language === value} onClick={() => { setLanguage(value); if (value === 'om') setBackend('turbo'); }} className={`${button} w-full whitespace-nowrap ${language === value ? 'border-fd-primary bg-fd-primary/10 text-fd-primary' : ''}`}>
+            <div className="grid grid-cols-3 items-stretch gap-2">
+              {(['am', 'om', 'ti'] as const).map(value => (
+                <button key={value} type="button" aria-pressed={language === value} onClick={() => { setLanguage(value); if (value !== 'am') setBackend('turbo'); }} className={`${button} w-full text-center ${language === value ? 'border-fd-primary bg-fd-primary/10 text-fd-primary' : ''}`}>
                   {SCRIBE_LANGUAGES[value]}
                 </button>
               ))}
@@ -235,7 +236,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
                 </div>
               ))}
             </div>
-            {pinTurbo && <p id="scribe-speakers-turbo" className="mt-2 text-xs leading-5 text-fd-muted-foreground">{oromo ? 'Afaan Oromo is transcribed on Turbo. Choose Amharic to use Standard.' : 'Speaker labels need Turbo. Turn off Label speakers to choose Standard.'}</p>}
+            {pinTurbo && <p id="scribe-speakers-turbo" className="mt-2 text-xs leading-5 text-fd-muted-foreground">{turboOnlyLanguage ? `${SCRIBE_LANGUAGES[language]} is transcribed on Turbo. Choose Amharic to use Standard.` : 'Speaker labels need Turbo. Turn off Label speakers to choose Standard.'}</p>}
           </fieldset>
           <div className="space-y-3">
             <button type="button" className={`${button} w-full bg-fd-primary text-fd-primary-foreground`} disabled={(busy && phase !== 'recording') || !credential.trim()} onClick={phase === 'recording' ? finishRecording : record}>{phase === 'recording' ? <><Square className="size-4" />Finish recording</> : <><Mic className="size-4" />Record live</>}</button>

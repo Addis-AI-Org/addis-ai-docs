@@ -135,3 +135,15 @@ test('Amharic requests send no language; Afaan Oromo adds language=om and always
   assert.equal(effectiveBackend('standard', 'am', true), 'turbo');
   assert.equal(effectiveBackend('standard', 'om'), 'turbo');
 });
+test('Tigrinya adds language=ti and always uses Turbo, like Afaan Oromo', () => {
+  const ti = uploadQuery({ backend: 'standard', language: 'ti', stream: false, requestId: 'docs_9', timestamps: true, speakers: false });
+  assert.equal(ti.toString(), 'backend=turbo&chunk=1120ms&stream=false&request_id=docs_9&timestamps=word&language=ti');
+  const tiSpeakers = uploadQuery({ backend: 'turbo', language: 'ti', stream: false, requestId: 'docs_10', timestamps: true, speakers: true });
+  assert.equal(tiSpeakers.toString(), 'backend=turbo&chunk=1120ms&stream=false&request_id=docs_10&timestamps=word&speakers=true&language=ti');
+
+  assert.deepEqual(sessionBody({ backend: 'standard', language: 'ti', requestId: 'docs_11', speakers: false }), { backend: 'turbo', chunk: '320ms', request_id: 'docs_11', language: 'ti' });
+  assert.deepEqual(sessionBody({ backend: 'turbo', language: 'ti', requestId: 'docs_12', speakers: true }), { backend: 'turbo', chunk: '320ms', request_id: 'docs_12', speakers: true, language: 'ti' });
+
+  assert.equal(effectiveBackend('standard', 'ti'), 'turbo');
+  assert.equal(effectiveBackend('turbo', 'ti'), 'turbo');
+});
