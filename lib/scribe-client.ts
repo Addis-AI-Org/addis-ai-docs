@@ -1,11 +1,15 @@
 export const SCRIBE_API = 'https://api.addisassistant.com/api/v1/scribe';
 export type Backend = 'standard' | 'turbo';
-/** `am` (Amharic) is the API default and is never sent; `om` (Afaan Oromo) and `ti` (Tigrinya) run on Turbo only. */
-export type ScribeLanguage = 'am' | 'om' | 'ti';
-export const SCRIBE_LANGUAGES: Record<ScribeLanguage, string> = { am: 'Amharic', om: 'Afaan Oromo', ti: 'Tigrinya' };
+/** `am` (Amharic) is the API default and is never sent; every other language runs on Turbo only. */
+export type ScribeLanguage = 'am' | 'om' | 'ti' | 'ha' | 'sid' | 'wal' | 'sw';
+export const SCRIBE_LANGUAGES: Record<ScribeLanguage, string> = { am: 'Amharic', om: 'Afaan Oromo', ti: 'Tigrinya', ha: 'Hausa', sid: 'Sidama', wal: 'Wolaytta', sw: 'Swahili' };
+/** Speaker labels are offered in every Scribe language except Swahili (`languages.sw.speakers` is false). */
+export function hasSpeakerLabels(language: ScribeLanguage): boolean {
+  return language !== 'sw';
+}
 export type ScribeResult = {
   text: string; request_id: string; backend: Backend; seconds: number; compute_ms: number;
-  /** Oromo and Tigrinya results carry `language` ("om" or "ti") and that language's model id. */
+  /** Results in languages other than Amharic carry `language` (e.g. "om", "ha") and that language's model id. */
   language?: ScribeLanguage; model?: string;
   usage: { characters: number; credits_used: number; credits_remaining: number; currency: string; settled: boolean };
   idempotent_replay?: boolean;
@@ -107,23 +111,24 @@ export function speakerTurns(segments: ScribeSegment[]): { speaker: number | nul
 export function segmentAt(segments: ScribeSegment[], time: number): number {
   return segments.findIndex(segment => time >= segment.start && time < segment.end);
 }
-/** Backend a request actually uses: Afaan Oromo, Tigrinya and speaker labels are Turbo only. */
+/** Backend a request actually uses: every language but Amharic, and speaker labels, are Turbo only. */
 export function effectiveBackend(backend: Backend, language: ScribeLanguage, needsTurbo = false): Backend {
   return language !== 'am' || needsTurbo ? 'turbo' : backend;
 }
 
-/** Query for POST /transcribe. Amharic requests stay exactly as before: `language` is added only for Afaan Oromo and Tigrinya. */
+/** Query for POST /transcribe. Amharic requests stay exactly as before: `language` is added only for other languages. Swahili never asks for speakers. */
 export function uploadQuery(options: { backend: Backend; language: ScribeLanguage; stream: boolean; requestId: string; timestamps: boolean; speakers: boolean }): URLSearchParams {
-  const query = new URLSearchParams({ backend: effectiveBackend(options.backend, options.language, options.speakers), chunk: '1120ms', stream: String(options.stream), request_id: options.requestId });
+  const speakers = options.speakers && hasSpeakerLabels(options.language);
+  const query = new URLSearchParams({ backend: effectiveBackend(options.backend, options.language, speakers), chunk: '1120ms', stream: String(options.stream), request_id: options.requestId });
   if (options.timestamps) query.set('timestamps', 'word');
-  if (options.speakers) query.set('speakers', 'true');
+  if (speakers) query.set('speakers', 'true');
   if (options.language !== 'am') query.set('language', options.language);
   return query;
 }
 
-/** JSON body for POST /sessions. Amharic sessions stay exactly as before: `language` is added only for Afaan Oromo and Tigrinya. */
+/** JSON body for POST /sessions. Amharic sessions stay exactly as before: `language` is added only for other languages. Swahili never asks for speakers. */
 export function sessionBody(options: { backend: Backend; language: ScribeLanguage; requestId: string; speakers: boolean }): Record<string, string | boolean> {
-  const body: Record<string, string | boolean> = options.speakers
+  const body: Record<string, string | boolean> = options.speakers && hasSpeakerLabels(options.language)
     ? { backend: 'turbo', chunk: '320ms', request_id: options.requestId, speakers: true }
     : { backend: effectiveBackend(options.backend, options.language), chunk: '320ms', request_id: options.requestId };
   if (options.language !== 'am') body.language = options.language;
