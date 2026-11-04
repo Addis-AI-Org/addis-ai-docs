@@ -75,14 +75,9 @@ test('every #anchor on a documentation link exists on the target page', () => {
 // Hosts that answer automated requests with 4xx/999 (bot protection) although the page works
 // in a browser. They are skipped rather than reported as broken.
 const BOT_BLOCKING_HOSTS = ['linkedin.com', 'www.linkedin.com', 'x.com', 'twitter.com', 'www.npmjs.com'];
-// Pages that ship with an open developer-portal pull request (branch feat/scribe-ha-sid-wal-sw).
-// They are reported, not failed, until they are live; delete each entry once it answers 200.
-const PENDING_URLS = new Set([
-  'https://addisassistant.com/benchmarks/addis-scribe-hausa',
-  'https://addisassistant.com/benchmarks/addis-scribe-sidama',
-  'https://addisassistant.com/benchmarks/addis-scribe-wolaytta',
-  'https://addisassistant.com/benchmarks/addis-scribe-swahili',
-]);
+// Pages that ship with an open pull request elsewhere: reported, not failed, until they are live; delete each entry
+// once it answers 200. (The four Scribe benchmark pages went live on 2026-11-04.)
+const PENDING_URLS = new Set([]);
 // API endpoints need an API key; they are documented, not browsed.
 const SKIPPED_HOSTS = ['api.addisassistant.com', 'localhost', '127.0.0.1'];
 
@@ -135,6 +130,8 @@ test('live: external links and voice previews answer 2xx/3xx', { skip: process.e
       while (queue.length) {
         const url = queue.shift();
         const status = await check(url);
+        // 429 means the host rate-limited this runner, not that the link is broken: report it, don't fail.
+        if (status === 429) { t.diagnostic(`rate limited, not checked: ${url}`); continue; }
         const broken = typeof status !== 'number' || status >= 400;
         if (PENDING_URLS.has(url)) t.diagnostic(`${broken ? 'pending' : 'now live, remove from PENDING_URLS'}: ${status} ${url}`);
         else if (broken) failures.push(`${status} ${url}`);

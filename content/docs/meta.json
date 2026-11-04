@@ -2,6 +2,8 @@
   "title": "Addis AI Documentation | APIs & SDKs for African Languages",
   "root": true,
   "pages": [
+    "announcements",
+
     "--- Get started ---",
     "get-started/introduction",
     "get-started/quickstart",
@@ -39,7 +41,6 @@
     "platform/limits",
     "platform/errors",
     "platform/status",
-    "platform/faq",
-    "announcements"
+    "platform/faq"
   ]
 }

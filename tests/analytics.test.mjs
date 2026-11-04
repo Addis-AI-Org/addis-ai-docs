@@ -152,9 +152,6 @@ test('each page maps to the capability it documents', () => {
   const expected = {
     '/docs/announcements': 'other',
     '/docs/api-reference/chat-generate': 'chat',
-    '/docs/api-reference/studio-analyses': 'studio',
-    '/docs/api-reference/studio-conversation-analysis': 'studio',
-    '/docs/api-reference/studio-top-questions': 'studio',
     '/docs/capabilities/multimodal': 'chat',
     '/docs/capabilities/realtime': 'realtime',
     '/docs/capabilities/speech-to-text': 'stt',
@@ -193,10 +190,10 @@ test('each page maps to the capability it documents', () => {
     assert.equal(getDocsCapability(url), capability, url);
     assert.ok(DOCS_CAPABILITIES.includes(capability), capability);
   }
-  // Every value but `other` is used by some page.
+  // Every value but `other` is used by some page. `studio` waits for the Studio launch (its pages are drafts).
   assert.deepEqual(
     [...new Set(Object.values(expected))].sort(),
-    DOCS_CAPABILITIES.slice().sort(),
+    DOCS_CAPABILITIES.filter((capability) => capability !== 'studio').sort(),
   );
   assert.equal(getDocsCapability('/docs/capabilities/speech-to-text/live/'), 'live');
   assert.equal(getDocsCapability('/docs/capabilities/text-to-speechx'), 'other');

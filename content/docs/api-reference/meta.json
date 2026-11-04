@@ -2,9 +2,6 @@
   "title": "API reference",
   "icon": "Braces",
   "pages": [
-    "chat-generate",
-    "studio-conversation-analysis",
-    "studio-analyses",
-    "studio-top-questions"
+    "chat-generate"
   ]
 }
