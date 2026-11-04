@@ -23,3 +23,9 @@ test('pages offer no "Copy page" button', () => {
   assert.doesNotMatch(actions, /Copy page|clipboard/);
   assert.match(actions, /Open in ChatGPT/);
 });
+
+test('Realtime Audio is priced as billed: 2 / 8 ETB per 1,000 input / output tokens (since 2026-11-04)', () => {
+  const pricing = read('content/docs/platform/pricing.mdx');
+  assert.match(pricing, /\*\*Realtime Audio \(Input\)\*\* \| Input tokens \| \*\*2 ETB \/ 1,000 tokens\*\*/);
+  assert.match(pricing, /\*\*Realtime Audio \(Output\)\*\* \| Output tokens \| \*\*8 ETB \/ 1,000 tokens\*\*/);
+});
