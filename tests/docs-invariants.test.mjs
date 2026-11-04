@@ -69,10 +69,12 @@ test('documentation links are relative and resolve to a page, app route, or redi
   }
 });
 
-test('sidebar starts with Get started and has no duplicate labels or emoji headings', () => {
+test('sidebar opens with Announcements, then Get started, with no duplicate labels or emoji headings', () => {
   const meta = JSON.parse(read('content/docs/meta.json'));
-  const firstEntry = meta.pages.find((entry) => entry.trim() !== '');
-  assert.match(firstEntry, /^--- Get started ---$/i, 'The sidebar must open with the Get started group');
+  const [firstEntry, secondEntry] = meta.pages.filter((entry) => entry.trim() !== '');
+  // Announcements sits right under Useful Links (user, 2026-11-04); the page groups follow, Get started first.
+  assert.equal(firstEntry, 'announcements', 'The sidebar must open with Announcements');
+  assert.match(secondEntry, /^--- Get started ---$/i, 'Get started must be the first page group');
   assert.ok(meta.pages.includes('platform/limits'), 'Rate limits must be reachable from the sidebar');
 
   const titles = pages.map((path) => read(path).match(/^title: (.+)$/m)?.[1]).filter(Boolean);
