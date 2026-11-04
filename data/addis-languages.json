@@ -1,6 +1,6 @@
 {
   "version": "2026-11-04",
-  "source": "Live public API (GET /api/v1/scribe, GET /api/v1/realtime), live voice edge function v119 and the voice catalog (available, public rows), checked 2026-11-04 ~09:00 EAT. Previews are generated clips on the CDN. Realtime/stream ha, sid, wal: ledger migration applied 2026-11-04 10:51 EAT; gateway release pending at time of writing (check GET /api/v1/realtime).",
+  "source": "Live public API (GET /api/v1/scribe, GET /api/v1/realtime), live voice edge function v119 and the voice catalog (available, public rows), checked 2026-11-04 ~09:00 EAT. Previews are generated clips on the CDN. Realtime/stream ha, sid, wal: ledger migration applied 2026-11-04 10:51 EAT; gateway release v2-hasidwal-20261104 live 10:54 EAT (GET /api/v1/realtime lists all seven).",
   "languages": {
     "am": {
       "name": "Amharic",
