@@ -220,16 +220,12 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
             <button type="button" disabled={!credential.trim() || checking} className={`${button} w-full`} onClick={checkWallet}>{checking && <Loader2 className="size-4 animate-spin" />}Check balance and rate</button>
             {pricing && <p className="text-sm tabular-nums">Balance <strong>{pricing.balance.toFixed(4)} ETB</strong><br /><span className="text-fd-muted-foreground">{pricing.pricing.price_per_1000_characters} ETB / 1,000 transcribed characters</span></p>}
           </fieldset>
-          <fieldset disabled={busy}>
-            <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Language</legend>
-            <div className="grid grid-cols-3 items-stretch gap-2">
-              {(['am', 'om', 'ti', 'ha', 'sid', 'wal', 'sw'] as const).map(value => (
-                <button key={value} type="button" aria-pressed={language === value} onClick={() => { setLanguage(value); if (value !== 'am') setBackend('turbo'); }} className={`${button} w-full text-center ${language === value ? 'border-fd-primary bg-fd-primary/10 text-fd-primary' : ''}`}>
-                  {SCRIBE_LANGUAGES[value]}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          <div>
+            <label htmlFor="scribe-language" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Language</label>
+            <select id="scribe-language" disabled={busy} className={control} value={language} onChange={e => { const value = e.target.value as ScribeLanguage; setLanguage(value); if (value !== 'am') setBackend('turbo'); }}>
+              {(Object.keys(SCRIBE_LANGUAGES) as ScribeLanguage[]).map(value => <option key={value} value={value}>{SCRIBE_LANGUAGES[value]}</option>)}
+            </select>
+          </div>
           <fieldset disabled={busy}>
             <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Speed</legend>
             <div className="grid grid-cols-2 items-start gap-2">

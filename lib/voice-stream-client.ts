@@ -1,8 +1,7 @@
 export const VOICE_API = 'https://api.addisassistant.com/api/v1';
 export type AuthMode = 'api-key' | 'jwt';
-// Streamed and real-time speech languages. Hausa, Sidama and Wolaytta voices
-// are generated with voice.generate only, so they are not offered here.
-export const STREAMING_LANGUAGES = ['am', 'om', 'ti', 'sw'] as const;
+// Streamed and real-time speech languages (GET /api/v1/realtime, verified 2026-11-04).
+export const STREAMING_LANGUAGES = ['am', 'om', 'ti', 'sw', 'ha', 'sid', 'wal'] as const;
 export type VoiceLanguage = (typeof STREAMING_LANGUAGES)[number];
 export type StreamingVoice = {
   id: string; name: string; language: VoiceLanguage; is_available?: boolean; is_default?: boolean;

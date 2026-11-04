@@ -28,7 +28,7 @@ test('the source-of-truth file is internally consistent', () => {
   assert.deepEqual(codes, ['am', 'om', 'ti', 'sw', 'ha', 'sid', 'wal']);
   assert.deepEqual(Object.keys(facts.voices), voiceLanguages);
   assert.deepEqual(Object.keys(facts.default_voices), voiceLanguages);
-  assert.deepEqual(realtimeLanguages, ['am', 'om', 'ti', 'sw']);
+  assert.deepEqual(realtimeLanguages, voiceLanguages, 'every voice language streams and runs in real time');
   assert.equal(facts.voices.ha.length, 4, 'Hausa has exactly four voices');
   for (const lang of voiceLanguages) {
     assert.equal(facts.voices[lang][0], facts.default_voices[lang], `${lang} lists its default voice first`);
@@ -61,11 +61,28 @@ test('the playable voice catalog lists exactly the live voices with their detail
   }
 });
 
-test('the catalog language filter offers every voice language by name', () => {
+test('the catalog language filter is one labelled dropdown offering every voice language by name', () => {
   const component = read('components/voice-catalog.tsx');
   const options = [...component.matchAll(/\{ id: '([a-z]+)', label: '([^']+)' \}/g)].map(([, id, label]) => [id, label]);
   assert.deepEqual(options, voiceLanguages.map((lang) => [lang, languageName(lang)]));
+  assert.equal(options.length, 7, 'seven language options');
   for (const lang of voiceLanguages) assert.match(component, new RegExp(`type Language = [^;]*'${lang}'`));
+
+  const selects = [...component.matchAll(/<select\b[^>]*>/g)];
+  assert.equal(selects.length, 1, 'the catalog renders one <select>');
+  const id = selects[0][0].match(/id="([^"]+)"/)?.[1];
+  assert.ok(id, 'the language <select> has an id');
+  assert.match(component, new RegExp(`<label[^>]*htmlFor="${id}"[^>]*>\\s*Language\\s*</label>`), 'the <select> has a visible label');
+  assert.match(component, /languageOptions\.map\(\(option\) => \(\s*<option key=\{option\.id\} value=\{option\.id\}>/, 'one <option> per language');
+  assert.doesNotMatch(component, /aria-pressed/, 'no row of language toggle buttons');
+});
+
+test('language pickers in components are dropdowns, not rows of buttons', () => {
+  const scribe = read('components/scribe-demo.tsx');
+  assert.match(scribe, /<label htmlFor="scribe-language"[^>]*>Language<\/label>\s*<select id="scribe-language"/);
+  assert.match(scribe, /\(Object\.keys\(SCRIBE_LANGUAGES\) as ScribeLanguage\[\]\)\.map\(value => <option key=\{value\} value=\{value\}>/);
+  assert.doesNotMatch(scribe, /aria-pressed=\{language === /, 'Scribe demo has no language buttons');
+  assert.match(read('components/voice-streaming-demo.tsx'), /<select id="voice-stream-language"/);
 });
 
 test('streaming and real-time lists offer exactly the realtime languages', async () => {
@@ -125,7 +142,7 @@ test('the Text-to-Speech page documents every voice language and its voices', ()
   for (const lang of voiceLanguages) assert.ok(batches.includes(`(\`${lang}\`)`), `batches accept ${lang}`);
 });
 
-test('the streaming page lists only realtime languages and says the others are not available yet', () => {
+test('the streaming page lists exactly the realtime languages and never says "not available"', () => {
   const page = read('content/docs/capabilities/text-to-speech/streaming.mdx');
   const rows = tableRows(section(page, '## Choose a language and voice'));
   assert.deepEqual(
@@ -133,11 +150,19 @@ test('the streaming page lists only realtime languages and says the others are n
     realtimeLanguages.map((lang) => [languageName(lang), `\`${lang}\``, `\`${facts.default_voices[lang]}\``]),
   );
   const others = voiceLanguages.filter((lang) => !realtimeLanguages.includes(lang));
-  const notice = page.split('\n').find((line) => line.includes('not available for streaming'));
-  assert.ok(notice, 'the streaming page names the languages without streaming');
   for (const lang of others) {
-    assert.ok(notice.includes(languageName(lang)), `${languageName(lang)} is named as not streaming yet`);
     assert.doesNotMatch(page, new RegExp(`language[=:]\\s*"${lang}"`), `streaming samples never use ${lang}`);
+  }
+  if (!others.length) {
+    for (const [surface, text] of Object.entries({
+      'streaming page': page,
+      'Text-to-Speech page': read('content/docs/capabilities/text-to-speech/index.mdx'),
+      FAQ: read('content/docs/platform/faq.mdx'),
+      announcements: read('content/docs/announcements.mdx'),
+      'llms.txt': read('app/llms.txt/route.ts'),
+    })) {
+      assert.doesNotMatch(text, /not available for streaming|(streaming|real-time sessions)[^.]*not available[^.]*yet|generated as completed clips/i, `${surface} has no stale streaming restriction`);
+    }
   }
 });
 

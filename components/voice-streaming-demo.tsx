@@ -16,6 +16,9 @@ const examples = {
   om: { name: 'Afaan Oromo', voice: 'om-bikila', text: 'Nagaa, gara Addis AI baga nagaan dhuftan.' },
   ti: { name: 'Tigrinya', voice: 'ti-berhane', text: 'ሰላም፣ እንቋዕ ብደሓን መጻእኩም። ሎሚ ጽቡቕ መዓልቲ እዩ።' },
   sw: { name: 'Swahili', voice: 'sw-rashid', text: 'Habari, karibu sana. Leo ni siku nzuri ya kujifunza kitu kipya pamoja.' },
+  ha: { name: 'Hausa', voice: 'ha-mustapha', text: 'Barka da zuwa. Yau rana ce mai kyau don koyon sabon abu tare.' },
+  sid: { name: 'Sidama', voice: 'sid-tigist', text: 'Kunino babbaxxinno sidaamu budu tima, adonna shaanu babbaxxinno sidaamu budi sagale leeltawo yaate.' },
+  wal: { name: 'Wolaytta', voice: 'wal-tona', text: 'Giyaa giddon daro asay shammes, baassi koshshiyabaa bayzzes.' },
 } as const satisfies Record<VoiceLanguage, { name: string; voice: string; text: string }>;
 const control = 'w-full rounded-md border border-fd-border bg-fd-background px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary disabled:opacity-50';
 const button = 'inline-flex items-center justify-center gap-2 rounded-md border border-fd-border px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary disabled:cursor-not-allowed disabled:opacity-50';

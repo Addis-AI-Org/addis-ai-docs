@@ -7,7 +7,7 @@ isNew: true
 
 import { VoiceCatalog } from '@/components/voice-catalog';
 
-Addis Voices 2 turns Amharic, Afaan Oromo, Tigrinya, Swahili, Hausa, Sidama and Wolaytta text into durable audio clips. It is billed by generated duration at **5 ETB per minute**. Use `voice.generate` for completed clips in every language, or follow [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming) for HTTP streams and persistent WebSocket sessions in Amharic, Afaan Oromo, Tigrinya and Swahili. Hausa, Sidama and Wolaytta are not available for streaming or real-time sessions yet.
+Addis Voices 2 turns Amharic, Afaan Oromo, Tigrinya, Swahili, Hausa, Sidama and Wolaytta text into durable audio clips. It is billed by generated duration at **5 ETB per minute**. Use `voice.generate` for completed clips in every language, or follow [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming) for HTTP streams and persistent WebSocket sessions in every one of these languages.
 
 <Callout type="warn" title="Maintaining a Voice 1 integration?">
 The original Text-to-Speech API is deprecated and hidden from the primary navigation. [Open the Legacy Text-to-Speech guide →](/docs/capabilities/text-to-speech-legacy)
@@ -146,7 +146,7 @@ curl https://api.addisassistant.com/api/v1/voice/generations \
 
 ### Hausa voices
 
-Four Hausa voices are available. Send `language: "ha"` with any of these IDs (SDK 0.13.0 or later); `ha-mustapha` is the default. Pricing is the same per generated minute as every other Voices 2 voice. Hausa voices work with `voice.generate`, estimates and batches. Streaming and real-time sessions are not available in Hausa yet.
+Four Hausa voices are available. Send `language: "ha"` with any of these IDs (SDK 0.13.0 or later); `ha-mustapha` is the default. Pricing is the same per generated minute as every other Voices 2 voice. Hausa voices work with `voice.generate`, estimates and batches, and also stream over HTTP and real-time WebSocket sessions (SDK 0.14.0 or later); see [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming).
 
 | Voice ID | Name | Gender | Style |
 | --- | --- | --- | --- |
@@ -186,7 +186,7 @@ curl https://api.addisassistant.com/api/v1/voice/generations \
 
 ### Sidama voices
 
-Five Sidama voices are available. Send `language: "sid"` with any of these IDs (SDK 0.13.0 or later); `sid-tigist` is the default. Pricing is the same per generated minute as every other Voices 2 voice. Sidama voices work with `voice.generate`, estimates and batches. Streaming and real-time sessions are not available in Sidama yet.
+Five Sidama voices are available. Send `language: "sid"` with any of these IDs (SDK 0.13.0 or later); `sid-tigist` is the default. Pricing is the same per generated minute as every other Voices 2 voice. Sidama voices work with `voice.generate`, estimates and batches, and also stream over HTTP and real-time WebSocket sessions (SDK 0.14.0 or later); see [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming).
 
 | Voice ID | Name | Gender | Style |
 | --- | --- | --- | --- |
@@ -227,7 +227,7 @@ curl https://api.addisassistant.com/api/v1/voice/generations \
 
 ### Wolaytta voices
 
-Five Wolaytta voices are available. Send `language: "wal"` with any of these IDs (SDK 0.13.0 or later); `wal-tona` is the default. Pricing is the same per generated minute as every other Voices 2 voice. Wolaytta voices work with `voice.generate`, estimates and batches. Streaming and real-time sessions are not available in Wolaytta yet.
+Five Wolaytta voices are available. Send `language: "wal"` with any of these IDs (SDK 0.13.0 or later); `wal-tona` is the default. Pricing is the same per generated minute as every other Voices 2 voice. Wolaytta voices work with `voice.generate`, estimates and batches, and also stream over HTTP and real-time WebSocket sessions (SDK 0.14.0 or later); see [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming).
 
 | Voice ID | Name | Gender | Style |
 | --- | --- | --- | --- |

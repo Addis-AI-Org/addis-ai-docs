@@ -1,6 +1,6 @@
 {
   "version": "2026-11-04",
-  "source": "Live public API (GET /api/v1/scribe, GET /api/v1/realtime), live voice edge function v119 and the voice catalog (available, public rows), checked 2026-11-04 ~09:00 EAT. Previews are generated clips on the CDN.",
+  "source": "Live public API (GET /api/v1/scribe, GET /api/v1/realtime), live voice edge function v119 and the voice catalog (available, public rows), checked 2026-11-04 ~09:00 EAT. Previews are generated clips on the CDN. Realtime/stream ha, sid, wal: ledger migration applied 2026-11-04 10:51 EAT; gateway release v2-hasidwal-20261104 live 10:54 EAT (GET /api/v1/realtime lists all seven).",
   "languages": {
     "am": {
       "name": "Amharic",
@@ -56,7 +56,7 @@
         "turbo"
       ],
       "voice": true,
-      "voice_realtime": false
+      "voice_realtime": true
     },
     "sid": {
       "name": "Sidama",
@@ -67,7 +67,7 @@
         "turbo"
       ],
       "voice": true,
-      "voice_realtime": false
+      "voice_realtime": true
     },
     "wal": {
       "name": "Wolaytta",
@@ -78,7 +78,7 @@
         "turbo"
       ],
       "voice": true,
-      "voice_realtime": false
+      "voice_realtime": true
     }
   },
   "voices": {
@@ -167,7 +167,35 @@
   ],
   "preview_url": "https://cdn.addisassistant.com/voice-previews/{file}",
   "preview_files": {
-    "ti-danait": "ti-danait-v2.mp3"
+    "ti-danait": "ti-danait-v2.mp3",
+    "am-hamen": "am-hamen-v4.mp3",
+    "am-yohanes-calm": "am-yohanes-calm-v4.mp3",
+    "am-tesfa": "am-tesfa-v4.mp3",
+    "am-muaz": "am-muaz-v4.mp3",
+    "am-roba": "am-roba-v4.mp3",
+    "am-nejat": "am-nejat-v4.mp3",
+    "am-loza": "am-loza-v5.mp3",
+    "am-nahom": "am-nahom-v4.mp3",
+    "am-simon": "am-simon-v4.mp3",
+    "am-amanuel": "am-amanuel-v4.mp3",
+    "am-tewodros": "am-tewodros-v3.mp3",
+    "am-kaleb": "am-kaleb-v4.mp3",
+    "am-dawit": "am-dawit-v4.mp3",
+    "am-meron": "am-meron-v4.mp3",
+    "am-makda": "am-makda-v3.mp3",
+    "am-feven": "am-feven-v4.mp3",
+    "am-melat": "am-melat-v4.mp3",
+    "am-dibora": "am-dibora-v4.mp3",
+    "am-sara": "am-sara-v4.mp3",
+    "om-bikila": "om-bikila-v3.mp3",
+    "om-ayyaantuu": "om-ayyaantuu-v3.mp3",
+    "om-leensaa": "om-leensaa-v3.mp3",
+    "om-hawi": "om-hawi-v3.mp3",
+    "om-diriba": "om-diriba-v3.mp3",
+    "om-obse": "om-obse-v3.mp3",
+    "om-leta": "om-leta-v3.mp3",
+    "om-ebba": "om-ebba-v3.mp3",
+    "om-chala": "om-chala-v3.mp3"
   },
   "example_text": {
     "am": "ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።",
@@ -311,9 +339,7 @@
       "/api/v1/voice/generations",
       "/api/v1/voice/estimate",
       "/api/v1/voice/voices",
-      "/api/v1/batches (voice lines)"
-    ],
-    "voice_realtime_languages_only": [
+      "/api/v1/batches (voice lines)",
       "/api/v1/voice/generations/stream",
       "/api/v1/realtime/*"
     ]
