@@ -4,7 +4,7 @@ import test from 'node:test';
 import ts from 'typescript';
 const source = readFileSync(new URL('../lib/voice-stream-client.ts', import.meta.url), 'utf8');
 const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { authHeaders, availableVoices, selectVoice, validateSocketUrl, validateAudioUrl, readVoiceStream } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+const { authHeaders, availableVoices, selectVoice, validateSocketUrl, validateAudioUrl, readVoiceStream, STREAMING_LANGUAGES } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 const result = {id:'clip',audio_url:'https://cdn.addisassistant.com/audio/clips/clip.mp3?token=scoped',duration_seconds:1.008,usage:{credits_used:.084,credits_remaining:2,currency:'ETB',settled:true}};
 function framed(audio,metadata=result) {
  const bytes=new Uint8Array(audio.length+8+new TextEncoder().encode(JSON.stringify({data:metadata})).length);
@@ -45,4 +45,13 @@ test('all available choices remain selectable with per-language defaults and no 
  assert.equal(selectVoice(voices,'am','am-old'),'am-hamen');
  assert.equal(selectVoice(voices,'ti'),'ti-senait');
  assert.equal(selectVoice(voices,'om'),'');
+});
+
+test('Swahili streams; Hausa, Sidama and Wolaytta voices stay out of streamed and real-time speech', () => {
+ assert.deepEqual([...STREAMING_LANGUAGES],['am','om','ti','sw']);
+ const voices=[{id:'sw-neema',name:'Neema',language:'sw'},{id:'sw-rashid',name:'Rashid',language:'sw',is_default:true},{id:'ha-mustapha',name:'Mustapha',language:'ha',is_default:true},{id:'sid-tigist',name:'Tigist',language:'sid'},{id:'wal-tona',name:'Tona',language:'wal'}];
+ assert.deepEqual(availableVoices(voices).map(v=>v.id),['sw-neema','sw-rashid']);
+ assert.equal(selectVoice(voices,'sw'),'sw-rashid');
+ assert.equal(selectVoice(voices,'sw','sw-neema'),'sw-neema');
+ assert.equal(selectVoice(voices,'ha'),'');
 });

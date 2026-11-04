@@ -7,7 +7,7 @@ isNew: true
 
 import { VoiceCatalog } from '@/components/voice-catalog';
 
-Addis Voices 2 turns Amharic, Afaan Oromo and Tigrinya text into durable audio clips. It is billed by generated duration at **5 ETB per minute**. Use `voice.generate` for completed clips, or follow [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming) for HTTP streams and persistent WebSocket sessions.
+Addis Voices 2 turns Amharic, Afaan Oromo, Tigrinya, Swahili, Hausa, Sidama and Wolaytta text into durable audio clips. It is billed by generated duration at **5 ETB per minute**. Use `voice.generate` for completed clips in every language, or follow [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming) for HTTP streams and persistent WebSocket sessions in Amharic, Afaan Oromo, Tigrinya and Swahili. Hausa, Sidama and Wolaytta are not available for streaming or real-time sessions yet.
 
 <Callout type="warn" title="Maintaining a Voice 1 integration?">
 The original Text-to-Speech API is deprecated and hidden from the primary navigation. [Open the Legacy Text-to-Speech guide →](/docs/capabilities/text-to-speech-legacy)
@@ -15,7 +15,7 @@ The original Text-to-Speech API is deprecated and hidden from the primary naviga
 
 ## Discover voices
 
-Query the catalog rather than copying an arbitrary ID into production configuration. `am-hamen` is the canonical Amharic example, `om-bikila` the Afaan Oromo one and `ti-berhane` the Tigrinya one.
+Query the catalog rather than copying an arbitrary ID into production configuration. `am-hamen` is the canonical Amharic example, `om-bikila` the Afaan Oromo one, `ti-berhane` the Tigrinya one, `sw-rashid` the Swahili one, `ha-mustapha` the Hausa one, `sid-tigist` the Sidama one and `wal-tona` the Wolaytta one.
 
 <Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
   <Tab>
@@ -47,14 +47,14 @@ The catalog is dynamic. Filter for the requested language and store only IDs cur
 
 | Filter | Node.js | Python | Values |
 | --- | --- | --- | --- |
-| Language | `language` | `language` | `am`, `om`, or `ti` |
+| Language | `language` | `language` | `am`, `om`, `ti`, `sw`, `ha`, `sid`, or `wal` |
 | Gender | `gender` | `gender` | `female` or `male` |
 | Search | `search` | `search` | Name, ID, descriptor, style, or tag text |
 | Include unavailable voices | `includeUnavailable` | `include_unavailable` | `false` by default |
 
 ### Browse current voice IDs
 
-The playable catalog below is synchronized with the current backend availability list and developer-platform previews, and was last verified against production on October 23, 2026, when the Tigrinya voices were added. Your application should still call `voices.list()` because availability can change without a documentation release.
+The playable catalog below is synchronized with the current backend availability list and developer-platform previews, and was last verified against production on November 4, 2026, when the Swahili, Hausa, Sidama and Wolaytta voices were added. Your application should still call `voices.list()` because availability can change without a documentation release.
 
 <VoiceCatalog />
 
@@ -78,7 +78,7 @@ Seven native Tigrinya voices are available. Send `language: "ti"` with any of th
 const clip = await addis.voice.generate({
   voiceId: "ti-berhane",
   language: "ti",
-  text: "ሰላም፣ እንቋዕ ብደሓን መጻእኩም።",
+  text: "ሰላም፣ እንቋዕ ብደሓን መጻእኩም። ሎሚ ጽቡቕ መዓልቲ እዩ።",
 });
 ```
   </Tab>
@@ -87,7 +87,7 @@ const clip = await addis.voice.generate({
 clip = addis.voice.generate(
     voice_id="ti-berhane",
     language="ti",
-    text="ሰላም፣ እንቋዕ ብደሓን መጻእኩም።",
+    text="ሰላም፣ እንቋዕ ብደሓን መጻእኩም። ሎሚ ጽቡቕ መዓልቲ እዩ።",
 )
 ```
   </Tab>
@@ -96,7 +96,172 @@ clip = addis.voice.generate(
 curl https://api.addisassistant.com/api/v1/voice/generations \
   -H "x-api-key: $ADDIS_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"voice_id":"ti-berhane","language":"ti","text":"ሰላም፣ እንቋዕ ብደሓን መጻእኩም።","output_format":"mp3_44100"}'
+  -d '{"voice_id":"ti-berhane","language":"ti","text":"ሰላም፣ እንቋዕ ብደሓን መጻእኩም። ሎሚ ጽቡቕ መዓልቲ እዩ።","output_format":"mp3_44100"}'
+```
+  </Tab>
+</Tabs>
+
+### Swahili voices
+
+Seven Swahili voices are available. Send `language: "sw"` with any of these IDs (SDK 0.13.0 or later); `sw-rashid` is the default. Pricing is the same per generated minute as every other Voices 2 voice. Swahili also streams over HTTP and real-time WebSocket sessions; see [Streaming text-to-speech](/docs/capabilities/text-to-speech/streaming).
+
+| Voice ID | Name | Gender | Style |
+| --- | --- | --- | --- |
+| `sw-rashid` | Rashid (default) | Male | Authoritative |
+| `sw-neema` | Neema | Female | Narration |
+| `sw-hassan` | Hassan | Male | Reading |
+| `sw-bakari` | Bakari | Male | Deep |
+| `sw-amina` | Amina | Female | Natural |
+| `sw-juma` | Juma | Male | Storytelling |
+| `sw-zainab` | Zainab | Female | Natural |
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const clip = await addis.voice.generate({
+  voiceId: "sw-rashid",
+  language: "sw",
+  text: "Habari, karibu sana. Leo ni siku nzuri ya kujifunza kitu kipya pamoja.",
+});
+```
+  </Tab>
+  <Tab>
+```python
+clip = addis.voice.generate(
+    voice_id="sw-rashid",
+    language="sw",
+    text="Habari, karibu sana. Leo ni siku nzuri ya kujifunza kitu kipya pamoja.",
+)
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/generations \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"voice_id":"sw-rashid","language":"sw","text":"Habari, karibu sana. Leo ni siku nzuri ya kujifunza kitu kipya pamoja.","output_format":"mp3_44100"}'
+```
+  </Tab>
+</Tabs>
+
+### Hausa voices
+
+Four Hausa voices are available. Send `language: "ha"` with any of these IDs (SDK 0.13.0 or later); `ha-mustapha` is the default. Pricing is the same per generated minute as every other Voices 2 voice. Hausa voices work with `voice.generate`, estimates and batches. Streaming and real-time sessions are not available in Hausa yet.
+
+| Voice ID | Name | Gender | Style |
+| --- | --- | --- | --- |
+| `ha-mustapha` | Mustapha (default) | Male | Host |
+| `ha-sani` | Sani | Male | Commercial |
+| `ha-usman` | Usman | Male | Commercial |
+| `ha-musa` | Musa | Male | Narration |
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const clip = await addis.voice.generate({
+  voiceId: "ha-mustapha",
+  language: "ha",
+  text: "Barka da zuwa. Yau rana ce mai kyau don koyon sabon abu tare.",
+});
+```
+  </Tab>
+  <Tab>
+```python
+clip = addis.voice.generate(
+    voice_id="ha-mustapha",
+    language="ha",
+    text="Barka da zuwa. Yau rana ce mai kyau don koyon sabon abu tare.",
+)
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/generations \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"voice_id":"ha-mustapha","language":"ha","text":"Barka da zuwa. Yau rana ce mai kyau don koyon sabon abu tare.","output_format":"mp3_44100"}'
+```
+  </Tab>
+</Tabs>
+
+### Sidama voices
+
+Five Sidama voices are available. Send `language: "sid"` with any of these IDs (SDK 0.13.0 or later); `sid-tigist` is the default. Pricing is the same per generated minute as every other Voices 2 voice. Sidama voices work with `voice.generate`, estimates and batches. Streaming and real-time sessions are not available in Sidama yet.
+
+| Voice ID | Name | Gender | Style |
+| --- | --- | --- | --- |
+| `sid-tigist` | Tigist (default) | Female | News |
+| `sid-desta` | Desta | Male | News |
+| `sid-bereket` | Bereket | Male | Narration |
+| `sid-selam` | Selam | Female | Presenter |
+| `sid-alemu` | Alemu | Male | Formal |
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const clip = await addis.voice.generate({
+  voiceId: "sid-tigist",
+  language: "sid",
+  text: "Kunino babbaxxinno sidaamu budu tima, adonna shaanu babbaxxinno sidaamu budi sagale leeltawo yaate.",
+});
+```
+  </Tab>
+  <Tab>
+```python
+clip = addis.voice.generate(
+    voice_id="sid-tigist",
+    language="sid",
+    text="Kunino babbaxxinno sidaamu budu tima, adonna shaanu babbaxxinno sidaamu budi sagale leeltawo yaate.",
+)
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/generations \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"voice_id":"sid-tigist","language":"sid","text":"Kunino babbaxxinno sidaamu budu tima, adonna shaanu babbaxxinno sidaamu budi sagale leeltawo yaate.","output_format":"mp3_44100"}'
+```
+  </Tab>
+</Tabs>
+
+### Wolaytta voices
+
+Five Wolaytta voices are available. Send `language: "wal"` with any of these IDs (SDK 0.13.0 or later); `wal-tona` is the default. Pricing is the same per generated minute as every other Voices 2 voice. Wolaytta voices work with `voice.generate`, estimates and batches. Streaming and real-time sessions are not available in Wolaytta yet.
+
+| Voice ID | Name | Gender | Style |
+| --- | --- | --- | --- |
+| `wal-tona` | Tona (default) | Male | News |
+| `wal-almaz` | Almaz | Female | News |
+| `wal-amado` | Amado | Male | Presenter |
+| `wal-gobe` | Gobe | Male | Narration |
+| `wal-hiwot` | Hiwot | Female | Presenter |
+
+<Tabs items={['Node.js', 'Python', 'cURL']} groupId="integration-language">
+  <Tab>
+```ts
+const clip = await addis.voice.generate({
+  voiceId: "wal-tona",
+  language: "wal",
+  text: "Giyaa giddon daro asay shammes, baassi koshshiyabaa bayzzes.",
+});
+```
+  </Tab>
+  <Tab>
+```python
+clip = addis.voice.generate(
+    voice_id="wal-tona",
+    language="wal",
+    text="Giyaa giddon daro asay shammes, baassi koshshiyabaa bayzzes.",
+)
+```
+  </Tab>
+  <Tab>
+```bash
+curl https://api.addisassistant.com/api/v1/voice/generations \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"voice_id":"wal-tona","language":"wal","text":"Giyaa giddon daro asay shammes, baassi koshshiyabaa bayzzes.","output_format":"mp3_44100"}'
 ```
   </Tab>
 </Tabs>
@@ -225,7 +390,7 @@ The cURL example requires `jq`. A generation response contains clip metadata and
 
 ## Batch generation
 
-Send up to 10,000 text-to-speech requests in one batch. Batches run off-peak, every batch finishes within 24 hours, and only finished requests are billed, at **2.5 ETB per generated minute**, half the Voices 2 list price. Batches accept Amharic (`am`), Afaan Oromo (`om`) and Tigrinya (`ti`) with the same voices as `voice.generate`, including all seven Tigrinya voices. Each request's voice ID must match its language; the SDK rejects any other language before uploading.
+Send up to 10,000 text-to-speech requests in one batch. Batches run off-peak, every batch finishes within 24 hours, and only finished requests are billed, at **2.5 ETB per generated minute**, half the Voices 2 list price. Batches accept Amharic (`am`), Afaan Oromo (`om`), Tigrinya (`ti`), Swahili (`sw`), Hausa (`ha`), Sidama (`sid`) and Wolaytta (`wal`) with the same voices as `voice.generate`. Each request's voice ID must match its language; the SDK rejects any other language, or a voice ID from another language, before uploading. Swahili, Hausa, Sidama and Wolaytta need SDK 0.13.0 or later.
 
 Any account with at least one paid top-up can create batches; signup credit alone does not count. Create them with the SDK methods below (Node.js or Python SDK **0.9.0** or later), or upload a CSV on the Batches page of the dashboard.
 
@@ -361,7 +526,7 @@ Ensure high-quality output and reliable billing with these production patterns.
       <h3 className="font-semibold text-sm text-fd-foreground uppercase tracking-wide">Script & Punctuation</h3>
     </div>
     <div className="space-y-3 text-sm text-fd-muted-foreground">
-      <div><strong className="text-fd-foreground">Natural pauses:</strong> Use Ethiopic punctuation and complete sentences.</div>
+      <div><strong className="text-fd-foreground">Natural pauses:</strong> Use Ethiopic punctuation for Amharic and Tigrinya, ordinary Latin punctuation for the other languages, and complete sentences.</div>
       <div><strong className="text-fd-foreground">Consistent script:</strong> Transliterate mixed terms explicitly when pronunciation matters.</div>
     </div>
   </div>
@@ -416,4 +581,4 @@ Addis Voices 2 uses the same Addis AI API key as the legacy API, so no credentia
 
 For a new integration, follow [Generate and save a clip](#generate-and-save-a-clip). Existing applications can keep using the complete [Legacy Text-to-Speech guide](/docs/capabilities/text-to-speech-legacy) while migrating one use case at a time. Review [Pricing](/docs/platform/pricing) before switching production traffic.
 
-<LastVerified date="2026-07-23" />
+<LastVerified date="2026-11-04" />

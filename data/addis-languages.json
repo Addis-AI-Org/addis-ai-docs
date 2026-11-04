@@ -1,0 +1,321 @@
+{
+  "version": "2026-11-04",
+  "source": "Live public API (GET /api/v1/scribe, GET /api/v1/realtime), live voice edge function v119 and the voice catalog (available, public rows), checked 2026-11-04 ~09:00 EAT. Previews are generated clips on the CDN.",
+  "languages": {
+    "am": {
+      "name": "Amharic",
+      "native": "አማርኛ",
+      "scribe": true,
+      "scribe_speakers": true,
+      "scribe_backends": [
+        "standard",
+        "turbo"
+      ],
+      "voice": true,
+      "voice_realtime": true
+    },
+    "om": {
+      "name": "Afaan Oromo",
+      "native": "Afaan Oromoo",
+      "scribe": true,
+      "scribe_speakers": true,
+      "scribe_backends": [
+        "turbo"
+      ],
+      "voice": true,
+      "voice_realtime": true
+    },
+    "ti": {
+      "name": "Tigrinya",
+      "native": "ትግርኛ",
+      "scribe": true,
+      "scribe_speakers": true,
+      "scribe_backends": [
+        "turbo"
+      ],
+      "voice": true,
+      "voice_realtime": true
+    },
+    "sw": {
+      "name": "Swahili",
+      "native": "Kiswahili",
+      "scribe": true,
+      "scribe_speakers": false,
+      "scribe_backends": [
+        "turbo"
+      ],
+      "voice": true,
+      "voice_realtime": true
+    },
+    "ha": {
+      "name": "Hausa",
+      "native": "Harshen Hausa",
+      "scribe": true,
+      "scribe_speakers": true,
+      "scribe_backends": [
+        "turbo"
+      ],
+      "voice": true,
+      "voice_realtime": false
+    },
+    "sid": {
+      "name": "Sidama",
+      "native": "Sidaamu Afoo",
+      "scribe": true,
+      "scribe_speakers": true,
+      "scribe_backends": [
+        "turbo"
+      ],
+      "voice": true,
+      "voice_realtime": false
+    },
+    "wal": {
+      "name": "Wolaytta",
+      "native": "Wolayttatto",
+      "scribe": true,
+      "scribe_speakers": true,
+      "scribe_backends": [
+        "turbo"
+      ],
+      "voice": true,
+      "voice_realtime": false
+    }
+  },
+  "voices": {
+    "am": [
+      "am-hamen",
+      "am-simon",
+      "am-yohanes-calm",
+      "am-tesfa",
+      "am-muaz",
+      "am-roba",
+      "am-nejat",
+      "am-loza",
+      "am-nahom",
+      "am-amanuel",
+      "am-tewodros",
+      "am-kaleb",
+      "am-dawit",
+      "am-meron",
+      "am-makda",
+      "am-feven",
+      "am-melat",
+      "am-dibora",
+      "am-sara"
+    ],
+    "om": [
+      "om-bikila",
+      "om-ayyaantuu",
+      "om-leensaa",
+      "om-hawi",
+      "om-diriba",
+      "om-leta",
+      "om-ebba",
+      "om-chala",
+      "om-obse"
+    ],
+    "ti": [
+      "ti-berhane",
+      "ti-senait",
+      "ti-haben",
+      "ti-rahel",
+      "ti-filimon",
+      "ti-danait",
+      "ti-yonas"
+    ],
+    "sw": [
+      "sw-rashid",
+      "sw-neema",
+      "sw-hassan",
+      "sw-bakari",
+      "sw-amina",
+      "sw-juma",
+      "sw-zainab"
+    ],
+    "ha": [
+      "ha-mustapha",
+      "ha-sani",
+      "ha-usman",
+      "ha-musa"
+    ],
+    "sid": [
+      "sid-tigist",
+      "sid-desta",
+      "sid-bereket",
+      "sid-selam",
+      "sid-alemu"
+    ],
+    "wal": [
+      "wal-tona",
+      "wal-almaz",
+      "wal-amado",
+      "wal-gobe",
+      "wal-hiwot"
+    ]
+  },
+  "default_voices": {
+    "am": "am-hamen",
+    "om": "om-bikila",
+    "ti": "ti-berhane",
+    "sw": "sw-rashid",
+    "ha": "ha-mustapha",
+    "sid": "sid-tigist",
+    "wal": "wal-tona"
+  },
+  "retired_voices": [
+    "ha-hauwa"
+  ],
+  "preview_url": "https://cdn.addisassistant.com/voice-previews/{file}",
+  "preview_files": {
+    "ti-danait": "ti-danait-v2.mp3"
+  },
+  "example_text": {
+    "am": "ሰላም፣ እንኳን ወደ አዲስ ኤአይ በደህና መጡ።",
+    "om": "Nagaa, gara Addis AI baga nagaan dhuftan.",
+    "ti": "ሰላም፣ እንቋዕ ብደሓን መጻእኩም። ሎሚ ጽቡቕ መዓልቲ እዩ።",
+    "sw": "Habari, karibu sana. Leo ni siku nzuri ya kujifunza kitu kipya pamoja.",
+    "ha": "Barka da zuwa. Yau rana ce mai kyau don koyon sabon abu tare.",
+    "sid": "Kunino babbaxxinno sidaamu budu tima, adonna shaanu babbaxxinno sidaamu budi sagale leeltawo yaate.",
+    "wal": "Giyaa giddon daro asay shammes, baassi koshshiyabaa bayzzes."
+  },
+  "voice_details": {
+    "ha-mustapha": {
+      "name": "Mustapha",
+      "descriptor": "A relaxed, warm male host voice.",
+      "gender": "male",
+      "style": "Host"
+    },
+    "ha-sani": {
+      "name": "Sani",
+      "descriptor": "An energetic male voice for commercials.",
+      "gender": "male",
+      "style": "Commercial"
+    },
+    "ha-usman": {
+      "name": "Usman",
+      "descriptor": "A bright male voice for commercials.",
+      "gender": "male",
+      "style": "Commercial"
+    },
+    "ha-musa": {
+      "name": "Musa",
+      "descriptor": "A steady male narration voice.",
+      "gender": "male",
+      "style": "Narration"
+    },
+    "sid-tigist": {
+      "name": "Tigist",
+      "descriptor": "A clear, confident female voice with a broadcast delivery.",
+      "gender": "female",
+      "style": "News"
+    },
+    "sid-desta": {
+      "name": "Desta",
+      "descriptor": "A clear, steady male voice with a calm news delivery.",
+      "gender": "male",
+      "style": "News"
+    },
+    "sid-bereket": {
+      "name": "Bereket",
+      "descriptor": "A full, even male voice suited to narration.",
+      "gender": "male",
+      "style": "Narration"
+    },
+    "sid-selam": {
+      "name": "Selam",
+      "descriptor": "A warm female voice with an engaging presenter tone.",
+      "gender": "female",
+      "style": "Presenter"
+    },
+    "sid-alemu": {
+      "name": "Alemu",
+      "descriptor": "A deep, measured male voice with a formal pace.",
+      "gender": "male",
+      "style": "Formal"
+    },
+    "sw-rashid": {
+      "name": "Rashid",
+      "descriptor": "Clear, authoritative male voice",
+      "gender": "male",
+      "style": "Authoritative"
+    },
+    "sw-neema": {
+      "name": "Neema",
+      "descriptor": "Warm female narration voice",
+      "gender": "female",
+      "style": "Narration"
+    },
+    "sw-hassan": {
+      "name": "Hassan",
+      "descriptor": "Steady male reading voice",
+      "gender": "male",
+      "style": "Reading"
+    },
+    "sw-bakari": {
+      "name": "Bakari",
+      "descriptor": "Deep male voice",
+      "gender": "male",
+      "style": "Deep"
+    },
+    "sw-amina": {
+      "name": "Amina",
+      "descriptor": "Natural, conversational female voice",
+      "gender": "female",
+      "style": "Natural"
+    },
+    "sw-juma": {
+      "name": "Juma",
+      "descriptor": "Male voice with a suspenseful, storytelling delivery",
+      "gender": "male",
+      "style": "Storytelling"
+    },
+    "sw-zainab": {
+      "name": "Zainab",
+      "descriptor": "Natural, conversational female voice",
+      "gender": "female",
+      "style": "Natural"
+    },
+    "wal-tona": {
+      "name": "Tona",
+      "descriptor": "A clear, steady male voice with a calm news delivery.",
+      "gender": "male",
+      "style": "News"
+    },
+    "wal-almaz": {
+      "name": "Almaz",
+      "descriptor": "A bright, clear female voice with a confident news delivery.",
+      "gender": "female",
+      "style": "News"
+    },
+    "wal-amado": {
+      "name": "Amado",
+      "descriptor": "A full, warm male voice with a measured presenter pace.",
+      "gender": "male",
+      "style": "Presenter"
+    },
+    "wal-gobe": {
+      "name": "Gobe",
+      "descriptor": "A deep, even male voice suited to narration.",
+      "gender": "male",
+      "style": "Narration"
+    },
+    "wal-hiwot": {
+      "name": "Hiwot",
+      "descriptor": "A warm, lively female voice with an engaging presenter tone.",
+      "gender": "female",
+      "style": "Presenter"
+    }
+  },
+  "routes": {
+    "voice_all_languages": [
+      "/api/v1/voice/generations",
+      "/api/v1/voice/estimate",
+      "/api/v1/voice/voices",
+      "/api/v1/batches (voice lines)"
+    ],
+    "voice_realtime_languages_only": [
+      "/api/v1/voice/generations/stream",
+      "/api/v1/realtime/*"
+    ]
+  }
+}

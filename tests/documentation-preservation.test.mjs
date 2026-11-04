@@ -91,7 +91,7 @@ test('uses Addis AI documentation metadata for page titles and link previews', (
   assert.match(sharedMetadata, /Addis AI Documentation \| APIs & SDKs for African Languages/);
   assert.match(
     sharedMetadata,
-    /Build with Addis AI APIs and official Node\.js and Python SDKs for text generation, speech-to-text, Addis Voices 2, translation, multimodal reasoning, and realtime voice in Amharic, Afaan Oromo and Tigrinya\./,
+    /Addis AI APIs and Node\.js and Python SDKs for speech-to-text and Addis Voices 2 in Amharic, Afaan Oromo, Tigrinya, Swahili, Hausa, Sidama and Wolaytta\./,
   );
   assert.match(appLayout, /template: `%s \| \$\{DOCUMENTATION_SITE_NAME\}`/);
   assert.match(appLayout, /openGraph:/);
