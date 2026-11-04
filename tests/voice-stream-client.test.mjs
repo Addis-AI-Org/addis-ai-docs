@@ -47,11 +47,13 @@ test('all available choices remain selectable with per-language defaults and no 
  assert.equal(selectVoice(voices,'om'),'');
 });
 
-test('Swahili streams; Hausa, Sidama and Wolaytta voices stay out of streamed and real-time speech', () => {
- assert.deepEqual([...STREAMING_LANGUAGES],['am','om','ti','sw']);
- const voices=[{id:'sw-neema',name:'Neema',language:'sw'},{id:'sw-rashid',name:'Rashid',language:'sw',is_default:true},{id:'ha-mustapha',name:'Mustapha',language:'ha',is_default:true},{id:'sid-tigist',name:'Tigist',language:'sid'},{id:'wal-tona',name:'Tona',language:'wal'}];
- assert.deepEqual(availableVoices(voices).map(v=>v.id),['sw-neema','sw-rashid']);
+test('all seven voice languages stream and run in real time; other languages stay out', () => {
+ assert.deepEqual([...STREAMING_LANGUAGES],['am','om','ti','sw','ha','sid','wal']);
+ const voices=[{id:'sw-neema',name:'Neema',language:'sw'},{id:'sw-rashid',name:'Rashid',language:'sw',is_default:true},{id:'ha-mustapha',name:'Mustapha',language:'ha',is_default:true},{id:'sid-tigist',name:'Tigist',language:'sid'},{id:'wal-tona',name:'Tona',language:'wal'},{id:'en-test',name:'Test',language:'en',is_default:true}];
+ assert.deepEqual(availableVoices(voices).map(v=>v.id),['sw-neema','sw-rashid','ha-mustapha','sid-tigist','wal-tona']);
  assert.equal(selectVoice(voices,'sw'),'sw-rashid');
  assert.equal(selectVoice(voices,'sw','sw-neema'),'sw-neema');
- assert.equal(selectVoice(voices,'ha'),'');
+ assert.equal(selectVoice(voices,'ha'),'ha-mustapha');
+ assert.equal(selectVoice(voices,'sid'),'sid-tigist');
+ assert.equal(selectVoice(voices,'wal'),'wal-tona');
 });

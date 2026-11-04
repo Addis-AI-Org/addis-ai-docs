@@ -84,29 +84,30 @@ export function VoiceCatalog() {
 
         <div className="grid border border-fd-border">
           <div className="p-4 sm:p-5">
-            <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.15em] text-fd-muted-foreground">
+            <label
+              htmlFor="voice-catalog-language"
+              className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.15em] text-fd-muted-foreground"
+            >
               Language
-            </span>
-            <div className="flex flex-wrap gap-y-2" role="group" aria-label="Filter voices by language">
-              {languageOptions.map((option) => {
-                const count = voiceCatalog.filter((voice) => voice.language === option.id).length;
-                const selected = language === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => selectLanguage(option.id)}
-                    className={
-                      selected
-                        ? 'border border-fd-primary bg-fd-primary px-3 py-2 text-sm font-semibold text-fd-primary-foreground'
-                        : '-ml-px border border-fd-border px-3 py-2 text-sm font-medium text-fd-muted-foreground transition-colors first:ml-0 hover:z-10 hover:border-fd-primary/50 hover:text-fd-foreground'
-                    }
-                  >
-                    {option.label} <span aria-hidden="true">({count})</span>
-                  </button>
-                );
-              })}
+            </label>
+            <div className="relative sm:max-w-xs">
+              <select
+                id="voice-catalog-language"
+                value={language}
+                onChange={(event) => selectLanguage(event.target.value as Language)}
+                aria-controls="voice-catalog-results"
+                className="h-10 w-full appearance-none border border-fd-border bg-fd-background pl-3 pr-9 text-sm text-fd-foreground outline-none transition-colors focus-visible:border-fd-primary focus-visible:ring-1 focus-visible:ring-fd-primary"
+              >
+                {languageOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label} ({voiceCatalog.filter((voice) => voice.language === option.id).length})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-fd-muted-foreground"
+                aria-hidden="true"
+              />
             </div>
           </div>
 

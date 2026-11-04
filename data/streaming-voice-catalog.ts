@@ -296,5 +296,103 @@ export const streamingVoiceCatalog: StreamingVoice[] = [
     "language": "sw",
     "is_available": true,
     "is_default": false
+  },
+  {
+    "id": "ha-mustapha",
+    "name": "Mustapha",
+    "language": "ha",
+    "is_available": true,
+    "is_default": true
+  },
+  {
+    "id": "ha-sani",
+    "name": "Sani",
+    "language": "ha",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "ha-usman",
+    "name": "Usman",
+    "language": "ha",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "ha-musa",
+    "name": "Musa",
+    "language": "ha",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "sid-tigist",
+    "name": "Tigist",
+    "language": "sid",
+    "is_available": true,
+    "is_default": true
+  },
+  {
+    "id": "sid-desta",
+    "name": "Desta",
+    "language": "sid",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "sid-bereket",
+    "name": "Bereket",
+    "language": "sid",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "sid-selam",
+    "name": "Selam",
+    "language": "sid",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "sid-alemu",
+    "name": "Alemu",
+    "language": "sid",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "wal-tona",
+    "name": "Tona",
+    "language": "wal",
+    "is_available": true,
+    "is_default": true
+  },
+  {
+    "id": "wal-almaz",
+    "name": "Almaz",
+    "language": "wal",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "wal-amado",
+    "name": "Amado",
+    "language": "wal",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "wal-gobe",
+    "name": "Gobe",
+    "language": "wal",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "wal-hiwot",
+    "name": "Hiwot",
+    "language": "wal",
+    "is_available": true,
+    "is_default": false
   }
 ];

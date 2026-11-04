@@ -19,7 +19,7 @@ export function GET() {
 
 > ${ORGANIZATION_DEFINITION}
 
-API and SDK documentation for Addis AI: speech-to-text (Addis Scribe) and text-to-speech (Addis Voices 2) in Amharic, Afaan Oromo, Tigrinya, Swahili, Hausa, Sidama and Wolaytta, with streamed and real-time speech in Amharic, Afaan Oromo, Tigrinya and Swahili; text generation, translation and realtime voice in Amharic, Afaan Oromo and Tigrinya. Developer platform: https://addisassistant.com. Company site: https://addisai.ch. Full text of every page: ${SITE_URL}/llms-full.txt
+API and SDK documentation for Addis AI: speech-to-text (Addis Scribe) and text-to-speech (Addis Voices 2) in Amharic, Afaan Oromo, Tigrinya, Swahili, Hausa, Sidama and Wolaytta, with streamed and real-time speech in all seven; text generation, translation and realtime voice in Amharic, Afaan Oromo and Tigrinya. Developer platform: https://addisassistant.com. Company site: https://addisai.ch. Full text of every page: ${SITE_URL}/llms-full.txt
 
 ## Pages
 

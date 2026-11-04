@@ -20,10 +20,13 @@ Use **HTTP** for individual requests or **WebSockets** for successive turns on o
 | Afaan Oromo | `om` | Bikila | `om-bikila` |
 | Tigrinya | `ti` | Berhane | `ti-berhane` |
 | Swahili | `sw` | Rashid | `sw-rashid` |
+| Hausa | `ha` | Mustapha | `ha-mustapha` |
+| Sidama | `sid` | Tigist | `sid-tigist` |
+| Wolaytta | `wal` | Tona | `wal-tona` |
 
-Streaming and real-time sessions are available in Amharic, Afaan Oromo, Tigrinya and Swahili; Swahili needs SDK 0.13.0 or later. Hausa, Sidama and Wolaytta voices are not available for streaming or real-time sessions yet: generate them as completed clips with `voice.generate` (see [Text-to-Speech](/docs/capabilities/text-to-speech#hausa-voices)). SDK 0.13.0 rejects them in `voice.stream` and `realtime.connect` before sending.
+Streaming and real-time sessions are available in all seven Voices 2 languages: Amharic, Afaan Oromo, Tigrinya, Swahili, Hausa, Sidama and Wolaytta. Swahili needs SDK 0.13.0 or later; Hausa, Sidama and Wolaytta need SDK 0.14.0 or later in `voice.stream` and `realtime.connect`.
 
-Fetch the current catalog with `voices.list({ language: "ti" })` in Node.js or `voices.list(language="ti")` in Python. Select an available voice whose language matches the request. The examples below use Berhane (`ti-berhane`, `ti`); use Hamen (`am-hamen`, `am`), Bikila (`om-bikila`, `om`) or Rashid (`sw-rashid`, `sw`) in the same calls for the other streaming languages.
+Fetch the current catalog with `voices.list({ language: "ti" })` in Node.js or `voices.list(language="ti")` in Python. Select an available voice whose language matches the request. The examples below use Berhane (`ti-berhane`, `ti`); use Hamen (`am-hamen`, `am`), Bikila (`om-bikila`, `om`), Rashid (`sw-rashid`, `sw`), Mustapha (`ha-mustapha`, `ha`), Tigist (`sid-tigist`, `sid`) or Tona (`wal-tona`, `wal`) in the same calls for the other languages.
 
 ```bash
 curl --fail-with-body \
