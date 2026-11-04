@@ -6,7 +6,7 @@ import {
   DEFAULT_METADATA_DESCRIPTION,
   DOCUMENTATION_SITE_NAME,
 } from '@/lib/metadata';
-import { ORGANIZATION_DEFINITION, ORGANIZATION_ID, SITE_URL } from '@/lib/site';
+import { ORGANIZATION_JSON_LD, SITE_URL } from '@/lib/site';
 import { DocsProvider } from '@/components/provider';
 
 const inter = Inter({
@@ -18,14 +18,7 @@ const siteUrl = SITE_URL;
 
 // Points at the company entity declared on addisai.ch and addisassistant.com,
 // so the docs count toward the same "Addis AI" rather than a separate one.
-const organizationJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  '@id': ORGANIZATION_ID,
-  name: 'Addis AI',
-  url: 'https://addisai.ch',
-  description: ORGANIZATION_DEFINITION,
-};
+const organizationJsonLd = ORGANIZATION_JSON_LD;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

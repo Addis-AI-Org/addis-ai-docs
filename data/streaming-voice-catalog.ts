@@ -1,7 +1,7 @@
 import type { StreamingVoice } from '@/lib/voice-stream-client';
 
-// Available production voices verified on 2026-10-04. Refresh with the
-// authenticated live catalog when checking the account.
+// Available production voices for streamed and real-time speech, verified on
+// 2026-11-04. Refresh with the authenticated live catalog when checking the account.
 export const streamingVoiceCatalog: StreamingVoice[] = [
   {
     "id": "am-hamen",
@@ -245,6 +245,55 @@ export const streamingVoiceCatalog: StreamingVoice[] = [
     "id": "ti-yonas",
     "name": "Yonas — ዮናስ",
     "language": "ti",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "sw-rashid",
+    "name": "Rashid",
+    "language": "sw",
+    "is_available": true,
+    "is_default": true
+  },
+  {
+    "id": "sw-neema",
+    "name": "Neema",
+    "language": "sw",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "sw-hassan",
+    "name": "Hassan",
+    "language": "sw",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "sw-bakari",
+    "name": "Bakari",
+    "language": "sw",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "sw-amina",
+    "name": "Amina",
+    "language": "sw",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "sw-juma",
+    "name": "Juma",
+    "language": "sw",
+    "is_available": true,
+    "is_default": false
+  },
+  {
+    "id": "sw-zainab",
+    "name": "Zainab",
+    "language": "sw",
     "is_available": true,
     "is_default": false
   }
