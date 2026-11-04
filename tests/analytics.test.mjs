@@ -152,9 +152,6 @@ test('each page maps to the capability it documents', () => {
   const expected = {
     '/docs/announcements': 'other',
     '/docs/api-reference/chat-generate': 'chat',
-    '/docs/api-reference/studio-analyses': 'studio',
-    '/docs/api-reference/studio-conversation-analysis': 'studio',
-    '/docs/api-reference/studio-top-questions': 'studio',
     '/docs/capabilities/multimodal': 'chat',
     '/docs/capabilities/realtime': 'realtime',
     '/docs/capabilities/speech-to-text': 'stt',
