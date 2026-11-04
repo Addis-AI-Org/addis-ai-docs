@@ -89,6 +89,8 @@ export async function generateMetadata(
     openGraph: {
       title,
       description,
+      url: page.url,
+      type: "article",
       siteName: DOCUMENTATION_SITE_NAME,
       images: image,
     },

@@ -4,8 +4,15 @@ import { VoiceStreamingDemo } from '@/components/voice-streaming-demo';
 
 export const metadata: Metadata = {
   title: 'Text-to-Speech Streaming Playground',
-  description: 'Try live speech generation with Addis Voices 2.',
+  description: 'Try streamed speech with Addis Voices 2 in Amharic, Afaan Oromo, Tigrinya and Swahili.',
   alternates: { canonical: '/docs/playground/text-to-speech' },
+  openGraph: {
+    title: 'Text-to-Speech Streaming Playground | Addis AI Documentation',
+    description: 'Try streamed speech with Addis Voices 2 in Amharic, Afaan Oromo, Tigrinya and Swahili.',
+    url: '/docs/playground/text-to-speech',
+    siteName: 'Addis AI Documentation',
+    type: 'website',
+  },
 };
 
 export default function Page() {

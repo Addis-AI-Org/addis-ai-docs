@@ -5,12 +5,16 @@ import { useState } from 'react';
 
 import { voiceCatalog } from '@/data/voice-catalog';
 
-type Language = 'am' | 'om' | 'ti';
+type Language = 'am' | 'om' | 'ti' | 'sw' | 'ha' | 'sid' | 'wal';
 
 const languageOptions: Array<{ id: Language; label: string }> = [
   { id: 'am', label: 'Amharic' },
   { id: 'om', label: 'Afaan Oromo' },
   { id: 'ti', label: 'Tigrinya' },
+  { id: 'sw', label: 'Swahili' },
+  { id: 'ha', label: 'Hausa' },
+  { id: 'sid', label: 'Sidama' },
+  { id: 'wal', label: 'Wolaytta' },
 ];
 
 const INITIAL_VISIBLE_VOICES = 6;
@@ -78,12 +82,12 @@ export function VoiceCatalog() {
           </div>
         </div>
 
-        <div className="grid border border-fd-border md:grid-cols-[auto_minmax(0,1fr)]">
+        <div className="grid border border-fd-border">
           <div className="p-4 sm:p-5">
             <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.15em] text-fd-muted-foreground">
               Language
             </span>
-            <div className="flex" role="group" aria-label="Filter voices by language">
+            <div className="flex flex-wrap gap-y-2" role="group" aria-label="Filter voices by language">
               {languageOptions.map((option) => {
                 const count = voiceCatalog.filter((voice) => voice.language === option.id).length;
                 const selected = language === option.id;
@@ -106,7 +110,7 @@ export function VoiceCatalog() {
             </div>
           </div>
 
-          <div className="min-w-0 border-t border-fd-border p-4 sm:p-5 md:border-l md:border-t-0">
+          <div className="min-w-0 border-t border-fd-border p-4 sm:p-5">
             <label
               htmlFor="voice-catalog-search"
               className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.15em] text-fd-muted-foreground"

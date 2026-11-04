@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 const source = readFileSync(new URL('../lib/scribe-client.ts', import.meta.url), 'utf8');
 const js = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-const { authHeaders, pcm16, validateSocketUrl, readTranscriptStream, toSrt, toVtt, wrapCaption, wordsBySegment, segmentAt, appendLiveSegments, speakerTurns, uploadQuery, sessionBody, effectiveBackend } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+const { authHeaders, pcm16, validateSocketUrl, readTranscriptStream, toSrt, toVtt, wrapCaption, wordsBySegment, segmentAt, appendLiveSegments, speakerTurns, uploadQuery, sessionBody, effectiveBackend, hasSpeakerLabels, SCRIBE_LANGUAGES } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 
 test('API keys are header-only and absent credentials fail before network access', () => {
   assert.deepEqual(authHeaders('  customer-key  '), { 'x-api-key': 'customer-key' });
@@ -146,4 +146,24 @@ test('Tigrinya adds language=ti and always uses Turbo, like Afaan Oromo', () => 
 
   assert.equal(effectiveBackend('standard', 'ti'), 'turbo');
   assert.equal(effectiveBackend('turbo', 'ti'), 'turbo');
+});
+test('Hausa, Sidama, Wolaytta and Swahili add their language and always use Turbo; Swahili never asks for speakers', () => {
+  for (const language of ['ha', 'sid', 'wal', 'sw']) {
+    const upload = uploadQuery({ backend: 'standard', language, stream: false, requestId: `docs_${language}`, timestamps: true, speakers: false });
+    assert.equal(upload.toString(), `backend=turbo&chunk=1120ms&stream=false&request_id=docs_${language}&timestamps=word&language=${language}`);
+    assert.deepEqual(sessionBody({ backend: 'standard', language, requestId: `docs_${language}_live`, speakers: false }), { backend: 'turbo', chunk: '320ms', request_id: `docs_${language}_live`, language });
+    assert.equal(effectiveBackend('standard', language), 'turbo');
+  }
+  for (const language of ['ha', 'sid', 'wal']) {
+    assert.equal(hasSpeakerLabels(language), true);
+    const upload = uploadQuery({ backend: 'turbo', language, stream: false, requestId: 'docs_13', timestamps: true, speakers: true });
+    assert.equal(upload.toString(), `backend=turbo&chunk=1120ms&stream=false&request_id=docs_13&timestamps=word&speakers=true&language=${language}`);
+    assert.deepEqual(sessionBody({ backend: 'turbo', language, requestId: 'docs_14', speakers: true }), { backend: 'turbo', chunk: '320ms', request_id: 'docs_14', speakers: true, language });
+  }
+  assert.equal(hasSpeakerLabels('sw'), false);
+  assert.equal(hasSpeakerLabels('am'), true);
+  const sw = uploadQuery({ backend: 'turbo', language: 'sw', stream: false, requestId: 'docs_15', timestamps: true, speakers: true });
+  assert.equal(sw.toString(), 'backend=turbo&chunk=1120ms&stream=false&request_id=docs_15&timestamps=word&language=sw');
+  assert.deepEqual(sessionBody({ backend: 'turbo', language: 'sw', requestId: 'docs_16', speakers: true }), { backend: 'turbo', chunk: '320ms', request_id: 'docs_16', language: 'sw' });
+  assert.deepEqual(Object.keys(SCRIBE_LANGUAGES), ['am', 'om', 'ti', 'ha', 'sid', 'wal', 'sw']);
 });

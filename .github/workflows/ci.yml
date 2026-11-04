@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  check:
+    name: Lint, build, typecheck and test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm build
+      # After the build: tsconfig includes the route types Next generates in .next/types.
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: SEO checks on the built output
+        run: node --test tests/seo.test.mjs
+        env:
+          ADDIS_SEO_LIVE: '1'
+
+  drift:
+    name: Live language drift and link check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Compare the docs with the live API and check external links
+        run: node --test tests/language-drift.test.mjs tests/links.test.mjs
+        env:
+          ADDIS_DRIFT: '1'
+          ADDIS_LINKS: '1'

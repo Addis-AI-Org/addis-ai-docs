@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DemoNavigation } from '@/components/demo-navigation';
 import { Captions, Check, Copy, Download, FileAudio, Loader2, Mic, Square, Users, Zap } from 'lucide-react';
 import { startPlaygroundRun } from '@/lib/analytics';
-import { SCRIBE_API, SCRIBE_LANGUAGES, appendLiveSegments, authHeaders, pcm16, readJson, readTranscriptStream, segmentAt, sessionBody, speakerTurns, toSrt, toVtt, uploadQuery, validateSocketUrl, wordsBySegment, wrapCaption, type Backend, type ScribeLanguage, type ScribeLiveSegment, type ScribeResult, type ScribeSegment, type ScribeWord } from '@/lib/scribe-client';
+import { SCRIBE_API, SCRIBE_LANGUAGES, appendLiveSegments, hasSpeakerLabels, authHeaders, pcm16, readJson, readTranscriptStream, segmentAt, sessionBody, speakerTurns, toSrt, toVtt, uploadQuery, validateSocketUrl, wordsBySegment, wrapCaption, type Backend, type ScribeLanguage, type ScribeLiveSegment, type ScribeResult, type ScribeSegment, type ScribeWord } from '@/lib/scribe-client';
 
 type Phase = 'idle' | 'connecting' | 'recording' | 'processing';
 type Runtime = { socket?: WebSocket; context?: AudioContext; stream?: MediaStream; source?: MediaStreamAudioSourceNode; node?: AudioWorkletNode; mute?: GainNode; timer?: ReturnType<typeof setTimeout>; deadline?: ReturnType<typeof setTimeout>; cancelled: boolean; flushed?: () => void };
@@ -29,6 +29,10 @@ const PLACEHOLDER: Record<ScribeLanguage, { lang: string; text: string }> = {
   am: { lang: 'am', text: 'የእርስዎ ጽሑፍ እዚህ ይታያል።' },
   om: { lang: 'en', text: 'Your Afaan Oromo transcript appears here.' },
   ti: { lang: 'en', text: 'Your Tigrinya transcript appears here.' },
+  ha: { lang: 'en', text: 'Your Hausa transcript appears here.' },
+  sid: { lang: 'en', text: 'Your Sidama transcript appears here.' },
+  wal: { lang: 'en', text: 'Your Wolaytta transcript appears here.' },
+  sw: { lang: 'en', text: 'Your Swahili transcript appears here.' },
 };
 const button = 'inline-flex items-center justify-center gap-2 rounded-md border border-fd-border px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -47,7 +51,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const [captionFile, setCaptionFile] = useState<File | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [text, setText] = useState('');
-  const [status, setStatus] = useState('Record speech or upload audio in Amharic, Afaan Oromo or Tigrinya.');
+  const [status, setStatus] = useState('Record speech or upload audio in Amharic, Afaan Oromo, Tigrinya, Hausa, Sidama, Wolaytta or Swahili.');
   const [error, setError] = useState('');
   const [result, setResult] = useState<ScribeResult | null>(null);
   const [requestId, setRequestId] = useState('');
@@ -57,11 +61,14 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const runtime = useRef<Runtime>({ cancelled: false });
   const mounted = useRef(true);
   const busy = phase !== 'idle';
+  // Swahili has no speaker labels, so both Label speakers boxes are off and disabled for it.
+  const speakersOffered = hasSpeakerLabels(language);
   // Speaker labels ride on word timestamps and are Turbo only, so they pin the backend to Turbo while on.
-  const labelSpeakers = timestamps && speakers;
-  // Afaan Oromo and Tigrinya are transcribed on Turbo only, so they pin the backend too.
+  const labelSpeakers = timestamps && speakers && speakersOffered;
+  const labelLiveSpeakers = liveSpeakers && speakersOffered;
+  // Every language but Amharic is transcribed on Turbo only, so it pins the backend too.
   const turboOnlyLanguage = language !== 'am';
-  const pinTurbo = labelSpeakers || liveSpeakers || turboOnlyLanguage;
+  const pinTurbo = labelSpeakers || labelLiveSpeakers || turboOnlyLanguage;
 
   const stopAudio = (rt: Runtime) => {
     clearTimeout(rt.timer);
@@ -141,7 +148,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
     const playground = startPlaygroundRun('stt_live_websocket');
     try {
       const { headers, id } = startRequest();
-      if (liveSpeakers) setLiveSegments([]);
+      if (labelLiveSpeakers) setLiveSegments([]);
       cleanup(rt); rt = { cancelled: false }; runtime.current = rt;
       setPhase('connecting'); setStatus('Opening your microphone and creating a scoped session…');
       if (!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone access requires HTTPS and a supported browser.');
@@ -152,7 +159,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
       if (rt.context.sampleRate !== 16000) throw new Error('This browser cannot capture at 16 kHz. Upload an audio file instead.');
       await rt.context.audioWorklet.addModule('/scribe-pcm-worklet.js');
       await rt.context.resume();
-      const ticket = await readJson(await playground.fetch(`${SCRIBE_API}/sessions`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(sessionBody({ backend, language, requestId: id, speakers: liveSpeakers })), cache: 'no-store' }));
+      const ticket = await readJson(await playground.fetch(`${SCRIBE_API}/sessions`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(sessionBody({ backend, language, requestId: id, speakers: labelLiveSpeakers })), cache: 'no-store' }));
       if (rt.cancelled || !mounted.current) { stopAudio(rt); return; }
       const socket = new WebSocket(validateSocketUrl(ticket.websocket_url)); rt.socket = socket;
       rt.deadline = setTimeout(() => {
@@ -200,7 +207,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
       <div className="border-b border-fd-border p-5 sm:p-6">
         <DemoNavigation fullPage={fullPage} href="/docs/playground/speech-to-text" docsHref="/docs/capabilities/speech-to-text" />
         <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-fd-primary">Addis Scribe · Live API</p>
-        <h3 id="scribe-demo-title" className="text-xl font-semibold tracking-tight">Try Amharic, Afaan Oromo and Tigrinya transcription</h3>
+        <h3 id="scribe-demo-title" className="text-xl font-semibold tracking-tight">Try transcription in Amharic, Afaan Oromo, Tigrinya, Hausa, Sidama, Wolaytta and Swahili</h3>
         <p className="mt-2 text-sm leading-6 text-fd-muted-foreground">Record live or upload audio. Standard transcription rates apply.</p>
       </div>
       <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
@@ -216,7 +223,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
           <fieldset disabled={busy}>
             <legend className="mb-2 text-xs font-semibold uppercase tracking-wider text-fd-muted-foreground">Language</legend>
             <div className="grid grid-cols-3 items-stretch gap-2">
-              {(['am', 'om', 'ti'] as const).map(value => (
+              {(['am', 'om', 'ti', 'ha', 'sid', 'wal', 'sw'] as const).map(value => (
                 <button key={value} type="button" aria-pressed={language === value} onClick={() => { setLanguage(value); if (value !== 'am') setBackend('turbo'); }} className={`${button} w-full text-center ${language === value ? 'border-fd-primary bg-fd-primary/10 text-fd-primary' : ''}`}>
                   {SCRIBE_LANGUAGES[value]}
                 </button>
@@ -240,16 +247,16 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
           </fieldset>
           <div className="space-y-3">
             <button type="button" className={`${button} w-full bg-fd-primary text-fd-primary-foreground`} disabled={(busy && phase !== 'recording') || !credential.trim()} onClick={phase === 'recording' ? finishRecording : record}>{phase === 'recording' ? <><Square className="size-4" />Finish recording</> : <><Mic className="size-4" />Record live</>}</button>
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={liveSpeakers} disabled={busy} aria-describedby="scribe-live-speakers-hint" onChange={e => { setLiveSpeakers(e.target.checked); if (e.target.checked) setBackend('turbo'); }} /><Users aria-hidden="true" className="size-4" />Label speakers</label>
-            <p id="scribe-live-speakers-hint" className="text-xs leading-5 text-fd-muted-foreground">{liveSpeakers ? 'Preview: lines are labelled after each pause. Best with two people; upload group recordings. Uses Turbo.' : 'Marks who said what as Speaker 1, 2… (not names). Uses Turbo.'}</p>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={labelLiveSpeakers} disabled={busy || !speakersOffered} aria-describedby="scribe-live-speakers-hint" onChange={e => { setLiveSpeakers(e.target.checked); if (e.target.checked) setBackend('turbo'); }} /><Users aria-hidden="true" className="size-4" />Label speakers</label>
+            <p id="scribe-live-speakers-hint" className="text-xs leading-5 text-fd-muted-foreground">{!speakersOffered ? `Speaker labels are not available in ${SCRIBE_LANGUAGES[language]}.` : labelLiveSpeakers ? 'Preview: lines are labelled after each pause. Best with two people; upload group recordings. Uses Turbo.' : 'Marks who said what as Speaker 1, 2… (not names). Uses Turbo.'}</p>
             <p className="text-xs text-fd-muted-foreground">Up to 15 minutes.</p>
           </div>
           <div className="space-y-3 border-t border-fd-border pt-5">
             <label htmlFor="scribe-file" className="flex items-center gap-2 text-sm font-medium"><FileAudio className="size-4" />Upload audio</label>
             <input id="scribe-file" type="file" accept="audio/*,.wav,.mp3,.m4a,.webm,.ogg,.flac" disabled={busy} onChange={e => { setFile(e.target.files?.[0] ?? null); setCaptionFile(null); }} className={`${control} file:mr-3 file:rounded file:border-0 file:bg-fd-secondary file:px-2 file:py-1 file:text-fd-foreground`} />
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={timestamps} disabled={busy} aria-describedby="scribe-timestamps-hint" onChange={e => { setTimestamps(e.target.checked); if (e.target.checked) setUploadStream(false); }} />Word timestamps and captions</label>
-            {timestamps && <label className="ml-6 flex items-center gap-2 text-sm"><input type="checkbox" checked={speakers} disabled={busy} aria-describedby="scribe-speakers-hint" onChange={e => { setSpeakers(e.target.checked); if (e.target.checked) setBackend('turbo'); }} /><Users aria-hidden="true" className="size-4" />Label speakers</label>}
-            {timestamps && <p id="scribe-speakers-hint" className="ml-6 text-xs leading-5 text-fd-muted-foreground">Marks who said what as Speaker 1, 2… (not names). Uses Turbo.</p>}
+            {timestamps && <label className="ml-6 flex items-center gap-2 text-sm"><input type="checkbox" checked={speakers && speakersOffered} disabled={busy || !speakersOffered} aria-describedby="scribe-speakers-hint" onChange={e => { setSpeakers(e.target.checked); if (e.target.checked) setBackend('turbo'); }} /><Users aria-hidden="true" className="size-4" />Label speakers</label>}
+            {timestamps && <p id="scribe-speakers-hint" className="ml-6 text-xs leading-5 text-fd-muted-foreground">{speakersOffered ? 'Marks who said what as Speaker 1, 2… (not names). Uses Turbo.' : `Speaker labels are not available in ${SCRIBE_LANGUAGES[language]}.`}</p>}
             <label className={`flex items-center gap-2 text-sm ${timestamps ? 'text-fd-muted-foreground' : ''}`}><input type="checkbox" checked={uploadStream && !timestamps} disabled={busy || timestamps} aria-describedby="scribe-timestamps-hint" onChange={e => setUploadStream(e.target.checked)} />Show partial text after upload</label>
             <p id="scribe-timestamps-hint" className="text-xs leading-5 text-fd-muted-foreground">{timestamps ? 'Timestamps return the full result at once, so partial text is off. Turn timestamps off to see partial text.' : 'Turn on timestamps to play the file with synced captions and download SRT or VTT.'} Live recording returns text only unless Label speakers is on above.</p>
             <button type="button" className={`${button} w-full`} disabled={busy || !file || !credential.trim()} onClick={upload}>{phase === 'processing' && <Loader2 className="size-4 animate-spin" />}Transcribe file</button>
