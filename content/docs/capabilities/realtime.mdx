@@ -1,18 +1,25 @@
 ---
 title: Realtime API
-description: Low-latency, bidirectional voice conversations via WebSockets.
-icon: Zap
+description: Deprecated. Low-latency, bidirectional voice conversations via WebSockets, kept for existing applications.
+icon: Archive
 ---
 
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 import { Callout } from 'fumadocs-ui/components/callout';
 import { RealtimeVoiceDemo } from '@/components/realtime-voice-demo';
+import { StatusBadge } from '@/components/docs';
 import { Mic, Activity, BookOpen, Tractor, Phone, Car } from 'lucide-react';
+
+<StatusBadge status="deprecated">Deprecated</StatusBadge>
+
+<Callout type="warn" title="አሌፍ-1.2-realtime-audio is deprecated">
+The `አሌፍ-1.2-realtime-audio` model and this Realtime API are deprecated. This page is kept for existing applications only. New voice agents should use the [Streaming voice agent](/docs/integration/streaming-voice-agent) guide, which combines [Speech-to-Text](/docs/capabilities/speech-to-text) and [Text-to-Speech with Addis Voices 2](/docs/capabilities/text-to-speech).
+</Callout>
 
 The **Realtime API** enables fluid, natural voice conversations. It uses **WebSockets** to stream audio bi-directionally, achieving response times under **300ms**.
 
-It is powered by **`አሌፍ-1.2-realtime-audio`**, allowing for natural interruptions and back-channeling.
+It is powered by **`አሌፍ-1.2-realtime-audio`** <StatusBadge status="deprecated">Deprecated</StatusBadge>, allowing for natural interruptions and back-channeling.
 
 <Callout type="info" title="Stream speech with your chosen Voice 2 voice">
 For text-to-speech over HTTP or a persistent WebSocket, see [Streaming text-to-speech](/docs/capabilities/text-to-speech#streaming). That guide covers voice selection, session tickets, saved clips, and minute billing. The page below covers microphone conversations.

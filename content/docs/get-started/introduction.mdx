@@ -5,7 +5,7 @@ icon: House
 ---
 
 import { Cpu, Rocket, Book, Terminal, PlayCircle, Zap, Globe, MessageSquare, Mic, Image as ImageIcon, Sparkles, LayoutTemplate } from 'lucide-react';
-import { NewBadge } from '@/components/docs';
+import { NewBadge, StatusBadge } from '@/components/docs';
 
 <div className="not-prose addis-offset-shell my-10">
   <div className="relative border border-fd-border bg-fd-background">
@@ -90,8 +90,8 @@ A suite of high-fidelity audio models.
 
 The previous Voice 1 Text-to-Speech API remains available only for existing applications and is documented in the [Legacy Text-to-Speech guide](/docs/capabilities/text-to-speech-legacy).
 
-### 3. Realtime Audio
-Powered by **`አሌፍ-1.2-realtime-audio`**.
+### 3. Realtime Audio <StatusBadge status="deprecated">Deprecated</StatusBadge>
+Powered by **`አሌፍ-1.2-realtime-audio`**, which is **deprecated** and kept only for existing applications. For new voice agents, use the [Streaming voice agent](/docs/integration/streaming-voice-agent) guide built on Speech-to-Text and Addis Voices 2.
 *   **Latency:** &lt;300ms response time.
 *   **Use Case:** Live conversational agents (like Siri/Alexa) that need to interrupt and respond instantly.
 
