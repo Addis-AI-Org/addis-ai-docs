@@ -1,6 +1,6 @@
 ---
 title: Speech-to-Text
-description: Transcribe Amharic, Afaan Oromo, Tigrinya, Hausa, Sidama, Wolaytta and Swahili audio into text.
+description: Transcribe Amharic, Afaan Oromo, Tigrinya, Hausa, Sidama, Wolaytta, Swahili and English audio into text.
 icon: Mic
 ---
 
@@ -15,9 +15,9 @@ Our Speech-to-Text (STT) technology is powered by specialized models trained to 
 
 ## Try Addis Scribe live
 
-Transcribe **Amharic**, **Afaan Oromo**, **Tigrinya**, **Hausa**, **Sidama**, **Wolaytta** or **Swahili** live or upload audio. Choose the language, choose **Turbo · 3× speed** (the default) or **Standard** (Amharic only), and enter your API key. Both modes use the same transcription rate. Uploaded files can also return [word timestamps and captions](#timestamps-and-captions) that play in sync with your audio.
+Transcribe **Amharic**, **Afaan Oromo**, **Tigrinya**, **Hausa**, **Sidama**, **Wolaytta**, **Swahili** or **English** live or upload audio. Choose the language, choose **Turbo · 3× speed** (the default) or **Standard** (Amharic only), and enter your API key. Both modes use the same transcription rate. Uploaded files can also return [word timestamps and captions](#timestamps-and-captions) that play in sync with your audio.
 
-In your own code, add `language=om` to the API calls below for Afaan Oromo, `language=ti` for Tigrinya, or `language=ha`, `sid`, `wal` or `sw` for Hausa, Sidama, Wolaytta or Swahili. See [Afaan Oromo](#afaan-oromo), [Tigrinya](#tigrinya) and [Hausa, Sidama, Wolaytta and Swahili](#hausa-sidama-wolaytta-swahili).
+In your own code, add `language=om` to the API calls below for Afaan Oromo, `language=ti` for Tigrinya, `language=ha`, `sid`, `wal` or `sw` for Hausa, Sidama, Wolaytta or Swahili, or `language=en` for English. See [Afaan Oromo](#afaan-oromo), [Tigrinya](#tigrinya), [Hausa, Sidama, Wolaytta and Swahili](#hausa-sidama-wolaytta-swahili) and [English](#english).
 
 Accuracy benchmarks for [Amharic](https://addisassistant.com/benchmarks/addis-scribe-amharic), [Afaan Oromo](https://addisassistant.com/benchmarks/addis-scribe-oromo), [Hausa](https://addisassistant.com/benchmarks/addis-scribe-hausa), [Sidama](https://addisassistant.com/benchmarks/addis-scribe-sidama), [Wolaytta](https://addisassistant.com/benchmarks/addis-scribe-wolaytta) and [Swahili](https://addisassistant.com/benchmarks/addis-scribe-swahili) compare Scribe with other systems on the same test clips. Anyone can reproduce the Amharic, Afaan Oromo and Tigrinya numbers with their own Addis Scribe API key, using the references, transcripts, scorer and scripts in the [benchmark folder](https://huggingface.co/datasets/addisai/addis-scribe-benchmark).
 
@@ -33,7 +33,7 @@ curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?backend=turbo&requ
   -F 'audio=@audio.wav'
 ```
 
-Use `backend=turbo` for Turbo (the default) or `backend=standard` for Standard. Add `language=om` to transcribe Afaan Oromo, `language=ti` for Tigrinya, `language=ha` for Hausa, `language=sid` for Sidama, `language=wal` for Wolaytta or `language=sw` for Swahili (all Turbo only); without it, Scribe transcribes Amharic (`am`). Add `stream=true` for newline-delimited `transcript.partial` events after uploading; `transcript.completed` includes the final text and confirmed wallet usage. An ordinary HTTP request returns `data.text`, `data.seconds`, `data.compute_ms`, and `data.usage` as JSON.
+Use `backend=turbo` for Turbo (the default) or `backend=standard` for Standard. Add `language=om` to transcribe Afaan Oromo, `language=ti` for Tigrinya, `language=ha` for Hausa, `language=sid` for Sidama, `language=wal` for Wolaytta, `language=sw` for Swahili or `language=en` for English (all Turbo only); without it, Scribe transcribes Amharic (`am`). Add `stream=true` for newline-delimited `transcript.partial` events after uploading; `transcript.completed` includes the final text and confirmed wallet usage. An ordinary HTTP request returns `data.text`, `data.seconds`, `data.compute_ms`, and `data.usage` as JSON.
 
 For live microphone input, see [Live transcription](/docs/capabilities/speech-to-text/live).
 
@@ -43,7 +43,7 @@ For live microphone input, see [Live transcription](/docs/capabilities/speech-to
 
 ### Scribe SDK quick start
 
-Install the SDK with the commands below. Scribe recognizes **Amharic** (`am`, the default), **Afaan Oromo** (`om`), **Tigrinya** (`ti`), **Hausa** (`ha`), **Sidama** (`sid`), **Wolaytta** (`wal`) and **Swahili** (`sw`). Pass `language` (for example `"ti"` or `"ha"`) to any Scribe call: Hausa, Sidama, Wolaytta and Swahili need SDK 0.13.0 or later, Tigrinya 0.12.0 or later, Afaan Oromo 0.11.0 or later. Without it the SDKs transcribe Amharic. See [Afaan Oromo](#afaan-oromo), [Tigrinya](#tigrinya) and [Hausa, Sidama, Wolaytta and Swahili](#hausa-sidama-wolaytta-swahili) for the HTTP API. The existing `speech.transcribe` method below continues to use the separate file-transcription service.
+Install the SDK with the commands below. Scribe recognizes **Amharic** (`am`, the default), **Afaan Oromo** (`om`), **Tigrinya** (`ti`), **Hausa** (`ha`), **Sidama** (`sid`), **Wolaytta** (`wal`), **Swahili** (`sw`) and **English** (`en`). Pass `language` (for example `"ti"` or `"ha"`) to any Scribe call: English works with SDK 0.14.0 (Python accepts `language="en"`; in TypeScript, typed support for `"en"` arrives in the next SDK release), Hausa, Sidama, Wolaytta and Swahili need SDK 0.13.0 or later, Tigrinya 0.12.0 or later, Afaan Oromo 0.11.0 or later. Without it the SDKs transcribe Amharic. See [Afaan Oromo](#afaan-oromo), [Tigrinya](#tigrinya), [Hausa, Sidama, Wolaytta and Swahili](#hausa-sidama-wolaytta-swahili) and [English](#english) for the HTTP API. The existing `speech.transcribe` method below continues to use the separate file-transcription service.
 
 Keep `ADDIS_API_KEY` on your application server. For browser integrations, create a Scribe session on your server and return the scoped one-use ticket to the browser.
 
@@ -173,8 +173,8 @@ Scribe transcribes **Afaan Oromo** (language code `om`) as well as Amharic (`am`
 <TypeTable
   type={{
     'language': {
-      description: 'The spoken language: "am" (Amharic), "om" (Afaan Oromo), "ti" (Tigrinya), "ha" (Hausa), "sid" (Sidama), "wal" (Wolaytta) or "sw" (Swahili). A query parameter on POST /api/v1/scribe/transcribe and POST /api/v1/scribe/jobs, and a JSON field in the POST /api/v1/scribe/sessions body. Long-audio jobs also accept it in the JSON body of a declaration. Any other value returns HTTP 422 UNSUPPORTED_LANGUAGE. Every language but "am" is Turbo only: with backend=standard the request returns HTTP 422 INVALID_REQUEST.',
-      type: '"am" | "om" | "ti" | "ha" | "sid" | "wal" | "sw"',
+      description: 'The spoken language: "am" (Amharic), "om" (Afaan Oromo), "ti" (Tigrinya), "ha" (Hausa), "sid" (Sidama), "wal" (Wolaytta), "sw" (Swahili) or "en" (English). A query parameter on POST /api/v1/scribe/transcribe and POST /api/v1/scribe/jobs, and a JSON field in the POST /api/v1/scribe/sessions body. Long-audio jobs also accept it in the JSON body of a declaration. Any other value returns HTTP 422 UNSUPPORTED_LANGUAGE. Every language but "am" is Turbo only: with backend=standard the request returns HTTP 422 INVALID_REQUEST.',
+      type: '"am" | "om" | "ti" | "ha" | "sid" | "wal" | "sw" | "en"',
       default: '"am"',
     },
   }}
@@ -243,6 +243,7 @@ The `GET /api/v1/scribe` capabilities response includes a `languages` object, ke
 | `sid` | `addis-scribe-sidama-streaming` | `["turbo"]` | `true` |
 | `wal` | `addis-scribe-wolaytta-streaming` | `["turbo"]` | `true` |
 | `sw` | `addis-scribe-swahili-streaming` | `["turbo"]` | `false` |
+| `en` | `addis-scribe-english-streaming` | `["turbo"]` | `true` |
 
 **Accuracy.** On natural Afaan Oromo speech, Addis Scribe has the lowest error rate of every system we tested: 21.1% word error rate live, with the final text about 40 ms after the speaker stops. See the [Addis Scribe Oromo benchmark](https://addisassistant.com/benchmarks/addis-scribe-oromo) for the test set, every system compared and the method. Anyone can reproduce these numbers with their own Addis Scribe API key: the [benchmark folder](https://huggingface.co/datasets/addisai/addis-scribe-benchmark) has the references, every system's transcripts, the scorer, and scripts and a local app to run each system again.
 
@@ -378,6 +379,30 @@ On the WAXAL Wolaytta test (103 clips), Addis Scribe has the lowest word error r
 #### Swahili [#swahili]
 
 Addis Scribe has a 14.6% word error rate live on FLEURS Swahili, 7.9% on the African Voices Swahili test and 19.6% on Common Voice Swahili. The systems we compared it with are ahead on all three: African Voices (6.3% and 7.2%), FLEURS (8.8%) and Common Voice (15.8% and 18.7%). See the [Addis Scribe Swahili benchmark](https://addisassistant.com/benchmarks/addis-scribe-swahili) for the systems and sets.
+
+### English <NewBadge className="ml-2 align-middle" /> [#english]
+
+Scribe also transcribes **English** (`en`). It is the same API with the same `language` parameter: uploads, live sessions, word timestamps, SRT and VTT captions, speaker labels and long-audio jobs all work, with the same limits and the same price per character as Amharic. English runs on **Turbo** only; `backend=standard` returns HTTP 422 `INVALID_REQUEST`.
+
+| Language | `language` | `model` in responses | Speaker labels | Text |
+| --- | --- | --- | --- | --- |
+| English | `en` | `addis-scribe-english-streaming` | Yes | Capital letters and punctuation |
+
+**Price.** English is billed at the same per-character rate as Amharic. It is written in the Latin alphabet, which takes about twice as many characters as Amharic for the same speech, so a minute of English costs about twice as much as a minute of Amharic.
+
+```bash
+curl 'https://api.addisassistant.com/api/v1/scribe/transcribe?language=en&request_id=my-english-1' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -F 'audio=@meeting.wav'
+
+# English live session
+curl 'https://api.addisassistant.com/api/v1/scribe/sessions' \
+  -H "x-api-key: $ADDIS_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"language": "en", "backend": "turbo", "chunk": "320ms", "request_id": "my-english-live-1"}'
+```
+
+The result carries `"language": "en"` and `"model": "addis-scribe-english-streaming"`. For a long recording, add `language=en` to the [long-audio job](#long-audio) request. In the `GET /api/v1/scribe` capabilities response, `languages.en` lists the model, the backends `["turbo"]` and `speakers: true`.
 
 ### Timestamps and captions <NewBadge className="ml-2 align-middle" /> [#timestamps-and-captions]
 
