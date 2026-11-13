@@ -15,14 +15,14 @@ export const SITE_URL = (
 export const ORGANIZATION_ID = 'https://addisai.ch/#organization';
 
 export const ORGANIZATION_DEFINITION =
-  'Addis AI builds speech and language AI for Ethiopian and African languages: voices and speech-to-text in Amharic, Afaan Oromo, Tigrinya, Swahili, Hausa, Sidama and Wolaytta.';
+  'Addis AI builds speech and language AI for Ethiopian and African languages: voices and speech-to-text in Amharic, Afaan Oromo, Tigrinya, Swahili, Hausa, Sidama and Wolaytta, and speech-to-text in English.';
 
 /**
  * Languages with Addis AI speech products (Scribe speech-to-text and Addis
  * Voices 2), as BCP 47 codes. Kept equal to data/addis-languages.json by
  * tests/language-drift.test.mjs.
  */
-export const SPEECH_LANGUAGE_CODES = ['am', 'om', 'ti', 'sw', 'ha', 'sid', 'wal'];
+export const SPEECH_LANGUAGE_CODES = ['am', 'om', 'ti', 'sw', 'ha', 'sid', 'wal', 'en'];
 
 /** Organization JSON-LD for every page (see app/layout.tsx). */
 export const ORGANIZATION_JSON_LD = {

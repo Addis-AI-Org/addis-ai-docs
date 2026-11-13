@@ -25,7 +25,7 @@ const sameMembers = (actual, expected, message) =>
   assert.deepEqual([...actual].sort(), [...expected].sort(), message);
 
 test('the source-of-truth file is internally consistent', () => {
-  assert.deepEqual(codes, ['am', 'om', 'ti', 'sw', 'ha', 'sid', 'wal']);
+  assert.deepEqual(codes, ['am', 'om', 'ti', 'sw', 'ha', 'sid', 'wal', 'en']);
   assert.deepEqual(Object.keys(facts.voices), voiceLanguages);
   assert.deepEqual(Object.keys(facts.default_voices), voiceLanguages);
   assert.deepEqual(realtimeLanguages, voiceLanguages, 'every voice language streams and runs in real time');
@@ -180,13 +180,15 @@ test('site-wide copy, JSON-LD and llms.txt name every speech language', async ()
     FAQ: read('content/docs/platform/faq.mdx'),
     introduction: read('content/docs/get-started/introduction.mdx'),
     pricing: read('content/docs/platform/pricing.mdx'),
-    'Text-to-Speech page': read('content/docs/capabilities/text-to-speech/index.mdx'),
     'Speech-to-Text page': read('content/docs/capabilities/speech-to-text/index.mdx'),
     announcements: read('content/docs/announcements.mdx'),
   };
   for (const [surface, text] of Object.entries(surfaces)) {
     for (const lang of speech) assert.ok(text.includes(languageName(lang)), `${surface} names ${languageName(lang)}`);
   }
+  // The Text-to-Speech page names every voice language (English is a Scribe language only).
+  const tts = read('content/docs/capabilities/text-to-speech/index.mdx');
+  for (const lang of voiceLanguages) assert.ok(tts.includes(languageName(lang)), `Text-to-Speech page names ${languageName(lang)}`);
   assert.match(read('content/docs/announcements.mdx'), /<AnnouncementHero date="2026-11-04">/);
 });
 

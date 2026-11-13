@@ -1,8 +1,8 @@
 export const SCRIBE_API = 'https://api.addisassistant.com/api/v1/scribe';
 export type Backend = 'standard' | 'turbo';
 /** `am` (Amharic) is the API default and is never sent; every other language runs on Turbo only. */
-export type ScribeLanguage = 'am' | 'om' | 'ti' | 'ha' | 'sid' | 'wal' | 'sw';
-export const SCRIBE_LANGUAGES: Record<ScribeLanguage, string> = { am: 'Amharic', om: 'Afaan Oromo', ti: 'Tigrinya', ha: 'Hausa', sid: 'Sidama', wal: 'Wolaytta', sw: 'Swahili' };
+export type ScribeLanguage = 'am' | 'om' | 'ti' | 'ha' | 'sid' | 'wal' | 'sw' | 'en';
+export const SCRIBE_LANGUAGES: Record<ScribeLanguage, string> = { am: 'Amharic', om: 'Afaan Oromo', ti: 'Tigrinya', ha: 'Hausa', sid: 'Sidama', wal: 'Wolaytta', sw: 'Swahili', en: 'English' };
 /** Speaker labels are offered in every Scribe language except Swahili (`languages.sw.speakers` is false). */
 export function hasSpeakerLabels(language: ScribeLanguage): boolean {
   return language !== 'sw';

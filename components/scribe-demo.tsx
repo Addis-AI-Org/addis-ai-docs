@@ -33,6 +33,7 @@ const PLACEHOLDER: Record<ScribeLanguage, { lang: string; text: string }> = {
   sid: { lang: 'en', text: 'Your Sidama transcript appears here.' },
   wal: { lang: 'en', text: 'Your Wolaytta transcript appears here.' },
   sw: { lang: 'en', text: 'Your Swahili transcript appears here.' },
+  en: { lang: 'en', text: 'Your English transcript appears here.' },
 };
 const button = 'inline-flex items-center justify-center gap-2 rounded-md border border-fd-border px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fd-primary disabled:cursor-not-allowed disabled:opacity-50';
 
@@ -51,7 +52,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
   const [captionFile, setCaptionFile] = useState<File | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [text, setText] = useState('');
-  const [status, setStatus] = useState('Record speech or upload audio in Amharic, Afaan Oromo, Tigrinya, Hausa, Sidama, Wolaytta or Swahili.');
+  const [status, setStatus] = useState('Record speech or upload audio in Amharic, Afaan Oromo, Tigrinya, Hausa, Sidama, Wolaytta, Swahili or English.');
   const [error, setError] = useState('');
   const [result, setResult] = useState<ScribeResult | null>(null);
   const [requestId, setRequestId] = useState('');
@@ -207,7 +208,7 @@ export function ScribeDemo({ fullPage = false }: { fullPage?: boolean }) {
       <div className="border-b border-fd-border p-5 sm:p-6">
         <DemoNavigation fullPage={fullPage} href="/docs/playground/speech-to-text" docsHref="/docs/capabilities/speech-to-text" />
         <p className="mb-3 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-fd-primary">Addis Scribe · Live API</p>
-        <h3 id="scribe-demo-title" className="text-xl font-semibold tracking-tight">Try transcription in Amharic, Afaan Oromo, Tigrinya, Hausa, Sidama, Wolaytta and Swahili</h3>
+        <h3 id="scribe-demo-title" className="text-xl font-semibold tracking-tight">Try transcription in Amharic, Afaan Oromo, Tigrinya, Hausa, Sidama, Wolaytta, Swahili and English</h3>
         <p className="mt-2 text-sm leading-6 text-fd-muted-foreground">Record live or upload audio. Standard transcription rates apply.</p>
       </div>
       <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
