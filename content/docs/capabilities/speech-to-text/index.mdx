@@ -43,7 +43,7 @@ For live microphone input, see [Live transcription](/docs/capabilities/speech-to
 
 ### Scribe SDK quick start
 
-Install the SDK with the commands below. Scribe recognizes **Amharic** (`am`, the default), **Afaan Oromo** (`om`), **Tigrinya** (`ti`), **Hausa** (`ha`), **Sidama** (`sid`), **Wolaytta** (`wal`), **Swahili** (`sw`) and **English** (`en`). Pass `language` (for example `"ti"` or `"ha"`) to any Scribe call: English works with SDK 0.14.0 (Python accepts `language="en"`; in TypeScript, typed support for `"en"` arrives in the next SDK release), Hausa, Sidama, Wolaytta and Swahili need SDK 0.13.0 or later, Tigrinya 0.12.0 or later, Afaan Oromo 0.11.0 or later. Without it the SDKs transcribe Amharic. See [Afaan Oromo](#afaan-oromo), [Tigrinya](#tigrinya), [Hausa, Sidama, Wolaytta and Swahili](#hausa-sidama-wolaytta-swahili) and [English](#english) for the HTTP API. The existing `speech.transcribe` method below continues to use the separate file-transcription service.
+Install the SDK with the commands below. Scribe recognizes **Amharic** (`am`, the default), **Afaan Oromo** (`om`), **Tigrinya** (`ti`), **Hausa** (`ha`), **Sidama** (`sid`), **Wolaytta** (`wal`), **Swahili** (`sw`) and **English** (`en`). Pass `language` (for example `"ti"` or `"ha"`) to any Scribe call: English works with the current SDKs (typed support for `"en"` arrives in the next SDK release), Hausa, Sidama, Wolaytta and Swahili need SDK 0.13.0 or later, Tigrinya 0.12.0 or later, Afaan Oromo 0.11.0 or later. Without it the SDKs transcribe Amharic. See [Afaan Oromo](#afaan-oromo), [Tigrinya](#tigrinya), [Hausa, Sidama, Wolaytta and Swahili](#hausa-sidama-wolaytta-swahili) and [English](#english) for the HTTP API. The existing `speech.transcribe` method below continues to use the separate file-transcription service.
 
 Keep `ADDIS_API_KEY` on your application server. For browser integrations, create a Scribe session on your server and return the scoped one-use ticket to the browser.
 
@@ -402,7 +402,7 @@ curl 'https://api.addisassistant.com/api/v1/scribe/sessions' \
   -d '{"language": "en", "backend": "turbo", "chunk": "320ms", "request_id": "my-english-live-1"}'
 ```
 
-The result carries `"language": "en"` and `"model": "addis-scribe-english-streaming"`. For a long recording, add `language=en` to the [long-audio job](#long-audio) request. In the `GET /api/v1/scribe` capabilities response, `languages.en` lists the model, the backends `["turbo"]` and `speakers: true`.
+The result carries `language` set to `en` and `model` set to `addis-scribe-english-streaming`. For a long recording, add `language=en` to the [long-audio job](#long-audio) request. In the `GET /api/v1/scribe` capabilities response, `languages.en` lists the model, the backends `["turbo"]` and `speakers: true`.
 
 ### Timestamps and captions <NewBadge className="ml-2 align-middle" /> [#timestamps-and-captions]
 
