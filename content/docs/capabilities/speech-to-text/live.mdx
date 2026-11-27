@@ -46,15 +46,16 @@ Add `"language": "ha"` (Hausa), `"sid"` (Sidama), `"wal"` (Wolaytta) or `"sw"` (
 
 With SDK 0.13.0 or later, pass `language: "ha"` (or `"sid"`, `"wal"`, `"sw"`) to `scribe.connect` or `createSession` (Python `language="ha"`), or create the session with the HTTP request above. See [Hausa, Sidama, Wolaytta and Swahili](/docs/capabilities/speech-to-text#hausa-sidama-wolaytta-swahili) for uploads, captions and accuracy.
 
-### Live English
+### Live English and French
 
-Add `"language": "en"` to the session body. English runs on Turbo only, and live speaker labels work as below.
+Add `"language": "en"` (English) or `"language": "fr"` (French) to the session body. Both run on Turbo only. Live speaker labels work in English as below, not in French.
 
 ```json
 {"language":"en","backend":"turbo","chunk":"320ms","request_id":"my-english-live-1"}
+{"language":"fr","backend":"turbo","chunk":"320ms","request_id":"my-french-live-1"}
 ```
 
-In Python pass `language="en"` to `scribe.connect` or `create_session`, or create the session with the HTTP request above. See [English](/docs/capabilities/speech-to-text#english) for uploads and captions.
+In Python pass `language="en"` or `language="fr"` to `scribe.connect` or `create_session`, or create the session with the HTTP request above. See [English](/docs/capabilities/speech-to-text#english) and [French](/docs/capabilities/speech-to-text#french) for uploads and captions.
 
 ## Connect live audio with the SDK
 

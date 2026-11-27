@@ -165,7 +165,7 @@ test('Hausa, Sidama, Wolaytta and Swahili add their language and always use Turb
   const sw = uploadQuery({ backend: 'turbo', language: 'sw', stream: false, requestId: 'docs_15', timestamps: true, speakers: true });
   assert.equal(sw.toString(), 'backend=turbo&chunk=1120ms&stream=false&request_id=docs_15&timestamps=word&language=sw');
   assert.deepEqual(sessionBody({ backend: 'turbo', language: 'sw', requestId: 'docs_16', speakers: true }), { backend: 'turbo', chunk: '320ms', request_id: 'docs_16', language: 'sw' });
-  assert.deepEqual(Object.keys(SCRIBE_LANGUAGES), ['am', 'om', 'ti', 'ha', 'sid', 'wal', 'sw', 'en']);
+  assert.deepEqual(Object.keys(SCRIBE_LANGUAGES), ['am', 'om', 'ti', 'ha', 'sid', 'wal', 'sw', 'en', 'fr']);
 });
 test('English adds its language, always uses Turbo and offers speaker labels', () => {
   assert.equal(effectiveBackend('standard', 'en'), 'turbo');
@@ -173,4 +173,11 @@ test('English adds its language, always uses Turbo and offers speaker labels', (
   const upload = uploadQuery({ backend: 'standard', language: 'en', stream: false, requestId: 'docs_en', timestamps: true, speakers: true });
   assert.equal(upload.toString(), 'backend=turbo&chunk=1120ms&stream=false&request_id=docs_en&timestamps=word&speakers=true&language=en');
   assert.deepEqual(sessionBody({ backend: 'turbo', language: 'en', requestId: 'docs_en_live', speakers: false }), { backend: 'turbo', chunk: '320ms', request_id: 'docs_en_live', language: 'en' });
+});
+test('French adds its language, always uses Turbo and never asks for speakers', () => {
+  assert.equal(effectiveBackend('standard', 'fr'), 'turbo');
+  assert.equal(hasSpeakerLabels('fr'), false);
+  const upload = uploadQuery({ backend: 'standard', language: 'fr', stream: false, requestId: 'docs_fr', timestamps: true, speakers: true });
+  assert.equal(upload.toString(), 'backend=turbo&chunk=1120ms&stream=false&request_id=docs_fr&timestamps=word&language=fr');
+  assert.deepEqual(sessionBody({ backend: 'standard', language: 'fr', requestId: 'docs_fr_live', speakers: true }), { backend: 'turbo', chunk: '320ms', request_id: 'docs_fr_live', language: 'fr' });
 });
