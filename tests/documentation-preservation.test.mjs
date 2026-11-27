@@ -91,7 +91,7 @@ test('uses Addis AI documentation metadata for page titles and link previews', (
   assert.match(sharedMetadata, /Addis AI Documentation \| APIs & SDKs for African Languages/);
   assert.match(
     sharedMetadata,
-    /Addis AI APIs and SDKs: speech-to-text in Amharic, Afaan Oromo, Tigrinya, Swahili, Hausa, Sidama, Wolaytta and English; Addis Voices 2 in all but English\./,
+    /Addis AI APIs and SDKs: speech-to-text in Amharic, Afaan Oromo, Tigrinya, Swahili, Hausa, Sidama, Wolaytta, English and French; voices in the first seven\./,
   );
   assert.match(appLayout, /template: `%s \| \$\{DOCUMENTATION_SITE_NAME\}`/);
   assert.match(appLayout, /openGraph:/);
@@ -347,7 +347,7 @@ test('corrects capability page descriptions, terminology, and title badges', () 
   assert.match(voiceCatalog, /'Afaan Oromo'/);
 
   assert.match(speechToText, /^title: Speech-to-Text$/m);
-  assert.match(speechToText, /^description: Transcribe Amharic, Afaan Oromo, Tigrinya, Hausa, Sidama, Wolaytta, Swahili and English audio into text\.$/m);
+  assert.match(speechToText, /^description: Transcribe Amharic, Afaan Oromo, Tigrinya, Hausa, Sidama, Wolaytta, Swahili, English and French audio into text\.$/m);
   assert.match(translation, /^description: Translate text between Amharic, Afaan Oromo, Tigrinya, and English\.$/m);
   assert.match(translation, /The Translation API supports bidirectional translation between Amharic \(`am`\), Afaan Oromo \(`om`\), Tigrinya \(`ti`\), and English \(`en`\)\. All twelve source-to-target language combinations are available through the REST API and official SDKs\./);
   assert.match(translation, /Supported language pairs/);

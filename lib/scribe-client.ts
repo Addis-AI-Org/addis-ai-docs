@@ -1,11 +1,11 @@
 export const SCRIBE_API = 'https://api.addisassistant.com/api/v1/scribe';
 export type Backend = 'standard' | 'turbo';
 /** `am` (Amharic) is the API default and is never sent; every other language runs on Turbo only. */
-export type ScribeLanguage = 'am' | 'om' | 'ti' | 'ha' | 'sid' | 'wal' | 'sw' | 'en';
-export const SCRIBE_LANGUAGES: Record<ScribeLanguage, string> = { am: 'Amharic', om: 'Afaan Oromo', ti: 'Tigrinya', ha: 'Hausa', sid: 'Sidama', wal: 'Wolaytta', sw: 'Swahili', en: 'English' };
-/** Speaker labels are offered in every Scribe language except Swahili (`languages.sw.speakers` is false). */
+export type ScribeLanguage = 'am' | 'om' | 'ti' | 'ha' | 'sid' | 'wal' | 'sw' | 'en' | 'fr';
+export const SCRIBE_LANGUAGES: Record<ScribeLanguage, string> = { am: 'Amharic', om: 'Afaan Oromo', ti: 'Tigrinya', ha: 'Hausa', sid: 'Sidama', wal: 'Wolaytta', sw: 'Swahili', en: 'English', fr: 'French' };
+/** Speaker labels are offered in every Scribe language except Swahili and French (`languages.sw.speakers` and `languages.fr.speakers` are false). */
 export function hasSpeakerLabels(language: ScribeLanguage): boolean {
-  return language !== 'sw';
+  return language !== 'sw' && language !== 'fr';
 }
 export type ScribeResult = {
   text: string; request_id: string; backend: Backend; seconds: number; compute_ms: number;
@@ -116,7 +116,7 @@ export function effectiveBackend(backend: Backend, language: ScribeLanguage, nee
   return language !== 'am' || needsTurbo ? 'turbo' : backend;
 }
 
-/** Query for POST /transcribe. Amharic requests stay exactly as before: `language` is added only for other languages. Swahili never asks for speakers. */
+/** Query for POST /transcribe. Amharic requests stay exactly as before: `language` is added only for other languages. Swahili and French never ask for speakers. */
 export function uploadQuery(options: { backend: Backend; language: ScribeLanguage; stream: boolean; requestId: string; timestamps: boolean; speakers: boolean }): URLSearchParams {
   const speakers = options.speakers && hasSpeakerLabels(options.language);
   const query = new URLSearchParams({ backend: effectiveBackend(options.backend, options.language, speakers), chunk: '1120ms', stream: String(options.stream), request_id: options.requestId });
@@ -126,7 +126,7 @@ export function uploadQuery(options: { backend: Backend; language: ScribeLanguag
   return query;
 }
 
-/** JSON body for POST /sessions. Amharic sessions stay exactly as before: `language` is added only for other languages. Swahili never asks for speakers. */
+/** JSON body for POST /sessions. Amharic sessions stay exactly as before: `language` is added only for other languages. Swahili and French never ask for speakers. */
 export function sessionBody(options: { backend: Backend; language: ScribeLanguage; requestId: string; speakers: boolean }): Record<string, string | boolean> {
   const body: Record<string, string | boolean> = options.speakers && hasSpeakerLabels(options.language)
     ? { backend: 'turbo', chunk: '320ms', request_id: options.requestId, speakers: true }

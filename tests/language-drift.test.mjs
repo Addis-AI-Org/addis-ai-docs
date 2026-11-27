@@ -25,7 +25,7 @@ const sameMembers = (actual, expected, message) =>
   assert.deepEqual([...actual].sort(), [...expected].sort(), message);
 
 test('the source-of-truth file is internally consistent', () => {
-  assert.deepEqual(codes, ['am', 'om', 'ti', 'sw', 'ha', 'sid', 'wal', 'en']);
+  assert.deepEqual(codes, ['am', 'om', 'ti', 'sw', 'ha', 'sid', 'wal', 'en', 'fr']);
   assert.deepEqual(Object.keys(facts.voices), voiceLanguages);
   assert.deepEqual(Object.keys(facts.default_voices), voiceLanguages);
   assert.deepEqual(realtimeLanguages, voiceLanguages, 'every voice language streams and runs in real time');
@@ -186,7 +186,7 @@ test('site-wide copy, JSON-LD and llms.txt name every speech language', async ()
   for (const [surface, text] of Object.entries(surfaces)) {
     for (const lang of speech) assert.ok(text.includes(languageName(lang)), `${surface} names ${languageName(lang)}`);
   }
-  // The Text-to-Speech page names every voice language (English is a Scribe language only).
+  // The Text-to-Speech page names every voice language (English and French are Scribe languages only).
   const tts = read('content/docs/capabilities/text-to-speech/index.mdx');
   for (const lang of voiceLanguages) assert.ok(tts.includes(languageName(lang)), `Text-to-Speech page names ${languageName(lang)}`);
   assert.match(read('content/docs/announcements.mdx'), /<AnnouncementHero date="2026-11-04">/);
